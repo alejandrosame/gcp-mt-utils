@@ -2,26 +2,45 @@ package main
 
 import (
     "fmt"
+    "html/template"
     "net/http"
     "regexp"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
     if r.URL.Path != "/" {
-        http.NotFound(w, r)
+        app.notFound(w)
         return
     }
 
-    w.Write([]byte("Hello from GCP MT Utils\n"))
+    // TODO: Change template file location to use absolute path based on the current file location
+    files := []string{
+        "./ui/html/home.page.tmpl",
+        "./ui/html/base.layout.tmpl",
+        "./ui/html/footer.partial.tmpl",
+    }
+
+    ts, err := template.ParseFiles(files...)
+    if err != nil {
+        app.errorLog.Println(err.Error())
+        app.serverError(w, err)
+        return
+    }
+
+    err = ts.Execute(w, nil)
+    if err != nil {
+        app.errorLog.Println(err.Error())
+        app.serverError(w, err)
+    }
 }
 
 // Add a showSnippet handler function.
-func showPairs(w http.ResponseWriter, r *http.Request) {
+func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
 
     id := r.URL.Query().Get("id")
 
     if m, _ := regexp.MatchString("^[a-zA-Z1-9\\-]+$", id); !m {
-        http.NotFound(w, r)
+        app.notFound(w)
         return
     }
 
@@ -29,11 +48,11 @@ func showPairs(w http.ResponseWriter, r *http.Request) {
 }
 
 // Add a createSnippet handler function.
-func loadPairs(w http.ResponseWriter, r *http.Request) {
+func (app *application) loadPairs(w http.ResponseWriter, r *http.Request) {
 
     if r.Method != "POST" {
         w.Header().Set("Allow", "POST")
-        http.Error(w, "Method Not Allowed", 405)
+        app.clientError(w, http.StatusMethodNotAllowed)
         return
     }
 
