@@ -3,6 +3,7 @@ package main
 import (
     "database/sql"
     "flag"
+    "html/template"
     "log"
     "net/http"
     "os"
@@ -16,6 +17,7 @@ type application struct {
     errorLog *log.Logger
     infoLog  *log.Logger
     pairs *mysql.PairModel
+    templateCache map[string]*template.Template
 }
 
 func main() {
@@ -27,16 +29,24 @@ func main() {
     infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
     errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+    // Init objects
     db, err := openDB(*dsn)
     if err != nil {
         errorLog.Fatal(err)
     }
     defer db.Close()
 
+    templateCache, err := newTemplateCache()
+    if err != nil {
+        errorLog.Fatal(err)
+    }
+
+    // Add objects to app struct
     app := &application{
         errorLog: errorLog,
         infoLog:  infoLog,
         pairs: &mysql.PairModel{DB: db},
+        templateCache: templateCache,
     }
 
     srv := &http.Server{

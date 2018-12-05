@@ -2,7 +2,6 @@ package main
 
 import (
     "fmt"
-    //"html/template"
     "net/http"
     //"regexp"
     "strconv"
@@ -16,42 +15,13 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    s, err := app.pairs.Latest()
+    p, err := app.pairs.Latest()
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    for _, pair := range s {
-        fmt.Fprintf(w, "%v\n", pair)
-    }
-
-    /*
-    if r.URL.Path != "/" {
-        app.notFound(w)
-        return
-    }
-
-    // TODO: Change template file location to use absolute path based on the current file location
-    files := []string{
-        "./ui/html/home.page.tmpl",
-        "./ui/html/base.layout.tmpl",
-        "./ui/html/footer.partial.tmpl",
-    }
-
-    ts, err := template.ParseFiles(files...)
-    if err != nil {
-        app.errorLog.Println(err.Error())
-        app.serverError(w, err)
-        return
-    }
-
-    err = ts.Execute(w, nil)
-    if err != nil {
-        app.errorLog.Println(err.Error())
-        app.serverError(w, err)
-    }
-    */
+    app.render(w, r, "home.page.tmpl", &templateData{Pairs: p})
 }
 
 func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +41,7 @@ func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    s, err := app.pairs.Get(id)
+    p, err := app.pairs.Get(id)
     if err == models.ErrNoRecord {
         app.notFound(w)
         return
@@ -80,7 +50,7 @@ func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    fmt.Fprintf(w, "%v", s)
+    app.render(w, r, "show.page.tmpl", &templateData{Pair: p})
 }
 
 func (app *application) createPair(w http.ResponseWriter, r *http.Request) {

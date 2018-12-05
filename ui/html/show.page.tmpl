@@ -1,0 +1,21 @@
+{{template "base" .}}
+
+{{define "title"}}Pair #{{.Pair.ID}}{{end}}
+
+{{define "body"}}
+	{{with .Pair}}
+	<div class='snippet'>
+	    <div class='metadata'>
+	        <strong>{{.SourceLanguage}} - {{.TargetLanguage}}</strong>
+	        <span>#{{.ID}}</span>
+	    </div>
+	    <div>
+	    	<pre><code>{{.SourceText}}</code></pre>
+	    	<pre><code>{{.TargetText}}</code></pre>
+	    </div>
+	    <div class='metadata'>
+	        <time>Created: {{humanDate .Created}}</time>
+	    </div>
+	</div>
+	{{end}}
+{{end}}
