@@ -1,19 +1,21 @@
 package main
 
 import (
-	"html/template"
+    "html/template"
     "path/filepath"
     "time"
 
-	"github.com/alejandrosame/gcp-mt-utils/pkg/models"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 )
 
 // Define a templateData type to act as the holding structure for
 // any dynamic data that we want to pass to our HTML templates.
 type templateData struct {
-	CurrentYear int
-    Pair *models.Pair
-    Pairs []*models.Pair
+    CurrentYear int
+    Form        *forms.Form
+    Pair        *models.Pair
+    Pairs       []*models.Pair
 }
 
 

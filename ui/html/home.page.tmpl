@@ -13,7 +13,7 @@
         </tr>
         {{range .Pairs}}
         <tr>
-            <td><a href='/pair?id={{.ID}}'>#{{.ID}}</a></td>
+            <td><a href='/pair/{{.ID}}'>#{{.ID}}</a></td>
             <td>{{.SourceLanguage}} - {{.TargetLanguage}}</td>
             <td>{{humanDate .Created}}</td>
         </tr>

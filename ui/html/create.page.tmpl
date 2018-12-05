@@ -1,0 +1,51 @@
+{{template "base" .}}
+
+{{define "title"}}Create a New Pair{{end}}
+
+{{define "body"}}
+<form action='/pair/create' method='POST'>
+    {{with .Form}}
+        <div>
+            <label>Source:</label>
+            {{with .Errors.Get "sourceLanguage"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            {{$code := or (.Get "sourceLanguage") "EN"}}
+            <input type='radio' name='sourceLanguage' value='EN' {{if (eq $code "EN")}}checked{{end}}> English
+            <input type='radio' name='sourceLanguage' value='ES' {{if (eq $code "ES")}}checked{{end}}> Spanish
+            <input type='radio' name='sourceLanguage' value='FR' {{if (eq $code "FR")}}checked{{end}}> French
+            <input type='radio' name='sourceLanguage' value='PT' {{if (eq $code "PT")}}checked{{end}}> Portuguese
+            <input type='radio' name='sourceLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}}> Swahili
+        </div>
+        <div>
+            <label>Source text:</label>
+            {{with .Errors.Get "sourceText"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <textarea name='sourceText'>{{.Get "sourceText"}}</textarea>
+        </div>
+        <div>
+            <label>Target:</label>
+            {{with .Errors.Get "targetLanguage"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            {{$code := or (.Get "targetLanguage") "ES"}}
+            <input type='radio' name='targetLanguage' value='EN' {{if (eq $code "EN")}}checked{{end}}> English
+            <input type='radio' name='targetLanguage' value='ES' {{if (eq $code "ES")}}checked{{end}}> Spanish
+            <input type='radio' name='targetLanguage' value='FR' {{if (eq $code "FR")}}checked{{end}}> French
+            <input type='radio' name='targetLanguage' value='PT' {{if (eq $code "PT")}}checked{{end}}> Portuguese
+            <input type='radio' name='targetLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}}> Swahili
+        </div>
+        <div>
+            <label>Target text:</label>
+            {{with .Errors.Get "targetText"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <textarea name='targetText'>{{.Get "targetText"}}</textarea>
+        </div>
+        <div>
+            <input type='submit' value='Create pair'>
+        </div>
+    {{end}}
+</form>
+{{end}}
