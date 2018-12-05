@@ -1,8 +1,15 @@
 package main
 
-import "net/http"
+import (
+    "net/http"
 
-func (app *application) routes() *http.ServeMux {
+    "github.com/justinas/alice"
+)
+
+func (app *application) routes() http.Handler {
+    // Create the standar middleware to be used in our app
+    standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
     mux := http.NewServeMux()
     mux.HandleFunc("/", app.home)
     mux.HandleFunc("/pair", app.showPair)
@@ -12,5 +19,5 @@ func (app *application) routes() *http.ServeMux {
     fileServer := http.FileServer(http.Dir("./ui/static/"))
     mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-    return mux
+    return standardMiddleware.Then(mux)
 }
