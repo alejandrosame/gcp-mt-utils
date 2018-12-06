@@ -47,7 +47,9 @@ func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    app.render(w, r, "show.page.tmpl", &templateData{Pair: p})
+    app.render(w, r, "show.page.tmpl", &templateData{
+        Pair:  p,
+    })
 }
 
 
@@ -90,6 +92,9 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
         app.serverError(w, err)
         return
     }
+
+    // Add feedback for the user as session information
+    app.session.Put(r, "flash", "Pair successfully created!")
 
     http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
 }

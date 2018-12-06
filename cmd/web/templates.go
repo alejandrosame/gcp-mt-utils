@@ -13,6 +13,7 @@ import (
 // any dynamic data that we want to pass to our HTML templates.
 type templateData struct {
     CurrentYear int
+    Flash       string
     Form        *forms.Form
     Pair        *models.Pair
     Pairs       []*models.Pair

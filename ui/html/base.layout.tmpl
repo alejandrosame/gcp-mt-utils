@@ -19,6 +19,9 @@
             <a href='/pair/create'>Create pair</a>
         </nav>
         <section>
+            {{with .Flash}}
+            <div class='flash '>{{.}}</div>
+            {{end}}
             {{template "body" .}}
         </section>
         {{template "footer" .}}

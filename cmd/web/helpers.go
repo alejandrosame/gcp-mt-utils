@@ -31,6 +31,8 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
         td = &templateData{}
     }
     td.CurrentYear = time.Now().Year()
+    // Recover feedback message for the user
+    td.Flash = app.session.PopString(r, "flash")
     return td
 }
 

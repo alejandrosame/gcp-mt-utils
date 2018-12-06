@@ -7,16 +7,19 @@ import (
     "log"
     "net/http"
     "os"
+    "time"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/models/mysql"
 
     _ "github.com/go-sql-driver/mysql"
+    "github.com/golangcollege/sessions"
 )
 
 type application struct {
-    errorLog *log.Logger
-    infoLog  *log.Logger
-    pairs *mysql.PairModel
+    errorLog      *log.Logger
+    infoLog       *log.Logger
+    pairs         *mysql.PairModel
+    session       *sessions.Session
     templateCache map[string]*template.Template
 }
 
@@ -24,6 +27,7 @@ func main() {
 
     addr := flag.String("addr", ":4000", "HTTP network address")
     dsn := flag.String("dsn", "web:123456@/gcp_mt_pairs?parseTime=true", "MySQL data source name")
+    secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
     flag.Parse()
 
     infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -41,11 +45,18 @@ func main() {
         errorLog.Fatal(err)
     }
 
+    // Sessions always expires after 10 minutes
+    session := sessions.New([]byte(*secret))
+    session.Lifetime = 10 * time.Minute
+    session.Secure = false // TODO: Make it true when TLS is available
+    session.SameSite = http.SameSiteStrictMode
+
     // Add objects to app struct
     app := &application{
-        errorLog: errorLog,
-        infoLog:  infoLog,
-        pairs: &mysql.PairModel{DB: db},
+        errorLog:      errorLog,
+        infoLog:       infoLog,
+        pairs:         &mysql.PairModel{DB: db},
+        session:       session,
         templateCache: templateCache,
     }
 
