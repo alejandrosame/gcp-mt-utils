@@ -11,13 +11,19 @@ var (
     ErrDuplicateEmail = errors.New("models: duplicate email")
 )
 
-type Pair struct {
-    ID      		int
+// Models for input/output files
+type FilePair struct {
     SourceLanguage  string
     TargetLanguage  string
-    SourceText   	string
-    TargetText   	string
-    Created 		time.Time
+    SourceText      string
+    TargetText      string
+}
+
+// Models for DB objects
+type Pair struct {
+    ID              int
+    FilePair
+    Created         time.Time
 }
 
 type User struct {
