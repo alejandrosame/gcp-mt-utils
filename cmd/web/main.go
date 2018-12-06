@@ -22,6 +22,7 @@ type application struct {
     pairs         *mysql.PairModel
     session       *sessions.Session
     templateCache map[string]*template.Template
+    users         *mysql.UserModel
 }
 
 func main() {
@@ -59,6 +60,7 @@ func main() {
         pairs:         &mysql.PairModel{DB: db},
         session:       session,
         templateCache: templateCache,
+        users:         &mysql.UserModel{DB: db},
     }
 
     tlsConfig := &tls.Config{
