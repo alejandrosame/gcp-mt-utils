@@ -5,6 +5,7 @@ import (
     "net/http"
     "strconv"
 
+    "github.com/alejandrosame/gcp-mt-utils/pkg/files"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 )
@@ -171,4 +172,54 @@ func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
     // Add a flash message to the session to confirm to the user that they've been logged out.
     app.session.Put(r, "flash", "You've been logged out successfully!")
     http.Redirect(w, r, "/", 303)
+}
+
+
+func (app *application) uploadPairsForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "upload.page.tmpl", &templateData{Form: forms.New(nil)})
+}
+
+
+func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("sourceLanguage", "targetLanguage")
+    // Languages codes to check
+    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
+    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
+
+    sourceLanguage := form.Get("sourceLanguage")
+    targetLanguage := form.Get("targetLanguage")
+    tmp_file := form.ProcessFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "upload.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    tpfile := files.ReadPairsFromTsv(tmp_file, sourceLanguage, targetLanguage)
+
+    if !tpfile.Valid() {
+        form.Errors.Add("fileName", "Error parsing file")
+        app.render(w, r, "upload.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    count, err := app.pairs.BulkInsert(tpfile.Pairs)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    // Add feedback for the user as session information
+    app.session.Put(r, "flash", fmt.Sprintf("%d Pairs successfully uploaded!", count))
+
+    http.Redirect(w, r, "/", http.StatusSeeOther)
 }

@@ -19,6 +19,8 @@ func (app *application) routes() http.Handler {
     mux.Get("/pair/create", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createPairForm))
     mux.Post("/pair/create", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createPair))
     mux.Get("/pair/:id", dynamicMiddleware.ThenFunc(app.showPair))
+    mux.Get("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairsForm))
+    mux.Post("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairs))
 
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))

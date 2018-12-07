@@ -12,9 +12,13 @@ import (
 type TranslationPairFile struct {
     Path            string
     Errors          errors
-    Pairs           []*models.FilePair
+    Pairs           []models.FilePair
 }
 
+
+func (tpf *TranslationPairFile) Valid() bool {
+    return len(tpf.Errors) == 0
+}
 
 func ReadPairsFromTsv(path string, sourceLanguage string, targetLanguage string) *TranslationPairFile {
     file, err := os.Open(path)
@@ -23,13 +27,13 @@ func ReadPairsFromTsv(path string, sourceLanguage string, targetLanguage string)
     }
     defer file.Close()
 
-    filePairs := []*models.FilePair{}
+    filePairs := []models.FilePair{}
 
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
         pairs := strings.Split(scanner.Text(), "\t")
 
-        filePairs = append(filePairs, &models.FilePair{sourceLanguage, targetLanguage, pairs[0], pairs[1]})
+        filePairs = append(filePairs, models.FilePair{sourceLanguage, targetLanguage, pairs[0], pairs[1]})
     }
 
     if err := scanner.Err(); err != nil {

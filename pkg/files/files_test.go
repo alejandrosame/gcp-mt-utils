@@ -9,7 +9,7 @@ import (
 )
 
 
-func TestCoolServerStuff(t *testing.T) {
+func TestReadPairsFromTsv(t *testing.T) {
 
     expectedPairs := []*models.FilePair{
         &models.FilePair{"EN", "ES", "a", "b"},
