@@ -23,17 +23,24 @@ var contextKeyUser = contextKey("user")
 type application struct {
     errorLog      *log.Logger
     infoLog       *log.Logger
+    maxUploadSize *int64
     pairs         *mysql.PairModel
     session       *sessions.Session
     templateCache map[string]*template.Template
+    uploadPath    *string
     users         *mysql.UserModel
 }
 
 func main() {
 
+    // Non string default values
+    var defaultMaxUploadSize int64 = 2 * 1024 // 2 MB
+
     addr := flag.String("addr", ":4000", "HTTP network address")
     dsn := flag.String("dsn", "web:123456@/gcp_mt_pairs?parseTime=true", "MySQL data source name")
     secret := flag.String("secret", "s6Ndh+pPbnzHbS*+9Pk8qGWhTzbpa@ge", "Secret key")
+    maxUploadSize := flag.Int64("max-upload-size", defaultMaxUploadSize, "File max upload size (MB)")
+    uploadPath := flag.String("upload-path", "./tmp", "Upload file tmp folder")
     flag.Parse()
 
     infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
@@ -61,9 +68,11 @@ func main() {
     app := &application{
         errorLog:      errorLog,
         infoLog:       infoLog,
+        maxUploadSize: maxUploadSize,
         pairs:         &mysql.PairModel{DB: db},
         session:       session,
         templateCache: templateCache,
+        uploadPath:    uploadPath,
         users:         &mysql.UserModel{DB: db},
     }
 
