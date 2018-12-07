@@ -1,6 +1,7 @@
 module github.com/alejandrosame/gcp-mt-utils
 
 require (
+	baliance.com/gooxml v1.0.1
 	github.com/360EntSecGroup-Skylar/excelize v1.4.0
 	github.com/bmizerany/pat v0.0.0-20170815010413-6226ea591a40
 	github.com/go-sql-driver/mysql v1.4.1

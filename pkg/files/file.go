@@ -8,6 +8,8 @@ import (
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 
+    "baliance.com/gooxml/document"
+    "baliance.com/gooxml/measurement"
     "github.com/360EntSecGroup-Skylar/excelize"
 )
 
@@ -80,4 +82,34 @@ func ReadPairsFromXlsx(path string, sourceLanguage string, targetLanguage string
         errors,
         filePairs,
     }
+}
+
+
+func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText string){
+    doc := document.New()
+
+    para := doc.AddParagraph()
+    run := para.AddRun()
+
+    para = doc.AddParagraph()
+    para.SetStyle("Heading1")
+    run = para.AddRun()
+    run.AddText(sourceLanguage)
+
+    para = doc.AddParagraph()
+    para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+    run = para.AddRun()
+    run.AddText(sourceText)
+
+    para = doc.AddParagraph()
+    para.SetStyle("Heading1")
+    run = para.AddRun()
+    run.AddText(targetLanguage)
+
+    para = doc.AddParagraph()
+    para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+    run = para.AddRun()
+    run.AddText(targetText)
+
+    doc.SaveToFile(tmp_file)
 }

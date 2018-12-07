@@ -45,6 +45,22 @@ func (f *Form) Required(fields ...string) {
 }
 
 
+func (f *Form) OneRequired(fields ...string) {
+    found := false
+    for _, field := range fields {
+        value := f.Get(field)
+        if strings.TrimSpace(value) != "" {
+            found = true
+        }
+    }
+    if !found {
+        for _, field := range fields {
+            f.Errors.Add(field, "No action provided")
+        }
+    }
+}
+
+
 func (f *Form) MaxLength(field string, d int) {
     value := f.Get(field)
     if value == "" {
