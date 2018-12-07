@@ -195,7 +195,7 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
 
     sourceLanguage := form.Get("sourceLanguage")
     targetLanguage := form.Get("targetLanguage")
-    tmp_file := form.ProcessFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
+    tmp_file, fileType := form.ProcessFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -204,10 +204,17 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    tpfile := files.ReadPairsFromTsv(tmp_file, sourceLanguage, targetLanguage)
+    var tpfile *files.TranslationPairFile = nil
+
+    if fileType == "TSV" {
+        tpfile = files.ReadPairsFromTsv(tmp_file, sourceLanguage, targetLanguage)
+    }
+    if fileType == "XLSX" {
+        tpfile = files.ReadPairsFromXlsx(tmp_file, sourceLanguage, targetLanguage)
+    }
 
     if !tpfile.Valid() {
-        form.Errors.Add("fileName", "Error parsing file")
+        form.Errors["fileName"] = tpfile.Errors["fileName"]
         app.render(w, r, "upload.page.tmpl", &templateData{Form: form})
         return
     }
