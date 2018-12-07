@@ -98,41 +98,49 @@ func (f *Form) Valid() bool {
 
 
 func (f *Form) ProcessFileUpload(w http.ResponseWriter, r *http.Request, maxUploadSize int64, uploadPath string,
-                                 infoLog *log.Logger, errorLog *log.Logger) string {
+                                 infoLog *log.Logger, errorLog *log.Logger) (string, string) {
 
     r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
     if err := r.ParseMultipartForm(maxUploadSize); err != nil {
         f.Errors.Add("fileName", fmt.Sprint("This file is too big (max %d MB)", maxUploadSize))
-        return ""
+        return "", ""
     }
 
     fileType := r.PostFormValue("type")
     file, _, err := r.FormFile("fileName")
     if err != nil {
         f.Errors.Add("fileName", "Please, select a file to upload")
-        return ""
+        return "", ""
     }
     defer file.Close()
 
     fileBytes, err := ioutil.ReadAll(file)
     if err != nil {
         f.Errors.Add("fileName", "This file is invalid")
-        return ""
+        return "", ""
     }
 
     filetype := http.DetectContentType(fileBytes)
-    if filetype != "text/plain; charset=utf-8" {
+    if filetype != "application/zip" &&
+       filetype != "text/plain; charset=utf-8" {
         errorLog.Printf("INVALID_FILE_TYPE: %s", filetype)
         f.Errors.Add("fileName", "File type not supported (supported types are TSV and XLSX)")
-        return ""
+        return "", ""
     }
 
     fileName := randToken(12)
     fileEndings, err := mime.ExtensionsByType(fileType)
     if err != nil {
-        infoLog.Printf("CANT_READ_FILE_TYPE. Assuming TSV file type")
-        fileType = "TSV"
-        fileEndings = append(fileEndings, ".tsv")
+        if filetype == "text/plain; charset=utf-8" {
+            infoLog.Printf("CANT_READ_FILE_TYPE. Assuming TSV file type")
+            fileType = "TSV"
+            fileEndings = append(fileEndings, ".tsv")
+        }
+        if filetype == "application/zip" {
+            infoLog.Printf("CANT_READ_FILE_TYPE. Assuming XLSX file type")
+            fileType = "XLSX"
+            fileEndings = append(fileEndings, ".xlsx")
+        }
     }
 
     newPath := filepath.Join(uploadPath, fileName+fileEndings[0])
@@ -141,15 +149,15 @@ func (f *Form) ProcessFileUpload(w http.ResponseWriter, r *http.Request, maxUplo
     newFile, err := os.Create(newPath)
     if err != nil {
         f.Errors.Add("fileName", "Cannot create this file type in temporary folder")
-        return ""
+        return "", ""
     }
     defer newFile.Close()
     if _, err := newFile.Write(fileBytes); err != nil {
         f.Errors.Add("fileName", "Cannot write this file type in temporary folder")
-        return ""
+        return "", ""
     }
 
-    return newPath
+    return newPath, fileType
 }
 
 
