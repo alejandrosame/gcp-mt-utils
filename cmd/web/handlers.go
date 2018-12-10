@@ -4,6 +4,7 @@ import (
     "fmt"
     "net/http"
     "strconv"
+    "time"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/files"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
@@ -229,4 +230,84 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "flash", fmt.Sprintf("%d Pairs successfully uploaded!", count))
 
     http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+
+func (app *application) translateForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
+}
+
+
+func (app *application) translateOrExport(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("translate", "export")
+
+    if !form.Valid() {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    if form.Get("translate") != "" {
+        app.translate(w, r)
+    } else {
+        app.exportTranslation(w, r)
+    }
+}
+
+
+func (app *application) translate(w http.ResponseWriter, r *http.Request) {
+    // TODO: Add logic here
+    form := forms.New(r.PostForm)
+    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("sourceText", maxChar)
+    form.MaxLength("targetText", maxChar)
+    // Languages codes to check
+    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
+    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    sourceLanguage := form.Get("sourceLanguage")
+    targetLanguage := form.Get("targetLanguage")
+    sourceText := form.Get("sourceText")
+    targetText := form.Get("targetText")
+
+    tmp_file := "./tmp/translation.docx"
+    files.WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText)
+
+    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
+
+    // Add download file for user
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
+    w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    http.ServeFile(w, r, tmp_file)
+
+    // Add feedback for the user as session information
+    app.session.Put(r, "flash", "Translation successfully exported!")
+    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
 }
