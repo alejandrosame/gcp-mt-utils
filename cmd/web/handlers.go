@@ -6,6 +6,10 @@ import (
     "strconv"
     "time"
 
+    "os"
+    "bufio"
+
+    "github.com/alejandrosame/gcp-mt-utils/pkg/automl"
     "github.com/alejandrosame/gcp-mt-utils/pkg/files"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
@@ -262,8 +266,54 @@ func (app *application) translateOrExport(w http.ResponseWriter, r *http.Request
 
 
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
-    // TODO: Add logic here
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
     form := forms.New(r.PostForm)
+    form.Required("sourceLanguage", "targetLanguage", "sourceText")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("sourceText", maxChar)
+    // Languages codes to check
+    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
+    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    //sourceLanguage := form.Get("sourceLanguage")
+    //targetLanguage := form.Get("targetLanguage")
+    sourceText := form.Get("sourceText")
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    modelName := scanner.Text()
+
+    targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    form.Set("targetText", targetText)
+
+    // Add feedback for the user as session information
+    app.session.Put(r, "flash", fmt.Sprintf("Translation completed successfully!"))
+
     app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
 }
 
