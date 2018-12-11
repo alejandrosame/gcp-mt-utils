@@ -70,6 +70,24 @@ type TrainOperationReport struct {
     Cancelled   []*TrainOperation
 }
 
+type TranslationDatasetMetadata struct {
+    SourceLanguageCode string `json:"sourceLanguageCode"`
+    TargetLanguageCode string `json:"targetLanguageCode"`
+}
+
+type Dataset struct {
+   Name                         string `json:"name"`
+   DisplayName                  string `json:"displayName"`
+   CreateTime                   time.Time `json:"createTime"`
+   ExampleCount                 int `json:"exampleCount"`
+   UpdateTime                   time.Time `json:"updateTime"`
+   TranslationDatasetMetadata   TranslationDatasetMetadata `json:"translationDatasetMetadata"`
+}
+
+type ListDatasetAPIResponse struct {
+    DatasetList     []*Dataset `json:"datasets"`
+    NextPageToken   string `json:"nextPageToken"`
+}
 
 // Request functions
 func GetClient() (*http.Client, error) {
@@ -317,4 +335,43 @@ func ListTrainOperationsRequest(infoLog, errorLog *log.Logger, projectId string)
     infoLog.Printf("%#v", report)
 
     return report, nil
+}
+
+
+func ListDatasetsRequest(infoLog, errorLog *log.Logger, projectId string) ([]*Dataset, error) {
+    var defaultValue []*Dataset
+
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/projects/%s/locations/us-central1/datasets", projectNumber)
+
+    client, err := GetClient()
+    if err != nil {
+        return defaultValue, err
+    }
+    req, err := http.NewRequest("GET", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return defaultValue, err
+    }
+    defer response.Body.Close()
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    t := new(ListDatasetAPIResponse)
+    err = json.Unmarshal(body, &t)
+    if(err != nil){
+        return defaultValue, err
+    }
+
+    infoLog.Printf("%#v", t.DatasetList)
+
+    return t.DatasetList, nil
 }
