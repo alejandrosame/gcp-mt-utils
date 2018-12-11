@@ -22,6 +22,7 @@ type templateData struct {
     Pairs             []*models.Pair
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
+    Datasets          []*automl.Dataset
 }
 
 

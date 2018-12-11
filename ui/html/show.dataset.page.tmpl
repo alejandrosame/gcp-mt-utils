@@ -1,0 +1,29 @@
+{{template "base" .}}
+
+{{define "title"}}Datasets{{end}}
+
+{{define "body"}}
+    <h2>Dataset created</h2>
+    {{if .Datasets}}
+     <table>
+        <tr>
+            <th>Display Name</th>
+            <th>Pairs count</th>
+            <th>Source Language</th>
+            <th>Target Language</th>
+            <th>Create Time</th>
+        </tr>
+        {{range .Datasets}}
+        <tr>
+            <td>{{.DisplayName}}</td>
+            <td>{{.ExampleCount}}</td>
+            <td>{{.TranslationDatasetMetadata.SourceLanguageCode}}</td>
+            <td>{{.TranslationDatasetMetadata.TargetLanguageCode}}</td>
+            <td>{{humanDate .CreateTime}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>No datasets created yet!</p>
+    {{end}}
+{{end}}
