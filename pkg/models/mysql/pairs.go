@@ -113,23 +113,20 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
 }
 
 
-func (m *PairModel) GetToValidate(sourceLanguage, targetLanguage string) (*models.Pair, error) {
+func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (int, error) {
 
-    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    WHERE source_language = ? AND target_language = ? AND NOT validated`
+    stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated`
 
     p := &models.Pair{}
 
-    err := m.DB.QueryRow(stmt, sourceLanguage, 
-                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
-                                             &p.Created)
+    err := m.DB.QueryRow(stmt, sourceLanguage, targetLanguage).Scan(&p.ID,)
     if err == sql.ErrNoRows {
-        return nil, models.ErrNoRecord
+        return 0, models.ErrNoRecord
     } else if err != nil {
-        return nil, err
+        return 0, err
     }
 
-    return p, nil
+    return p.ID, nil
 }
 
 

@@ -3,7 +3,7 @@
 {{define "title"}}Validate Pair{{end}}
 
 {{define "body"}}
-<form action='/pair/validate/{{.Form.Get "id" | decodeInteger}}' method='POST'>
+<form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
         <div>
@@ -45,9 +45,8 @@
             <textarea name='targetText'>{{.Get "targetText"}}</textarea>
         </div>
         <div>
-            <input type='submit' name="no-save-no-validate" value='Do not validate pair (save changes)'>
+            <input type='submit' name="no-save-no-validate" value='Do not validate pair'>
             <input type='submit' name="validate" value='Validate pair'>
-            <input type='submit' name="save-no-validate" value='Save changes and do not validate pair'>
         </div>
     {{end}}
 </form>

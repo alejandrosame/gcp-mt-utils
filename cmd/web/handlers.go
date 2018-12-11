@@ -462,7 +462,7 @@ func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *ht
     sourceLanguage := form.Get("sourceLanguage")
     targetLanguage := form.Get("targetLanguage")
 
-    p, err := app.pairs.GetToValidate(sourceLanguage, targetLanguage)
+    newId, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
     if err == models.ErrNoRecord {
         app.notFound(w)
         return
@@ -471,11 +471,7 @@ func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *ht
         return
     }
 
-    form.Add("id", string(p.ID))
-    form.Add("sourceText", p.SourceText)
-    form.Add("targetText", p.TargetText)
-
-    app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
+    http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
 }
 
 
@@ -496,7 +492,7 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
     }
 
     form := forms.New(url.Values{})
-    form.Add("id", string(p.ID))
+    form.Add("id", fmt.Sprintf("%d", p.ID))
     form.Add("sourceText", p.SourceText)
     form.Add("targetText", p.TargetText)
 
@@ -507,7 +503,6 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
 func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
-
         app.notFound(w)
         return
     }
@@ -546,15 +541,11 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
         return
     }
     // Do nothing if no-save-no-validate
-
     sourceLanguage := form.Get("sourceLanguage")
     targetLanguage := form.Get("targetLanguage")
-    //sourceText := form.Get("sourceText")
-    //targetText := form.Get("targetText")
-
 
     // Get another pair to validate from the same scope
-    newId, err := app.pairs.GetToValidate(sourceLanguage, targetLanguage)
+    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
     if err == models.ErrNoRecord {
         app.notFound(w)
         return
@@ -563,5 +554,8 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
+    if form.Get("validate") != ""{
+        app.session.Put(r, "flash", "Pair successfully validated!")
+    }
+    http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newPair), http.StatusSeeOther)
 }
