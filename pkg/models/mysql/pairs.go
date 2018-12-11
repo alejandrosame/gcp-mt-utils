@@ -111,3 +111,95 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
 
     return pairs, nil
 }
+
+
+func (m *PairModel) GetToValidate(sourceLanguage, targetLanguage string) (*models.Pair, error) {
+
+    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE source_language = ? AND target_language = ? AND NOT validated`
+
+    p := &models.Pair{}
+
+    err := m.DB.QueryRow(stmt, sourceLanguage, 
+                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                             &p.Created)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return p, nil
+}
+
+
+func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
+
+    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE id = ?`
+
+    p := &models.Pair{}
+
+    err := m.DB.QueryRow(stmt, id).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                        &p.Created)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    sourceLanguage := p.SourceLanguage
+    targetLanguage := p.TargetLanguage
+
+    stmt = `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE source_language = ? AND target_language = ? AND NOT validated`
+
+    p = &models.Pair{}
+
+    err = m.DB.QueryRow(stmt, sourceLanguage, 
+                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                             &p.Created)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return p, nil
+}
+
+
+func (m *PairModel) Validate(id int) error {
+    
+    sqlStr := `UPDATE pairs SET validated = true WHERE id = ?`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    _, err = stmt.Exec(id)
+    if err != nil {
+        return err
+    }
+    
+    return err
+}
+
+
+func (m *PairModel) Update(id int) error {
+    /*
+    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE source_language = ? AND target_language = ?`
+
+    p := &models.Pair{}
+
+    err := m.DB.QueryRow(stmt, sourceLanguage, 
+                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                             &p.Created)
+    if err != nil {
+        return err
+    }
+    */
+    return nil
+}

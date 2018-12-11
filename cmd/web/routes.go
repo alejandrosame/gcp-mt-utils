@@ -18,6 +18,10 @@ func (app *application) routes() http.Handler {
     mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
     mux.Get("/pair/create", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createPairForm))
     mux.Post("/pair/create", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.createPair))
+    mux.Get("/pair/validate/:id", dynamicMiddleware.ThenFunc(app.validatePairForm))
+    mux.Post("/pair/validate/:id", dynamicMiddleware.ThenFunc(app.validatePair))
+    mux.Get("/pair/validate", dynamicMiddleware.ThenFunc(app.chooseLanguagesValidatePairForm))
+    mux.Post("/pair/validate", dynamicMiddleware.ThenFunc(app.chooseLanguagesValidatePair))
     mux.Get("/pair/:id", dynamicMiddleware.ThenFunc(app.showPair))
     mux.Get("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairsForm))
     mux.Post("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairs))
@@ -26,7 +30,7 @@ func (app *application) routes() http.Handler {
     mux.Get("/model", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showModels))
     mux.Get("/dataset", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showDatasets))
     mux.Get("/train/status", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showTrainingStatus))
-
+    
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
     mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))

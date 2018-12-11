@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "net/http"
+    "net/url"
     "strconv"
     "time"
 
@@ -430,4 +431,137 @@ func (app *application) showDatasets(w http.ResponseWriter, r *http.Request) {
     }
 
     app.render(w, r, "show.dataset.page.tmpl", &templateData{Datasets: d})
+}
+
+
+func (app *application) chooseLanguagesValidatePairForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "choose.validate.pair.page.tmpl", &templateData{Form: forms.New(nil)})
+}
+
+
+func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("sourceLanguage", "targetLanguage")
+    // Languages codes to check
+    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
+    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "choose.validate.pair.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    sourceLanguage := form.Get("sourceLanguage")
+    targetLanguage := form.Get("targetLanguage")
+
+    p, err := app.pairs.GetToValidate(sourceLanguage, targetLanguage)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    form.Add("id", string(p.ID))
+    form.Add("sourceText", p.SourceText)
+    form.Add("targetText", p.TargetText)
+
+    app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    p, err := app.pairs.GetToValidateFromID(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    form := forms.New(url.Values{})
+    form.Add("id", string(p.ID))
+    form.Add("sourceText", p.SourceText)
+    form.Add("targetText", p.TargetText)
+
+    app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+
+        app.notFound(w)
+        return
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("no-save-no-validate", "save-no-validate", "validate")
+    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("sourceText", maxChar)
+    form.MaxLength("targetText", maxChar)
+    // Languages codes to check
+    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
+    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    if form.Get("no-save-no-validate") != "" {
+        err = app.pairs.Update(id)
+    } else if form.Get("validate") != ""{
+        err = app.pairs.Validate(id)
+    }
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    // Do nothing if no-save-no-validate
+
+    sourceLanguage := form.Get("sourceLanguage")
+    targetLanguage := form.Get("targetLanguage")
+    //sourceText := form.Get("sourceText")
+    //targetText := form.Get("targetText")
+
+
+    // Get another pair to validate from the same scope
+    newId, err := app.pairs.GetToValidate(sourceLanguage, targetLanguage)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
 }
