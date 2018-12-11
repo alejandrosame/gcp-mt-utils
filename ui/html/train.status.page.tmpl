@@ -1,0 +1,101 @@
+{{template "base" .}}
+
+{{define "title"}}Training operations status{{end}}
+
+{{define "body"}}
+    <h2>Training report</h2>
+    {{if and .TrainReport.Running .TrainReport.Error .TrainReport.Cancelled}}
+        <p>Nothing to report yet!</p>
+    {{end}}
+
+    {{with .TrainReport}}
+        <h3>Running training operations</h3>
+        {{if .Running}}
+            <table>
+                <tr>
+                    <th>Operation ID</th>
+                    <th>Create Time</th>
+                    <th>Update Time</th>
+                </tr>
+                {{range .Running}}
+                <tr>
+                    <td>{{.Id}}</td>
+                    <td>{{humanDate .CreateTime}}</td>
+                    <td>{{humanDate .UpdateTime}}</td>
+                </tr>
+                {{end}}
+            </table>
+        {{end}}
+
+        <h3>Cancelled training operations</h3>
+        {{if .Cancelled}}
+            <table>
+                <tr>
+                    <th>Operation ID</th>
+                    <th>Create Time</th>
+                    <th>Update Time</th>
+                </tr>
+                {{range .Cancelled}}
+                <tr>
+                    <td>{{.Id}}</td>
+                    <td>{{humanDate .CreateTime}}</td>
+                    <td>{{humanDate .UpdateTime}}</td>
+                </tr>
+                {{end}}
+            </table>
+        {{end}}
+
+        <h3>Failed training operations</h3>
+        {{if .Error}}
+            <table>
+                <tr>
+                    <th>Operation ID</th>
+                    <th>Progess</th>
+                    <th>Error Code</th>
+                    <th>Create Time</th>
+                    <th>Update Time</th>
+                </tr>
+                {{range .Cancelled}}
+                <tr>
+                    <td>{{.Id}}</td>
+                    <td>{{.ProgressPercent}} %</td>
+                    <td>{{.ErrorCode}}</td>
+                    <td>{{humanDate .CreateTime}}</td>
+                    <td>{{humanDate .UpdateTime}}</td>
+                </tr>
+                {{end}}
+            </table>
+        {{end}}
+    {{end}}
+
+
+    <h2>Models created</h2>
+    {{if .Models}}
+     <table>
+        <tr>
+            <th>Display Name</th>
+            <th>Dataset ID</th>
+            <th>Deployment State</th>
+            <th>Base Model</th>
+            <th>Source Language</th>
+            <th>Target Language</th>
+            <th>Create Time</th>
+            <th>Update Time</th>
+        </tr>
+        {{range .Models}}
+        <tr>
+            <td>{{.DisplayName}}</td>
+            <td>{{.DatasetId}}</td>
+            <td>{{.DeploymentState}}</td>
+            <td>{{.TranslationModelMetadata.BaseModel}}</td>
+            <td>{{.TranslationModelMetadata.SourceLanguageCode}}</td>
+            <td>{{.TranslationModelMetadata.TargetLanguageCode}}</td>
+            <td>{{humanDate .CreateTime}}</td>
+            <td>{{humanDate .UpdateTime}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>No models created yet!</p>
+    {{end}}
+{{end}}

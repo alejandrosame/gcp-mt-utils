@@ -8,8 +8,10 @@ import (
     "log"
     "net/http"
     "net/http/httputil"
+    "strings"
     "time"
 
+    "github.com/tidwall/gjson"
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
 )
@@ -54,6 +56,21 @@ type ListModelAPIResponse struct {
 }
 
 
+type TrainOperation struct {
+    Id              string
+    CreateTime      time.Time
+    UpdateTime      time.Time
+    ProgressPercent int
+    ErrorCode       int
+}
+
+type TrainOperationReport struct {
+    Running     []*TrainOperation
+    Error       []*TrainOperation
+    Cancelled   []*TrainOperation
+}
+
+
 // Request functions
 func GetClient() (*http.Client, error) {
 
@@ -84,26 +101,11 @@ func ProjectNumberRequest(infoLog, errorLog *log.Logger, projectId string) (stri
 
     req, err := http.NewRequest("GET", url, nil)
 
-    // Debug request
-    dump, err := httputil.DumpRequestOut(req, true)
-    if err != nil {
-        return defaultValue, err
-    }
-
-    infoLog.Printf("%s", dump)
-
     response, err := client.Do(req)
     if err != nil {
         return defaultValue, err
     }
     defer response.Body.Close()
-
-    // Debug response
-    dump, err = httputil.DumpResponse(response, true)
-    if err != nil {
-        return defaultValue, err
-    }
-    infoLog.Printf("%s", dump)
 
     body, err := ioutil.ReadAll(response.Body)
     if err != nil {
@@ -230,4 +232,89 @@ func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText strin
     }
 
     return t.PayloadList[0].Translation.TranslatedContent.Content, nil
+}
+
+
+func ListTrainOperationsRequest(infoLog, errorLog *log.Logger, projectId string) (*TrainOperationReport, error) {
+    var defaultValue *TrainOperationReport
+
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    name := fmt.Sprintf("projects/%s/locations/us-central1", projectNumber)
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s/operations", name)
+
+    client, err := GetClient()
+    if err != nil {
+        return defaultValue, err
+    }
+
+    req, err := http.NewRequest("GET", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return defaultValue, err
+    }
+    defer response.Body.Close()
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    report := &TrainOperationReport{
+        Running: []*TrainOperation{},
+        Error: []*TrainOperation{},
+        Cancelled: []*TrainOperation{},
+    }
+
+    operations := gjson.GetBytes(body, "operations")
+    operations.ForEach(func(key, operation gjson.Result) bool {
+        // If it's a train model operation
+        if operation.Get("metadata.createModelDetails").Exists(){
+            operationSplit := strings.Split(operation.Get("name").String(), "/")
+            operationId := operationSplit[len(operationSplit)-1]
+
+            createTime := operation.Get("createTime").Time()
+            updateTime := operation.Get("updateTime").Time()
+
+            progressPercent := 0
+            errorCode := 0
+
+            op := TrainOperation{
+                Id:                 operationId,
+                CreateTime:         createTime,
+                UpdateTime:         updateTime,
+                ProgressPercent:    progressPercent,
+                ErrorCode:          errorCode,
+            }
+
+            if operation.Get("done").Exists() {
+                e := operation.Get("error.code")
+                if e.Exists(){
+                    e.Int()
+                    progressPercent = int(operation.Get("progressPercent").Int())
+
+                    // User cancelled
+                    if errorCode == 1{
+                        report.Error = append(report.Error, &op)
+                    // Stopped due to error
+                    }else{
+                        report.Cancelled = append(report.Cancelled, &op)
+                    }
+                }
+            // Running operations
+            }else{
+                report.Running = append(report.Running, &op)
+            }
+        }
+
+        return true // keep iterating
+    })
+
+    infoLog.Printf("%#v", report)
+
+    return report, nil
 }

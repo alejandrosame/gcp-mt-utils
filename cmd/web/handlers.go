@@ -384,3 +384,26 @@ func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
 
     app.render(w, r, "show.model.page.tmpl", &templateData{Models: m})
 }
+
+func (app *application) showTrainingStatus(w http.ResponseWriter, r *http.Request) {
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    trainReport, err := automl.ListTrainOperationsRequest(app.infoLog, app.errorLog, projectId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "train.status.page.tmpl", &templateData{TrainReport: trainReport})
+}
