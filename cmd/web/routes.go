@@ -23,6 +23,7 @@ func (app *application) routes() http.Handler {
     mux.Post("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairs))
     mux.Get("/translate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.translateForm))
     mux.Post("/translate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.translateOrExport))
+    mux.Get("/model", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showModels))
 
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))

@@ -361,3 +361,26 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
     app.session.Put(r, "flash", "Translation successfully exported!")
     app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
 }
+
+func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    m, err := automl.ListModelsRequest(app.infoLog, app.errorLog, projectId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.model.page.tmpl", &templateData{Models: m})
+}
