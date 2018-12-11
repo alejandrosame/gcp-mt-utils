@@ -5,6 +5,7 @@ import (
     "path/filepath"
     "time"
 
+    "github.com/alejandrosame/gcp-mt-utils/pkg/automl"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 )
@@ -19,6 +20,8 @@ type templateData struct {
     Form              *forms.Form
     Pair              *models.Pair
     Pairs             []*models.Pair
+    Models            []*automl.Model
+    TrainReport       *automl.TrainOperationReport
 }
 
 
