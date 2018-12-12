@@ -31,17 +31,8 @@ func (m *PairModel) Insert(sourceLanguage, targetLanguage, sourceText, targetTex
 }
 
 
-func (m *PairModel) BulkInsert(pairs []models.FilePair) (int64, error) {
-
-    sqlStr := "INSERT INTO pairs (source_language, target_language, source_text, target_text, created) VALUES "
-    vals := []interface{}{}
-
-    for _, row := range pairs {
-        sqlStr += "(?, ?, ?, ?, UTC_TIMESTAMP()),"
-        vals = append(vals, row.SourceLanguage, row.TargetLanguage, row.SourceText, row.TargetText)
-    }
-
-    sqlStr = strings.TrimSuffix(sqlStr, ",")
+func (m *PairModel) BulkInsertHelper(inputSqlStr string, vals []interface{}) (int64, error) {
+    sqlStr := strings.TrimSuffix(inputSqlStr, ",")
 
     stmt, err := m.DB.Prepare(sqlStr)
     if err != nil {
@@ -59,6 +50,45 @@ func (m *PairModel) BulkInsert(pairs []models.FilePair) (int64, error) {
     }
 
     return count, nil
+}
+
+
+func (m *PairModel) BulkInsert(pairs []models.FilePair) (int64, error) {
+
+    startingStr := `INSERT INTO pairs (source_language, target_language, sl_text_source, tl_text_source, text_detail,
+                                  source_text, target_text, validated, created, updated) VALUES `
+    placeholder_part := "(?, ?, ?, ?, ?, ?, ?, false, UTC_TIMESTAMP(), UTC_TIMESTAMP()),"
+    total_count_inserted := int64(0)
+    number_placeholders := int64(strings.Count(placeholder_part, "?"))
+
+    sqlStr := startingStr
+    total_placeholders := int64(0)
+    vals := []interface{}{}
+
+    for _, row := range pairs {
+        sqlStr += placeholder_part
+        total_placeholders += number_placeholders
+        vals = append(vals, row.SourceLanguage, row.TargetLanguage, row.SourceVersion, row.TargetVersion,
+                      row.Detail, row.SourceText, row.TargetText)
+
+        // MySQL will fail if placeholder count is bigger than 65535, so we need to chunk the inserts
+        if total_placeholders + number_placeholders > 65535 {
+            // Make partial insert
+            count, err := m.BulkInsertHelper(sqlStr, vals)
+            if err != nil {
+                return 0, err
+            }
+
+            total_count_inserted += count
+
+            // Reset placeholder sql string, placeholder counter and val list
+            sqlStr = startingStr
+            total_placeholders = int64(0)
+            vals = []interface{}{}
+        }
+    }
+
+    return total_count_inserted, nil
 }
 
 
@@ -84,7 +114,7 @@ func (m *PairModel) Get(id int) (*models.Pair, error) {
 func (m *PairModel) Latest() ([]*models.Pair, error) {
 
     stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    ORDER BY created DESC LIMIT 10`
+    ORDER BY created DESC, id DESC LIMIT 10`
 
     rows, err := m.DB.Query(stmt)
     if err != nil {

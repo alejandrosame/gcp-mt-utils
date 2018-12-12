@@ -194,13 +194,7 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage")
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
 
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
     tmp_file, fileType := form.ProcessFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
 
     // If the form isn't valid, redisplay the template passing in the
@@ -213,10 +207,10 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     var tpfile *files.TranslationPairFile = nil
 
     if fileType == "TSV" {
-        tpfile = files.ReadPairsFromTsv(tmp_file, sourceLanguage, targetLanguage)
+        tpfile = files.ReadPairsFromTsv(tmp_file)
     }
     if fileType == "XLSX" {
-        tpfile = files.ReadPairsFromXlsx(tmp_file, sourceLanguage, targetLanguage)
+        tpfile = files.ReadPairsFromXlsx(tmp_file)
     }
 
     if !tpfile.Valid() {

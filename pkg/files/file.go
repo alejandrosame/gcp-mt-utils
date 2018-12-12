@@ -24,7 +24,7 @@ func (tpf *TranslationPairFile) Valid() bool {
     return len(tpf.Errors) == 0
 }
 
-func ReadPairsFromTsv(path string, sourceLanguage string, targetLanguage string) *TranslationPairFile {
+func ReadPairsFromTsv(path string) *TranslationPairFile {
     filePairs := []models.FilePair{}
     errors := errors(map[string][]string{})
 
@@ -38,7 +38,11 @@ func ReadPairsFromTsv(path string, sourceLanguage string, targetLanguage string)
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
         pairs := strings.Split(scanner.Text(), "\t")
-        filePairs = append(filePairs, models.FilePair{sourceLanguage, targetLanguage, pairs[0], pairs[1]})
+        filePairs = append(filePairs,
+                           models.FilePair{pairs[0], pairs[1],
+                                           pairs[2], pairs[3],
+                                           pairs[4],
+                                           pairs[5], pairs[6]})
     }
 
     if err := scanner.Err(); err != nil {
@@ -57,7 +61,7 @@ func ReadPairsFromTsv(path string, sourceLanguage string, targetLanguage string)
 }
 
 
-func ReadPairsFromXlsx(path string, sourceLanguage string, targetLanguage string) *TranslationPairFile {
+func ReadPairsFromXlsx(path string) *TranslationPairFile {
     filePairs := []models.FilePair{}
     errors := errors(map[string][]string{})
 
@@ -70,7 +74,10 @@ func ReadPairsFromXlsx(path string, sourceLanguage string, targetLanguage string
     sheet_name :=  xlsx.GetSheetMap()[1]
     rows := xlsx.GetRows(sheet_name)
     for _, row := range rows {
-        filePairs = append(filePairs, models.FilePair{sourceLanguage, targetLanguage, row[0], row[1]})
+        filePairs = append(filePairs, models.FilePair{row[0], row[1],
+                                                      row[2], row[3],
+                                                      row[4],
+                                                      row[5], row[6]})
     }
 
     if len(filePairs) == 0 {
