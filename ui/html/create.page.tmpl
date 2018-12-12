@@ -19,6 +19,13 @@
             <input type='radio' name='sourceLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}}> Swahili
         </div>
         <div>
+            <label>Source text version:</label>
+            {{with .Errors.Get "sourceVersion"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type="text" name='sourceVersion'>{{.Get "sourceVersion"}}</input>
+        </div>
+        <div>
             <label>Source text:</label>
             {{with .Errors.Get "sourceText"}}
                 <label class='error'>{{.}}</label>
@@ -38,11 +45,25 @@
             <input type='radio' name='targetLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}}> Swahili
         </div>
         <div>
+            <label>Target text version:</label>
+            {{with .Errors.Get "targetVersion"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type="text" name='targetVersion'>{{.Get "targetVersion"}}</input>
+        </div>
+        <div>
             <label>Target text:</label>
             {{with .Errors.Get "targetText"}}
                 <label class='error'>{{.}}</label>
             {{end}}
             <textarea name='targetText'>{{.Get "targetText"}}</textarea>
+        </div>
+        <div>
+            <label>Translation detail:</label>
+            {{with .Errors.Get "detail"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type="text" name='detail'>{{.Get "detail"}}</input>
         </div>
         <div>
             <input type='submit' value='Create pair'>

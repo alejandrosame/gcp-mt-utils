@@ -12,12 +12,15 @@ type PairModel struct {
     DB *sql.DB
 }
 
-func (m *PairModel) Insert(sourceLanguage, targetLanguage, sourceText, targetText string) (int, error) {
+func (m *PairModel) Insert(sourceLanguage, sourceVersion, targetLanguage, targetVersion, detail,
+                           sourceText, targetText string) (int, error) {
 
-    sqlStr := `INSERT INTO pairs (source_language, target_language, source_text, target_text, created)
-    VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
+    sqlStr := `INSERT INTO pairs (source_language, sl_text_source, target_language, tl_text_source, text_detail,
+                                  source_text, target_text, validated, created, updated)
+    VALUES(?, ?, ?, ?, ?, ?, ?, false, UTC_TIMESTAMP(), UTC_TIMESTAMP())`
 
-    result, err := m.DB.Exec(sqlStr, sourceLanguage, targetLanguage, sourceText, targetText)
+    result, err := m.DB.Exec(sqlStr, sourceLanguage, sourceVersion, targetLanguage, targetVersion, detail,
+                                     sourceText, targetText)
     if err != nil {
         return 0, err
     }

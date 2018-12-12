@@ -62,11 +62,15 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
+    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText", "sourceVersion", "targetVersion",
+                  "detail")
     // Max number of chars for text input
     maxChar := 10000
     form.MaxLength("sourceText", maxChar)
     form.MaxLength("targetText", maxChar)
+    form.MaxLength("sourceVersion", maxChar)
+    form.MaxLength("targetVersion", maxChar)
+    form.MaxLength("detail", maxChar)
     // Languages codes to check
     form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
     form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
@@ -82,8 +86,12 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     targetLanguage := form.Get("targetLanguage")
     sourceText := form.Get("sourceText")
     targetText := form.Get("targetText")
+    sourceVersion := form.Get("sourceVersion")
+    targetVersion := form.Get("targetVersion")
+    detail := form.Get("detail")
 
-    id, err := app.pairs.Insert(sourceLanguage, targetLanguage, sourceText, targetText)
+    id, err := app.pairs.Insert(sourceLanguage, sourceVersion, targetLanguage, targetVersion, detail,
+                                sourceText, targetText)
     if err != nil {
         app.serverError(w, err)
         return
