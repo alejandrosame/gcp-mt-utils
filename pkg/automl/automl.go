@@ -375,3 +375,28 @@ func ListDatasetsRequest(infoLog, errorLog *log.Logger, projectId string) ([]*Da
 
     return t.DatasetList, nil
 }
+
+
+func DeleteDatasetRequest(infoLog, errorLog *log.Logger, projectId, datasetId string) error {
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return err
+    }
+
+    datasetName := fmt.Sprintf("projects/%s/locations/us-central1/datasets/%s", projectNumber, datasetId)
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s", datasetName)
+
+    client, err := GetClient()
+    if err != nil {
+        return err
+    }
+    req, err := http.NewRequest("DELETE", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer response.Body.Close()
+
+    return nil
+}

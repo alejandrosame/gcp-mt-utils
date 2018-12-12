@@ -574,3 +574,62 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     }
     http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newPair), http.StatusSeeOther)
 }
+
+
+func (app *application) deleteDatasetForm(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    v := url.Values{}
+    v.Add("name", id)
+
+    app.render(w, r, "delete.dataset.page.tmpl", &templateData{Form: forms.New(v)})
+}
+
+
+func (app *application) deleteDataset(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("yes", "no")
+
+    if !form.Valid() {
+        app.render(w, r, "show.dataset.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    if form.Get("yes") != "" {
+        err = automl.DeleteDatasetRequest(app.infoLog, app.errorLog, projectId, id)
+    }
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if form.Get("yes") != ""{
+        app.session.Put(r, "flash", "Dataset successfully deleted!")
+    }else{
+        app.session.Put(r, "flash", "Dataset not deleted!")
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("/dataset"), http.StatusSeeOther)
+}
