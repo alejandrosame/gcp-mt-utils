@@ -118,7 +118,7 @@ func (f *Form) ProcessFileUpload(w http.ResponseWriter, r *http.Request, maxUplo
 
     r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
     if err := r.ParseMultipartForm(maxUploadSize); err != nil {
-        f.Errors.Add("fileName", fmt.Sprint("This file is too big (max %d MB)", maxUploadSize))
+        f.Errors.Add("fileName", fmt.Sprintf("This file is too big (max %d MB)", maxUploadSize))
         return "", ""
     }
 

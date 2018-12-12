@@ -23,7 +23,10 @@ type ValidationStats struct {
 // Models for input/output files
 type FilePair struct {
     SourceLanguage  string
+    SourceVersion   string
     TargetLanguage  string
+    TargetVersion   string
+    Detail          string
     SourceText      string
     TargetText      string
 }
