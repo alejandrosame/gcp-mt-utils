@@ -23,7 +23,7 @@
             {{with .Errors.Get "sourceVersion"}}
                 <label class='error'>{{.}}</label>
             {{end}}
-            <input type="text" name='sourceVersion'>{{.Get "sourceVersion"}}</input>
+            <input type="text" name='sourceVersion' value='{{.Get "sourceVersion"}}'/>
         </div>
         <div>
             <label>Source text:</label>
@@ -49,7 +49,7 @@
             {{with .Errors.Get "targetVersion"}}
                 <label class='error'>{{.}}</label>
             {{end}}
-            <input type="text" name='targetVersion'>{{.Get "targetVersion"}}</input>
+            <input type="text" name='targetVersion' value='{{.Get "targetVersion"}}'/>
         </div>
         <div>
             <label>Target text:</label>
@@ -63,7 +63,7 @@
             {{with .Errors.Get "detail"}}
                 <label class='error'>{{.}}</label>
             {{end}}
-            <input type="text" name='detail'>{{.Get "detail"}}</input>
+            <input type="text" name='detail' value='{{.Get "detail"}}'/>
         </div>
         <div>
             <input type='submit' value='Create pair'>
