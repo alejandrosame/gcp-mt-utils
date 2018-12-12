@@ -1,6 +1,7 @@
 package models
 
 import (
+    "database/sql"
     "errors"
     "time"
 )
@@ -35,7 +36,11 @@ type FilePair struct {
 type Pair struct {
     ID              int
     FilePair
+    Comments        sql.NullString
+    Validated       bool
+    GcpDataset      sql.NullString
     Created         time.Time
+    Updated         time.Time
 }
 
 type User struct {

@@ -3,19 +3,28 @@
 {{define "title"}}Pair #{{.Pair.ID}}{{end}}
 
 {{define "body"}}
-	{{with .Pair}}
-	<div class='snippet'>
-	    <div class='metadata'>
-	        <strong>{{.SourceLanguage}} - {{.TargetLanguage}}</strong>
-	        <span>#{{.ID}}</span>
-	    </div>
-	    <div>
-	    	<pre><code>{{.SourceText}}</code></pre>
-	    	<pre><code>{{.TargetText}}</code></pre>
-	    </div>
-	    <div class='metadata'>
-	        <time>Created: {{humanDate .Created}}</time>
-	    </div>
-	</div>
-	{{end}}
+    {{with .Pair}}
+    <div class='snippet'>
+        <div class='metadata'>
+            <strong>{{.SourceLanguage}}({{.SourceVersion}}) - {{.TargetLanguage}}({{.TargetVersion}})</strong>
+            <span>#{{.ID}} Detail: {{.Detail}}</span>
+        </div>
+        <div>
+            <div><strong>Source: </strong><span>{{.SourceText}}</span></div>
+            <div><strong>Target: </strong><span>{{.TargetText}}</span></div>
+        </div>
+        <div>
+
+            <div><strong>Comments: </strong><span>{{if .Comments.Valid}}{{.Comments.Value}}{{end}}</span></div>
+            <div><strong>GCP Dataset: </strong>
+                <span>{{if .GcpDataset.Valid}}{{.GcpDataset.Value}}{{else}}Not uploaded yet{{end}}</span>
+            </div>
+            <div><strong>Validated: </strong><span>{{if .Validated}}Yes{{else}}No{{end}}</span></div>
+        </div>
+        <div class='metadata'>
+            <time>Created: {{humanDate .Created}}</time>
+            <time>Updated: {{humanDate .Updated}}</time>
+        </div>
+    </div>
+    {{end}}
 {{end}}
