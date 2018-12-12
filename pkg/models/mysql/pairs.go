@@ -115,7 +115,9 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
 
 func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (int, error) {
 
-    stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated`
+    stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated
+    ORDER BY RAND()
+    LIMIT 1;`
 
     p := &models.Pair{}
 
@@ -149,7 +151,9 @@ func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
     targetLanguage := p.TargetLanguage
 
     stmt = `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    WHERE source_language = ? AND target_language = ? AND NOT validated`
+    WHERE source_language = ? AND target_language = ? AND NOT validated
+    ORDER BY RAND()
+    LIMIT 1;`
 
     p = &models.Pair{}
 
@@ -185,19 +189,9 @@ func (m *PairModel) Validate(id int) error {
 
 
 func (m *PairModel) Update(id int) error {
-    /*
-    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    WHERE source_language = ? AND target_language = ?`
 
-    p := &models.Pair{}
+    // TODO
 
-    err := m.DB.QueryRow(stmt, sourceLanguage, 
-                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
-                                             &p.Created)
-    if err != nil {
-        return err
-    }
-    */
     return nil
 }
 
