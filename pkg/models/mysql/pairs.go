@@ -12,12 +12,15 @@ type PairModel struct {
     DB *sql.DB
 }
 
-func (m *PairModel) Insert(sourceLanguage, targetLanguage, sourceText, targetText string) (int, error) {
+func (m *PairModel) Insert(sourceLanguage, sourceVersion, targetLanguage, targetVersion, detail,
+                           sourceText, targetText string) (int, error) {
 
-    sqlStr := `INSERT INTO pairs (source_language, target_language, source_text, target_text, created)
-    VALUES(?, ?, ?, ?, UTC_TIMESTAMP())`
+    sqlStr := `INSERT INTO pairs (source_language, sl_text_source, target_language, tl_text_source, text_detail,
+                                  source_text, target_text, validated, created, updated)
+    VALUES(?, ?, ?, ?, ?, ?, ?, false, UTC_TIMESTAMP(), UTC_TIMESTAMP())`
 
-    result, err := m.DB.Exec(sqlStr, sourceLanguage, targetLanguage, sourceText, targetText)
+    result, err := m.DB.Exec(sqlStr, sourceLanguage, sourceVersion, targetLanguage, targetVersion, detail,
+                                     sourceText, targetText)
     if err != nil {
         return 0, err
     }
@@ -94,13 +97,19 @@ func (m *PairModel) BulkInsert(pairs []models.FilePair) (int64, error) {
 
 func (m *PairModel) Get(id int) (*models.Pair, error) {
 
-    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    WHERE id = ?`
+    stmt := `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text, 
+                    text_detail, comments, validated, gcp_dataset,created, updated 
+             FROM pairs
+             WHERE id = ?`
 
     p := &models.Pair{}
 
-    err := m.DB.QueryRow(stmt, id).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
-                                        &p.Created)
+    err := m.DB.QueryRow(stmt, id).Scan(&p.ID,
+                                        &p.SourceLanguage, &p.SourceVersion,
+                                        &p.TargetLanguage, &p.TargetVersion,
+                                        &p.SourceText, &p.TargetText,
+                                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                                        &p.Created, &p.Updated)
     if err == sql.ErrNoRows {
         return nil, models.ErrNoRecord
     } else if err != nil {
