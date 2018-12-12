@@ -3,6 +3,11 @@
 {{define "title"}}Validate Pair{{end}}
 
 {{define "body"}}
+{{with .ValidationStats}}
+<div>
+    <p>Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)</p>
+</div>
+{{end}}
 <form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}

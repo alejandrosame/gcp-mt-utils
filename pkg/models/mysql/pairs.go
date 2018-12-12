@@ -200,3 +200,41 @@ func (m *PairModel) Update(id int) error {
     */
     return nil
 }
+
+
+func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error) {
+
+    sqlStr := `WITH p AS (
+                SELECT id, source_language AS sl, target_language AS tl
+                FROM pairs
+                WHERE id = ?
+            ),
+            scope_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = true
+            ),
+            scope_not_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = false
+            ) SELECT sv.count AS validated, snv.count AS not_validated
+              FROM scope_validated AS sv, scope_not_validated AS snv;`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+
+    stats := &models.ValidationStats{}
+
+    err = stmt.QueryRow(id).Scan(&stats.Validated, &stats.NotValidated)
+    if err != nil {
+        return nil, err
+    }
+
+    stats.Total = stats.Validated + stats.NotValidated
+    stats.Percent = float64(stats.Validated)/float64(stats.Total)
+
+    return stats, nil
+}

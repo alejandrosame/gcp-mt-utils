@@ -491,12 +491,21 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
         return
     }
 
+    stats, err := app.pairs.ValidationStatistics(id)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
     form := forms.New(url.Values{})
     form.Add("id", fmt.Sprintf("%d", p.ID))
     form.Add("sourceText", p.SourceText)
     form.Add("targetText", p.TargetText)
 
-    app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
+    app.render(w, r, "validate.pair.page.tmpl", &templateData{
+        Form: form,
+        ValidationStats: stats,
+    })
 }
 
 
@@ -527,7 +536,7 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
     if !form.Valid() {
-        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+        app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
         return
     }
 

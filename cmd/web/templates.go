@@ -23,6 +23,7 @@ type templateData struct {
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
     Datasets          []*automl.Dataset
+    ValidationStats   *models.ValidationStats
 }
 
 
