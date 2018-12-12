@@ -228,7 +228,7 @@ func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error
     }
 
     stats.Total = stats.Validated + stats.NotValidated
-    stats.Percent = float64(stats.Validated)/float64(stats.Total)
+    stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
 
     return stats, nil
 }

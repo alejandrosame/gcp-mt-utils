@@ -523,7 +523,7 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.OneRequired("no-save-no-validate", "save-no-validate", "validate")
+    form.OneRequired("no-validate", "validate")
     form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
     // Max number of chars for text input
     maxChar := 10000
@@ -540,7 +540,8 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if form.Get("no-save-no-validate") != "" {
+    if form.Get("no-validate") != "" {
+        // We will need to update comments if necessary
         err = app.pairs.Update(id)
     } else if form.Get("validate") != ""{
         err = app.pairs.Validate(id)
