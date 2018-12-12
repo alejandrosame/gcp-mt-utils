@@ -23,12 +23,14 @@ type templateData struct {
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
     Datasets          []*automl.Dataset
+    ValidationStats   *models.ValidationStats
 }
 
 
 func humanDate(t time.Time) string {
     return t.Format("02 Jan 2006 at 15:04")
 }
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our

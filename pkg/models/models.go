@@ -11,6 +11,15 @@ var (
     ErrDuplicateEmail = errors.New("models: duplicate email")
 )
 
+// Misc models
+type ValidationStats struct {
+    Validated       int
+    NotValidated    int
+    Total           int
+    Percent         float64
+}
+
+
 // Models for input/output files
 type FilePair struct {
     SourceLanguage  string

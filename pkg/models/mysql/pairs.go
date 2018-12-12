@@ -111,3 +111,124 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
 
     return pairs, nil
 }
+
+
+func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (int, error) {
+
+    stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated
+    ORDER BY RAND()
+    LIMIT 1;`
+
+    p := &models.Pair{}
+
+    err := m.DB.QueryRow(stmt, sourceLanguage, targetLanguage).Scan(&p.ID,)
+    if err == sql.ErrNoRows {
+        return 0, models.ErrNoRecord
+    } else if err != nil {
+        return 0, err
+    }
+
+    return p.ID, nil
+}
+
+
+func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
+
+    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE id = ?`
+
+    p := &models.Pair{}
+
+    err := m.DB.QueryRow(stmt, id).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                        &p.Created)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    sourceLanguage := p.SourceLanguage
+    targetLanguage := p.TargetLanguage
+
+    stmt = `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
+    WHERE source_language = ? AND target_language = ? AND NOT validated
+    ORDER BY RAND()
+    LIMIT 1;`
+
+    p = &models.Pair{}
+
+    err = m.DB.QueryRow(stmt, sourceLanguage, 
+                         targetLanguage).Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, 
+                                             &p.Created)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return p, nil
+}
+
+
+func (m *PairModel) Validate(id int) error {
+    
+    sqlStr := `UPDATE pairs SET validated = true WHERE id = ?`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    _, err = stmt.Exec(id)
+    if err != nil {
+        return err
+    }
+    
+    return err
+}
+
+
+func (m *PairModel) Update(id int) error {
+
+    // TODO
+
+    return nil
+}
+
+
+func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error) {
+
+    sqlStr := `WITH p AS (
+                SELECT id, source_language AS sl, target_language AS tl
+                FROM pairs
+                WHERE id = ?
+            ),
+            scope_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = true
+            ),
+            scope_not_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = false
+            ) SELECT sv.count AS validated, snv.count AS not_validated
+              FROM scope_validated AS sv, scope_not_validated AS snv;`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+
+    stats := &models.ValidationStats{}
+
+    err = stmt.QueryRow(id).Scan(&stats.Validated, &stats.NotValidated)
+    if err != nil {
+        return nil, err
+    }
+
+    stats.Total = stats.Validated + stats.NotValidated
+    stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
+
+    return stats, nil
+}
