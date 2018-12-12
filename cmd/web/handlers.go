@@ -503,6 +503,9 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
     form.Add("id", fmt.Sprintf("%d", p.ID))
     form.Add("sourceText", p.SourceText)
     form.Add("targetText", p.TargetText)
+    form.Add("sourceVersion", p.SourceVersion)
+    form.Add("targetVersion", p.TargetVersion)
+    form.Add("detail", p.Detail)
 
     app.render(w, r, "validate.pair.page.tmpl", &templateData{
         Form: form,
