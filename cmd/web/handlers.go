@@ -115,8 +115,32 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
+    token := r.URL.Query().Get("token")
+    if token == "" {
+        app.notFound(w)
+        return
+    }
+
+    found, err := app.invitations.TokenExists(token)
+    if err == models.ErrTokenNotFound {
+        app.session.Put(r, "flash", "Token expired or does not match invite.")
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if found == false {
+        app.notFound(w)
+        return
+    }
+
+    f := forms.New(url.Values{})
+    f.Add("inviteToken", token)
+
     app.render(w, r, "signup.page.tmpl", &templateData{
-        Form: forms.New(nil),
+        Form: f,
     })
 }
 
@@ -128,7 +152,7 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("name", "email", "password")
+    form.Required("name", "email", "password", "inviteToken")
     form.MatchesPattern("email", forms.EmailRX)
     form.MinLength("password", 10)
 
@@ -138,9 +162,19 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    inv, err := app.invitations.CheckToken(form.Get("email"), form.Get("inviteToken"))
+    if err == models.ErrTokenNotFound {
+        app.session.Put(r, "flash", "Token expired or does not match invite.")
+        http.Redirect(w, r, "/", http.StatusSeeOther)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
     // Try to create a new user record in the database. If the email already exists
     // add an error message to the form and re-display it.
-    err = app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password"))
+    err = app.users.Insert(form.Get("name"), form.Get("email"), form.Get("password"), inv.Role)
     if err == models.ErrDuplicateEmail {
         form.Errors.Add("email", "Address is already in use")
         app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
@@ -157,6 +191,46 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
     // And redirect the user to the login page.
     http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
+
+
+func (app *application) generateInvitationLinkForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "generate.signup.invitation.page.tmpl", &templateData{
+        Form: forms.New(nil),
+    })
+}
+
+func (app *application) generateInvitationLink(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("email", "role")
+    form.PermittedValues("role", "validator", "translator", "admin")
+    form.MatchesPattern("email", forms.EmailRX)
+
+    if !form.Valid() {
+        app.render(w, r, "generate.signup.invitation.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    i, err := app.invitations.Insert(form.Get("email"), form.Get("role"))
+    if err == models.ErrDuplicateEmail {
+        form.Errors.Add("email", "Address is already in use")
+        app.render(w, r, "generate.signup.invitation.page.tmpl", &templateData{Form: form})
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", "Invitation creation was successful.")
+
+    app.render(w, r, "show.signup.invitation.page.tmpl", &templateData{ SignUpInvitation: i})
+}
+
 
 func (app *application) loginUserForm(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "login.page.tmpl", &templateData{

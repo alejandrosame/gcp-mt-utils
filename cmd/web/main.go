@@ -29,6 +29,7 @@ type application struct {
     templateCache map[string]*template.Template
     uploadPath    *string
     users         *mysql.UserModel
+    invitations   *mysql.InvitationModel
 }
 
 func main() {
@@ -74,6 +75,7 @@ func main() {
         templateCache: templateCache,
         uploadPath:    uploadPath,
         users:         &mysql.UserModel{DB: db},
+        invitations:   &mysql.InvitationModel{DB: db},
     }
 
     tlsConfig := &tls.Config{

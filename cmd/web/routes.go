@@ -46,6 +46,9 @@ func (app *application) routes() http.Handler {
     mux.Post("/dataset/train/:name", adminMiddleware.ThenFunc(app.trainDataset))
     mux.Get("/dataset", adminMiddleware.ThenFunc(app.showDatasets))
     mux.Get("/train/status", adminMiddleware.ThenFunc(app.showTrainingStatus))
+    mux.Get("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLinkForm))
+    mux.Post("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLink))
+
     
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))

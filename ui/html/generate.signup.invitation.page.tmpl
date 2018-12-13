@@ -1,0 +1,30 @@
+{{template "base" .}}
+
+{{define "title"}}Signup invitation link generator{{end}}
+
+{{define "body"}}
+<form action='/user/signup/invitation/generate' method='POST' novalidate>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    {{with .Form}}
+        <div>
+            <label>Email:</label>
+            {{with .Errors.Get "email"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='email' name='email' value='{{.Get "email"}}'>
+        </div>
+        <div>
+            <label>Role:</label>
+            {{with .Errors.Get "role"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type='radio' name='role' value='validator'> Validator
+            <input type='radio' name='role' value='translator'> Translator
+            <input type='radio' name='role' value='admin'> Admin
+        </div>
+        <div>
+            <input type='submit' value='Generate invitation link'>
+        </div>
+    {{end}}
+</form>
+{{end}}

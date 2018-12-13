@@ -10,6 +10,7 @@ var (
     ErrNoRecord = errors.New("models: no matching record found")
     ErrInvalidCredentials = errors.New("models: invalid credentials")
     ErrDuplicateEmail = errors.New("models: duplicate email")
+    ErrTokenNotFound = errors.New("models: token not found, expired or does not match with email")
 )
 
 // Misc models
@@ -53,4 +54,15 @@ type User struct {
     Admin          bool
     Validator      bool
     Translator     bool
+}
+
+
+type Invitation struct {
+    ID             int
+    Token          []byte
+    Role           string
+    Email          string
+    Created        time.Time
+    Expires        time.Time
+    Used           bool
 }

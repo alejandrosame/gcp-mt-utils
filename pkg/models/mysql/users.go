@@ -2,6 +2,7 @@ package mysql
 
 import (
     "database/sql"
+    "fmt"
     "strings"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
@@ -14,15 +15,24 @@ type UserModel struct {
     DB *sql.DB
 }
 
-func (m *UserModel) Insert(name, email, password string) error {
+func (m *UserModel) Insert(name, email, password, role string) error {
     // Create a bcrypt hash of the plain-text password.
     hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
     if err != nil {
         return err
     }
 
-    stmt := `INSERT INTO users (name, email, hashed_password, created)
-    VALUES(?, ?, ?, UTC_TIMESTAMP())`
+    var roleStmt string
+    if role == "admin" {
+        roleStmt = "roleadmin"
+    }else if role == "validator" {
+        roleStmt = "rolevalidator"
+    } else if role == "translator" {
+        roleStmt = "roletranslator"
+    }
+
+    stmt := fmt.Sprintf(`INSERT INTO users (name, email, hashed_password, %s, created)
+    VALUES(?, ?, ?, true, UTC_TIMESTAMP())`, roleStmt)
 
     _, err = m.DB.Exec(stmt, name, email, string(hashedPassword))
     if err != nil {
