@@ -49,4 +49,8 @@ type User struct {
     Email          string
     HashedPassword []byte
     Created        time.Time
+    Super          bool
+    Admin          bool
+    Validator      bool
+    Translator     bool
 }

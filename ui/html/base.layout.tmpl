@@ -30,22 +30,23 @@
             </div>
         </nav>
         {{if .AuthenticatedUser}}
+            {{if or .AuthenticatedUser.Validator .AuthenticatedUser.Admin}}
             <nav>
                 <div>
                     <a href='/pair'>Manage pairs</a>
                 </div>
                 <div></div>
             </nav>
-        {{end}}
-        {{if .AuthenticatedUser}}
+            {{end}}
+            {{if or .AuthenticatedUser.Translator .AuthenticatedUser.Admin}}
             <nav>
                 <div>
                     <a href='/translate'>Translate text</a>
                 </div>
                 <div></div>
             </nav>
-        {{end}}
-        {{if .AuthenticatedUser}}
+            {{end}}
+            {{if .AuthenticatedUser.Admin}}
             <nav>
                 <div>
                     <a href='/model'>Manage models</a>
@@ -58,6 +59,7 @@
                 </div>
                 <div></div>
             </nav>
+            {{end}}
         {{end}}
         <section>
             {{with .Flash}}
