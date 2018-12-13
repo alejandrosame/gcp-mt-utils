@@ -633,3 +633,105 @@ func (app *application) deleteDataset(w http.ResponseWriter, r *http.Request) {
 
     http.Redirect(w, r, fmt.Sprintf("/dataset"), http.StatusSeeOther)
 }
+
+
+func (app *application) trainDatasetForm(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    m, err := automl.ListModelsRequest(app.infoLog, app.errorLog, projectId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    v := url.Values{}
+    v.Add("datasetDisplayName", id)
+    v.Add("datasetName", id)
+
+    app.render(w, r, "train.dataset.page.tmpl", &templateData{
+        Form: forms.New(v),
+        Models: m,
+    })
+}
+
+
+func (app *application) trainDataset(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("train", "cancel")
+
+    if form.Get("cancel") != "" {
+        app.session.Put(r, "flash", "Training not launched!")
+        http.Redirect(w, r, fmt.Sprintf("/dataset"), http.StatusSeeOther)
+    }
+
+    form.Required("modelDisplayName")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("modelDisplayName", maxChar)
+    // Languages codes to check
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    m, err := automl.ListModelsRequest(app.infoLog, app.errorLog, projectId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    // Avoid taking an already existing model name
+    form.NotPermittedValues("modelDisplayName", automl.GetModelsDisplayName(m)...)
+
+    if !form.Valid() {
+        v := url.Values{}
+        v.Add("datasetDisplayName", id)
+        v.Add("datasetName", id)
+
+        app.render(w, r, "train.dataset.page.tmpl", &templateData{
+            Form: forms.New(v),
+            Models: m,
+        })
+        return
+    }
+
+    // We send the train request
+    err = automl.TrainModelRequest(app.infoLog, app.errorLog, projectId, id, form.Get("modelDisplayName"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", "Training launched successfully!")
+    http.Redirect(w, r, fmt.Sprintf("/train/status"), http.StatusSeeOther)
+}

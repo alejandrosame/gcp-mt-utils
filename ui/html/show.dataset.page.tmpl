@@ -28,13 +28,16 @@
                 </form>
                 <form action='/dataset/train/{{.Name | last}}' method='GET'>
                     <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                    <input type='submit' value='Use for training'>
+                    <input type='submit' value='Train new model'>
                 </form>
+                <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/train?dataset={{.Name | last}}'>
+                    Train existing dataset
+                </a>
         </tr>
         {{end}}
     </table>
     {{else}}
         <p>No datasets created yet!</p>
     {{end}}
-    <a href='https://cloud.google.com/automl/ui/translation/datasets/create?project={{getProject}}'>Create a new dataset</a>
+    <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/create?project={{getProject}}'>Create a new dataset</a>
 {{end}}
