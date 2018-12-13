@@ -99,21 +99,23 @@ nav a {
     display: inline-block;
 }
 
-nav form {
+
+
+nav.primary form {
     display: inline-block;
     margin-left: 1.5em;
 }
 
-nav div {
+nav.primary div {
     width: 50%;
     float: left;
 }
 
-nav div:last-child {
+nav.primary div:last-child {
     text-align: right;
 }
 
-nav div:last-child a {
+nav.primary div:last-child a {
     margin-left: 1.5em;
     margin-right: 0;
 }
@@ -127,19 +129,8 @@ nav a.live:hover {
     text-decoration: none;
 }
 
-nav a.live:after {
-    content: '';
-    display: block;
-    position: relative;
-    left: calc(50% - 7px);
-    top: 9px;
-    width: 14px;
-    height: 14px;
-    background: #F7F9FA;
-    border-left: 1px solid #E4E5E7;
-    border-bottom: 1px solid #E4E5E7;
-    -moz-transform: rotate(45deg);
-    -webkit-transform: rotate(-45deg);
+nav div {
+    float: left;
 }
 
 a.button, input[type="submit"] {

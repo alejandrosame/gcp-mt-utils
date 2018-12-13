@@ -14,18 +14,9 @@
         <header>
             <h1><a href='/'>GCP MT utils</a></h1>
         </header>
-        <nav>
+        <nav class="primary">
             <div>
                 <a href='/'>Home</a>
-                {{if .AuthenticatedUser}}
-                    <a href='/pair/create'>Create pair</a>
-                    <a href='/pair/validate'>Validate pairs</a>
-                    <a href='/pairs/upload'>Upload pairs</a>
-                    <a href='/translate'>Translate text</a>
-                    <a href='/model'>Manage models</a>
-                    <a href='/dataset'>Manage datasets</a>
-                    <a href='/train/status'>Training status</a>
-                {{end}}
             </div>
             <div>
                 {{if .AuthenticatedUser}}
@@ -34,11 +25,40 @@
                         <button>Logout ({{.AuthenticatedUser.Name}})</button>
                     </form>
                 {{else}}
-                    <a href='/user/signup'>Signup</a>
                     <a href='/user/login'>Login</a>
                 {{end}}
             </div>
         </nav>
+        {{if .AuthenticatedUser}}
+            <nav>
+                <div>
+                    <a href='/pair'>Manage pairs</a>
+                </div>
+                <div></div>
+            </nav>
+        {{end}}
+        {{if .AuthenticatedUser}}
+            <nav>
+                <div>
+                    <a href='/translate'>Translate text</a>
+                </div>
+                <div></div>
+            </nav>
+        {{end}}
+        {{if .AuthenticatedUser}}
+            <nav>
+                <div>
+                    <a href='/model'>Manage models</a>
+                </div>
+                <div>
+                    <a href='/dataset'>Manage datasets</a>
+                </div>
+                <div>
+                    <a href='/train/status'>Training status</a>
+                </div>
+                <div></div>
+            </nav>
+        {{end}}
         <section>
             {{with .Flash}}
             <div class='flash '>{{.}}</div>

@@ -1,0 +1,29 @@
+{{template "base" .}}
+
+{{define "title"}}Manage pairs{{end}}
+
+{{define "body"}}
+    <h2>Latest Pairs</h2>
+    {{if .Pairs}}
+     <table>
+        <tr>
+            <th>ID</th>
+            <th>Source - Target</th>
+            <th>Created</th>
+        </tr>
+        {{range .Pairs}}
+        <tr>
+            <td><a href='/pair/{{.ID}}'>#{{.ID}}</a></td>
+            <td>{{.SourceLanguage}} - {{.TargetLanguage}}</td>
+            <td>{{humanDate .Created}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>There's nothing to see here... yet!</p>
+    {{end}}
+
+    <a class='button' href='/pair/create'>Create new training pair</a>
+    <a class='button' href='/pair/validate'>Upload training pairs from file</a>
+    <a class='button' href='/pairs/upload'>Validate training pairs</a>
+{{end}}

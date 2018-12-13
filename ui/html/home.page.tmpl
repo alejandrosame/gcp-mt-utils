@@ -3,23 +3,5 @@
 {{define "title"}}Home{{end}}
 
 {{define "body"}}
-    <h2>Latest Pairs</h2>
-    {{if .Pairs}}
-     <table>
-        <tr>
-            <th>ID</th>
-            <th>Source - Target</th>
-            <th>Created</th>
-        </tr>
-        {{range .Pairs}}
-        <tr>
-            <td><a href='/pair/{{.ID}}'>#{{.ID}}</a></td>
-            <td>{{.SourceLanguage}} - {{.TargetLanguage}}</td>
-            <td>{{humanDate .Created}}</td>
-        </tr>
-        {{end}}
-    </table>
-    {{else}}
-        <p>There's nothing to see here... yet!</p>
-    {{end}}
+    <h2>Welcome</h2>
 {{end}}
