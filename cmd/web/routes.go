@@ -28,6 +28,10 @@ func (app *application) routes() http.Handler {
     mux.Get("/translate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.translateForm))
     mux.Post("/translate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.translateOrExport))
     mux.Get("/model", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showModels))
+    mux.Get("/dataset/delete/:name", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.deleteDatasetForm))
+    mux.Post("/dataset/delete/:name", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.deleteDataset))
+    mux.Get("/dataset/train/:name", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.trainDatasetForm))
+    mux.Post("/dataset/train/:name", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.trainDataset))
     mux.Get("/dataset", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showDatasets))
     mux.Get("/train/status", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.showTrainingStatus))
     

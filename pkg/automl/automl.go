@@ -51,7 +51,7 @@ type Model struct {
 }
 
 type ListModelAPIResponse struct {
-    ModelList []Model `json:"model"`
+    ModelList []*Model `json:"model"`
     NextPageToken string `json:"nextPageToken"`
 }
 
@@ -195,12 +195,7 @@ func ListModelsRequest(infoLog, errorLog *log.Logger, projectId string) ([]*Mode
         return defaultValue, err
     }
 
-    models := []*Model{}
-    for _, element := range t.ModelList {
-        models = append(models, &element)
-    }
-
-    return models, nil
+    return t.ModelList, nil
 }
 
 
@@ -374,4 +369,92 @@ func ListDatasetsRequest(infoLog, errorLog *log.Logger, projectId string) ([]*Da
     infoLog.Printf("%#v", t.DatasetList)
 
     return t.DatasetList, nil
+}
+
+
+func DeleteDatasetRequest(infoLog, errorLog *log.Logger, projectId, datasetId string) error {
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return err
+    }
+
+    datasetName := fmt.Sprintf("projects/%s/locations/us-central1/datasets/%s", projectNumber, datasetId)
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s", datasetName)
+
+    client, err := GetClient()
+    if err != nil {
+        return err
+    }
+    req, err := http.NewRequest("DELETE", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer response.Body.Close()
+
+    return nil
+}
+
+
+func TrainModelRequest(infoLog, errorLog *log.Logger, projectId, datasetId, displayName string) error {
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return err
+    }
+
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/projects/%s/locations/us-central1/models", projectNumber)
+
+    client, err := GetClient()
+    if err != nil {
+        return err
+    }
+
+    jsonStr := []byte(fmt.Sprintf(`
+        {
+        "displayName": "%s",
+        "datasetId": "%s",
+        "translationModelMetadata": {
+            "baseModel" : ""
+            },
+        }`, displayName, datasetId))
+
+    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+
+    response, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer response.Body.Close()
+
+    // Debug response
+    dump, err := httputil.DumpResponse(response, true)
+    if err != nil {
+        return err
+    }
+    infoLog.Printf("%s", dump)
+
+    return nil
+}
+
+
+func GetDatasetsDisplayName(datasets []*Dataset) []*string {
+    names := []*string{}
+
+    for _, dataset := range datasets {
+        names = append(names, &dataset.DisplayName)
+    }
+
+    return names
+}
+
+
+func GetModelsDisplayName(models []*Model) []*string {
+    names := []*string{}
+
+    for _, model := range models {
+        names = append(names, &model.DisplayName)
+    }
+
+    return names
 }

@@ -182,3 +182,17 @@ func randToken(len int) string {
     rand.Read(b)
     return fmt.Sprintf("%x", b)
 }
+
+
+func (f *Form) NotPermittedValues(field string, opts ...*string) {
+    value := f.Get(field)
+    if value == "" {
+        return
+    }
+    for _, opt := range opts {
+        if value == *opt {
+            f.Errors.Add(field, "This field is invalid")
+            return
+        }
+    }
+}

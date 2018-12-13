@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}Train Model{{end}}
+
+{{define "body"}}
+
+<h2>Train new model using dataset {{.Form.Get "datasetDisplayName"}}</h2>
+
+    {{with .Form}}
+    <form action='/dataset/train/{{.Get "datasetDisplayName" | last}}' method='POST'>
+        <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+
+        <div>
+            <label>Model name:</label>
+            {{with .Errors.Get "modelDisplayName"}}
+                <label class='error'>{{.}}</label>
+            {{end}}
+            <input type="text" name='modelDisplayName' value='{{.Get "modelDisplayName"}}'>
+        </div>
+        
+        <input type='submit' name="cancel" value='Cancel'>
+        <input type='submit' name="train" value='Train'>
+    </form>
+    {{end}}
+{{end}}

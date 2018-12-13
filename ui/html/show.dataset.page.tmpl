@@ -3,7 +3,7 @@
 {{define "title"}}Datasets{{end}}
 
 {{define "body"}}
-    <h2>Dataset created</h2>
+    <h2>Datasets created</h2>
     {{if .Datasets}}
      <table>
         <tr>
@@ -12,6 +12,7 @@
             <th>Source Language</th>
             <th>Target Language</th>
             <th>Create Time</th>
+            <th>Operations</th>
         </tr>
         {{range .Datasets}}
         <tr>
@@ -20,10 +21,23 @@
             <td>{{.TranslationDatasetMetadata.SourceLanguageCode}}</td>
             <td>{{.TranslationDatasetMetadata.TargetLanguageCode}}</td>
             <td>{{humanDate .CreateTime}}</td>
+            <td>
+                <form action='/dataset/delete/{{.Name | last}}' method='GET'>
+                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                    <input type='submit' value='Delete'>
+                </form>
+                <form action='/dataset/train/{{.Name | last}}' method='GET'>
+                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                    <input type='submit' value='Train new model'>
+                </form>
+                <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/train?dataset={{.Name | last}}'>
+                    Train existing dataset
+                </a>
         </tr>
         {{end}}
     </table>
     {{else}}
         <p>No datasets created yet!</p>
     {{end}}
+    <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/create?project={{getProject}}'>Create a new dataset</a>
 {{end}}
