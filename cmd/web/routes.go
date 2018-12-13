@@ -23,6 +23,7 @@ func (app *application) routes() http.Handler {
     mux.Get("/pair/validate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.chooseLanguagesValidatePairForm))
     mux.Post("/pair/validate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.chooseLanguagesValidatePair))
     mux.Get("/pair/:id", dynamicMiddleware.ThenFunc(app.showPair))
+    mux.Get("/pair", dynamicMiddleware.ThenFunc(app.showPairs))
     mux.Get("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairsForm))
     mux.Post("/pairs/upload", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.uploadPairs))
     mux.Get("/translate", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.translateForm))

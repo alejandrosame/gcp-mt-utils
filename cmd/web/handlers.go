@@ -27,6 +27,17 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
+    p, err := app.pairs.Latest()
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p})
+}
+
+
 func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
@@ -177,7 +188,7 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "userID", id)
 
     // Redirect the user to the create pair page.
-    http.Redirect(w, r, "/pair/create", http.StatusSeeOther)
+    http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
