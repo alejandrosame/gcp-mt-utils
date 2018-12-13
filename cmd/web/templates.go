@@ -27,6 +27,7 @@ type templateData struct {
     TrainReport       *automl.TrainOperationReport
     Datasets          []*automl.Dataset
     ValidationStats   *models.ValidationStats
+    SignUpInvitation  *models.Invitation
 }
 
 
@@ -37,6 +38,10 @@ func humanDate(t time.Time) string {
 func last(s string) string {
     temp := strings.Split(s, "/")
     return temp[len(temp)-1]
+}
+
+func tokenToString(b []byte) string {
+    return string(b[:60])
 }
 
 func getProject() string {
@@ -60,6 +65,7 @@ var functions = template.FuncMap{
     "humanDate": humanDate,
     "last": last,
     "getProject": getProject,
+    "tokenToString": tokenToString,
 }
 
 

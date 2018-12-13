@@ -1,0 +1,19 @@
+{{template "base" .}}
+
+{{define "title"}}Signup invitation link{{end}}
+
+{{define "body"}}
+    {{with .SignUpInvitation}}
+    <div class='snippet'>
+        <div class='metadata'>
+            Invitation link for <strong>{{.Email}}</strong> with role <strong>{{.Role}}</strong>
+        </div>
+        <div>
+            <div><strong>Invitation link: </strong><code>/user/signup?token={{tokenToString .Token}}</code></div>
+        </div>
+        <div class='metadata'>
+            <time>Expires: {{humanDate .Expires}}</time>
+        </div>
+    </div>
+    {{end}}
+{{end}}

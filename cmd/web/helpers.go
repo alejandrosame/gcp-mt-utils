@@ -73,3 +73,30 @@ func (app *application) authenticatedUser(r *http.Request) *models.User {
     }
     return user
 }
+
+
+func (app *application) adminUser(r *http.Request) bool {
+    user, ok := r.Context().Value(contextKeyUser).(*models.User)
+    if !ok {
+        return false
+    }
+    return user.Admin || user.Super
+}
+
+
+func (app *application) validatorUser(r *http.Request) bool {
+    user, ok := r.Context().Value(contextKeyUser).(*models.User)
+    if !ok {
+        return false
+    }
+    return user.Validator || user.Admin || user.Super
+}
+
+
+func (app *application) translatorUser(r *http.Request) bool {
+    user, ok := r.Context().Value(contextKeyUser).(*models.User)
+    if !ok {
+        return false
+    }
+    return user.Translator || user.Admin || user.Super
+}

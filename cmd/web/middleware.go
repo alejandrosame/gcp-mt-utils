@@ -57,6 +57,42 @@ func (app *application) requireAuthenticatedUser(next http.Handler) http.Handler
 }
 
 
+func (app *application) requireAdminUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.adminUser(r) == false {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) requireTranslatorUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.translatorUser(r) == false {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) requireValidatorUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.validatorUser(r) == false {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
 // Create a NoSurf middleware function which uses a customized CSRF cookie with
 // the Secure, Path and HttpOnly flags set.
 func noSurf(next http.Handler) http.Handler {
