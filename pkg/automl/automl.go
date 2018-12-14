@@ -290,8 +290,8 @@ func ListTrainOperationsRequest(infoLog, errorLog *log.Logger, projectId string)
             operationSplit := strings.Split(operation.Get("name").String(), "/")
             operationId := operationSplit[len(operationSplit)-1]
 
-            createTime := operation.Get("createTime").Time()
-            updateTime := operation.Get("updateTime").Time()
+            createTime := operation.Get("metadata.createTime").Time()
+            updateTime := operation.Get("metadata.updateTime").Time()
 
             progressPercent := 0
             errorCode := 0
