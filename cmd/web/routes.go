@@ -47,6 +47,8 @@ func (app *application) routes() http.Handler {
     mux.Get("/dataset/train/:name", adminMiddleware.ThenFunc(app.trainDatasetForm))
     mux.Post("/dataset/train/:name", adminMiddleware.ThenFunc(app.trainDataset))
     mux.Get("/dataset", adminMiddleware.ThenFunc(app.showDatasets))
+    mux.Get("/train/cancel/:name", adminMiddleware.ThenFunc(app.cancelTrainingOperationForm))
+    mux.Post("/train/cancel/:name", adminMiddleware.ThenFunc(app.cancelTrainingOperation))
     mux.Get("/train/status", adminMiddleware.ThenFunc(app.showTrainingStatus))
     mux.Get("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLinkForm))
     mux.Post("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLink))

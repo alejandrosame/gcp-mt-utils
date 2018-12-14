@@ -1,0 +1,14 @@
+{{template "base" .}}
+
+{{define "title"}}Cancel train operation{{end}}
+
+{{define "body"}}
+
+<h2>Are you sure that you want to cancel the train operation {{.Form.Get "name"}}?</h2>
+
+<form action='/train/cancel/{{.Form.Get "name" | last}}' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <input type='submit' name="no" value='No'>
+    <input type='submit' name="yes" value='Yes'>
+</form>
+{{end}}

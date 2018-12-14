@@ -16,12 +16,19 @@
                     <th>Operation ID</th>
                     <th>Create Time</th>
                     <th>Update Time</th>
+                    <th>Operations</th>
                 </tr>
                 {{range .Running}}
                 <tr>
                     <td>{{.Id}}</td>
                     <td>{{humanDate .CreateTime}}</td>
                     <td>{{humanDate .UpdateTime}}</td>
+                    <td>
+                        <form action='/train/cancel/{{.Id | last}}' method='GET'>
+                            <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                            <input type='submit' value='Cancel'>
+                        </form>
+                    </td>
                 </tr>
                 {{end}}
             </table>

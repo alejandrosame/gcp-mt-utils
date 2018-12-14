@@ -879,3 +879,62 @@ func (app *application) deleteModel(w http.ResponseWriter, r *http.Request) {
 
     http.Redirect(w, r, fmt.Sprintf("/model"), http.StatusSeeOther)
 }
+
+
+func (app *application) cancelTrainingOperationForm(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    f := forms.New(url.Values{})
+    f.Add("name", id)
+
+    app.render(w, r, "cancel.train.page.tmpl", &templateData{Form: f})
+}
+
+
+func (app *application) cancelTrainingOperation(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("yes", "no")
+
+    if !form.Valid() {
+        app.render(w, r, "show.model.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    if form.Get("yes") != "" {
+        err = automl.CancelTrainRequest(app.infoLog, app.errorLog, projectId, id)
+    }
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if form.Get("yes") != ""{
+        app.session.Put(r, "flash", "Train operation successfully cancelled!")
+    }else{
+        app.session.Put(r, "flash", "Train operation not cancelled!")
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("/train/status"), http.StatusSeeOther)
+}
