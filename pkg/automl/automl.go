@@ -490,3 +490,35 @@ func DeleteModelRequest(infoLog, errorLog *log.Logger, projectId, modelId string
 
     return nil
 }
+
+
+func CancelTrainRequest(infoLog, errorLog *log.Logger, projectId, modelId string) error {
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return err
+    }
+
+    operationName := fmt.Sprintf("projects/%s/locations/us-central1/operations/%s", projectNumber, modelId)
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:cancel", operationName)
+
+    client, err := GetClient()
+    if err != nil {
+        return err
+    }
+    req, err := http.NewRequest("POST", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer response.Body.Close()
+
+    // Debug response
+    dump, err := httputil.DumpResponse(response, true)
+    if err != nil {
+        return err
+    }
+    infoLog.Printf("%s", dump)
+
+    return nil
+}
