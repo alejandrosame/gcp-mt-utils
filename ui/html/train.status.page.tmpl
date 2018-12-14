@@ -67,35 +67,4 @@
             </table>
         {{end}}
     {{end}}
-
-
-    <h2>Models created</h2>
-    {{if .Models}}
-     <table>
-        <tr>
-            <th>Display Name</th>
-            <th>Dataset ID</th>
-            <th>Deployment State</th>
-            <th>Base Model</th>
-            <th>Source Language</th>
-            <th>Target Language</th>
-            <th>Create Time</th>
-            <th>Update Time</th>
-        </tr>
-        {{range .Models}}
-        <tr>
-            <td>{{.DisplayName}}</td>
-            <td>{{.DatasetId}}</td>
-            <td>{{.DeploymentState}}</td>
-            <td>{{.TranslationModelMetadata.BaseModel}}</td>
-            <td>{{.TranslationModelMetadata.SourceLanguageCode}}</td>
-            <td>{{.TranslationModelMetadata.TargetLanguageCode}}</td>
-            <td>{{humanDate .CreateTime}}</td>
-            <td>{{humanDate .UpdateTime}}</td>
-        </tr>
-        {{end}}
-    </table>
-    {{else}}
-        <p>No models created yet!</p>
-    {{end}}
 {{end}}
