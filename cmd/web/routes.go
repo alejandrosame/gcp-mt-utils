@@ -39,6 +39,8 @@ func (app *application) routes() http.Handler {
     mux.Post("/translate", translatorMiddleware.ThenFunc(app.translateOrExport))
 
     // Admin routes
+    mux.Get("/model/delete/:name", adminMiddleware.ThenFunc(app.deleteModelForm))
+    mux.Post("/model/delete/:name", adminMiddleware.ThenFunc(app.deleteModel))
     mux.Get("/model", adminMiddleware.ThenFunc(app.showModels))
     mux.Get("/dataset/delete/:name", adminMiddleware.ThenFunc(app.deleteDatasetForm))
     mux.Post("/dataset/delete/:name", adminMiddleware.ThenFunc(app.deleteDataset))

@@ -458,3 +458,35 @@ func GetModelsDisplayName(models []*Model) []*string {
 
     return names
 }
+
+
+func DeleteModelRequest(infoLog, errorLog *log.Logger, projectId, modelId string) error {
+    projectNumber, err := ProjectNumberRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return err
+    }
+
+    datasetName := fmt.Sprintf("projects/%s/locations/us-central1/models/%s", projectNumber, modelId)
+    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s", datasetName)
+
+    client, err := GetClient()
+    if err != nil {
+        return err
+    }
+    req, err := http.NewRequest("DELETE", url, nil)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return err
+    }
+    defer response.Body.Close()
+
+    // Debug response
+    dump, err := httputil.DumpResponse(response, true)
+    if err != nil {
+        return err
+    }
+    infoLog.Printf("%s", dump)
+
+    return nil
+}

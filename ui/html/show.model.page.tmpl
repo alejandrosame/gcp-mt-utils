@@ -15,6 +15,7 @@
             <th>Target Language</th>
             <th>Create Time</th>
             <th>Update Time</th>
+            <th>Operations</th>
         </tr>
         {{range .Models}}
         <tr>
@@ -26,6 +27,12 @@
             <td>{{.TranslationModelMetadata.TargetLanguageCode}}</td>
             <td>{{humanDate .CreateTime}}</td>
             <td>{{humanDate .UpdateTime}}</td>
+            <td>
+                <form action='/model/delete/{{.Name | last}}' method='GET'>
+                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                    <input type='submit' value='Delete'>
+                </form>
+            </td>
         </tr>
         {{end}}
     </table>

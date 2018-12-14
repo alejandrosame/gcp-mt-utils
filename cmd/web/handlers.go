@@ -820,3 +820,62 @@ func (app *application) trainDataset(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "flash", "Training launched successfully!")
     http.Redirect(w, r, fmt.Sprintf("/train/status"), http.StatusSeeOther)
 }
+
+
+func (app *application) deleteModelForm(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    f := forms.New(url.Values{})
+    f.Add("name", id)
+
+    app.render(w, r, "delete.model.page.tmpl", &templateData{Form: f})
+}
+
+
+func (app *application) deleteModel(w http.ResponseWriter, r *http.Request) {
+    id := r.URL.Query().Get(":name")
+    if id == "" {
+        app.notFound(w)
+        return
+    }
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    form := forms.New(r.PostForm)
+    form.OneRequired("yes", "no")
+
+    if !form.Valid() {
+        app.render(w, r, "show.model.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    if form.Get("yes") != "" {
+        err = automl.DeleteModelRequest(app.infoLog, app.errorLog, projectId, id)
+    }
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if form.Get("yes") != ""{
+        app.session.Put(r, "flash", "Model successfully deleted!")
+    }else{
+        app.session.Put(r, "flash", "Model not deleted!")
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("/model"), http.StatusSeeOther)
+}

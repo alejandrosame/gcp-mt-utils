@@ -1,0 +1,14 @@
+{{template "base" .}}
+
+{{define "title"}}Delete model{{end}}
+
+{{define "body"}}
+
+<h2>Are you sure that you want to delete the model {{.Form.Get "name"}}?</h2>
+
+<form action='/model/delete/{{.Form.Get "name" | last}}' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <input type='submit' name="no" value='No'>
+    <input type='submit' name="yes" value='Yes'>
+</form>
+{{end}}
