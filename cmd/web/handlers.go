@@ -391,7 +391,11 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     scanner.Scan()
     modelName := scanner.Text()
 
-    targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
+    sourceLanguage := form.Get("sourceLanguage")
+    targetLanguage := form.Get("targetLanguage")
+
+    //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
     if err != nil {
         app.serverError(w, err)
         return
