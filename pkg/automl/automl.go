@@ -8,6 +8,7 @@ import (
     "log"
     "net/http"
     "net/http/httputil"
+    "net/url"
     "strings"
     "time"
 
@@ -245,6 +246,59 @@ func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText strin
     }
 
     return t.PayloadList[0].Translation.TranslatedContent.Content, nil
+}
+
+func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
+    defaultValue := ""
+
+    url := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2?source=%s&target=%s&q=%s",
+                       source, target, url.QueryEscape(sourceText))
+
+    client, err := GetClient()
+    if err != nil {
+        return defaultValue, err
+    }
+
+    req, err := http.NewRequest("POST", url, nil)
+
+    // Debug request
+    dump, err := httputil.DumpRequestOut(req, true)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    infoLog.Printf("%s", dump)
+
+    response, err := client.Do(req)
+    if err != nil {
+        return defaultValue, err
+    }
+    defer response.Body.Close()
+
+    // Debug response
+    dump, err = httputil.DumpResponse(response, true)
+    if err != nil {
+        return defaultValue, err
+    }
+    infoLog.Printf("%s", dump)
+
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    var translatedText string = ""
+
+    translations := gjson.GetBytes(body, "data.translations")
+    translations.ForEach(func(key, translation gjson.Result) bool {
+        // If it's a train model operation
+        if translation.Get("translatedText").Exists(){
+            translatedText = translation.Get("translatedText").String()
+        }
+        return false // stop iterating
+    })
+
+    return translatedText, nil
 }
 
 
