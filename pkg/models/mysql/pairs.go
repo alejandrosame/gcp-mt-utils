@@ -91,6 +91,22 @@ func (m *PairModel) BulkInsert(pairs []models.FilePair) (int64, error) {
         }
     }
 
+    // If total_placeholders is not 0, we still need to insert data
+    if total_placeholders != 0 {
+        // Make partial insert
+        count, err := m.BulkInsertHelper(sqlStr, vals)
+        if err != nil {
+            return 0, err
+        }
+
+        total_count_inserted += count
+
+        // Reset placeholder sql string, placeholder counter and val list
+        sqlStr = startingStr
+        total_placeholders = int64(0)
+        vals = []interface{}{}
+    }
+
     return total_count_inserted, nil
 }
 
