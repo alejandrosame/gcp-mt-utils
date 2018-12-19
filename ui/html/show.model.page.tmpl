@@ -3,40 +3,94 @@
 {{define "title"}}Models{{end}}
 
 {{define "body"}}
-    <h2>Models created</h2>
+<div>
+    <div class="row mt-3 justify-content-center">
+        <h2>Models created</h2>
+    </div>
     {{if .Models}}
-     <table>
-        <tr>
-            <th>Display Name</th>
-            <th>Dataset ID</th>
-            <th>Deployment State</th>
-            <th>Base Model</th>
-            <th>Source Language</th>
-            <th>Target Language</th>
-            <th>Create Time</th>
-            <th>Update Time</th>
-            <th>Operations</th>
-        </tr>
         {{range .Models}}
-        <tr>
-            <td>{{.DisplayName}}</td>
-            <td>{{.DatasetId}}</td>
-            <td>{{.DeploymentState}}</td>
-            <td>{{.TranslationModelMetadata.BaseModel}}</td>
-            <td>{{.TranslationModelMetadata.SourceLanguageCode}}</td>
-            <td>{{.TranslationModelMetadata.TargetLanguageCode}}</td>
-            <td>{{humanDate .CreateTime}}</td>
-            <td>{{humanDate .UpdateTime}}</td>
-            <td>
-                <form action='/model/delete/{{.Name | last}}' method='GET'>
-                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                    <input type='submit' value='Delete'>
-                </form>
-            </td>
-        </tr>
+        <div class="row mt-2">
+            <div class="col">
+                <div class='card bg-secondary border-dark'>
+                    <div class='card-header border-dark'>
+                        <div class="row">
+                            <div class="col text-center font-weight-bold">
+                                {{.DisplayName}}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col text-center">
+                                <span class="font-weight-bold text-uppercase">
+                                    {{.TranslationModelMetadata.SourceLanguageCode}}
+                                </span>
+                            </div>
+                            <div class="col text-center">
+                                <span class="font-weight-bold text-uppercase">
+                                    {{.TranslationModelMetadata.TargetLanguageCode}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class='card-body border-dark'>
+                        <div class="row align-items-center">
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col text-center font-weight-bold">
+                                        Dataset ID
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col text-center">
+                                        {{.DatasetId}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col text-center font-weight-bold">
+                                        Base model
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col text-center">
+                                        {{if .TranslationModelMetadata.BaseModel}}
+                                            {{.TranslationModelMetadata.BaseModel}}
+                                        {{else}}
+                                            Google NMT
+                                        {{end}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class='card-body border-dark'>
+                        <div class="row">
+                            <form action='/model/delete/{{.Name | last}}' method='GET'>
+                                <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                <input class="btn btn-danger btn-sm btn-block" type='submit' value='Delete'>
+                            </form>
+                        </div>
+                    </div>
+                    <div class='card-footer border-dark'>
+                        <div class="row">
+                            <div class="col text-center">
+                                <time>Created on {{humanDate .CreateTime}}</time>
+                            </div>
+                            <div class="col text-center">
+                                <time>Updated on {{humanDate .UpdateTime}}</time>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         {{end}}
-    </table>
     {{else}}
-        <p>No models created yet!</p>
+        <div class="row mt-2 justify-content-center">
+            <p>No models created yet!</p>
+        </div>
     {{end}}
+</div>
 {{end}}
