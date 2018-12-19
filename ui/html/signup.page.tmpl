@@ -7,29 +7,39 @@
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
         <input type='hidden' name='inviteToken' value='{{.Get "inviteToken"}}'>
-        <div>
-            <label>Name:</label>
-            {{with .Errors.Get "name"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type='text' name='name' value='{{.Get "name"}}'>
+        <div class="form-group row">
+            <div class="col">
+                <label for="name" class='text-white'>Name:</label>
+                {{with .Errors.Get "name"}}
+                    <label for="name" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type='text' name='name'
+                       value='{{.Get "name"}}'>
+            </div>
         </div>
-        <div>
-            <label>Email:</label>
-            {{with .Errors.Get "email"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type='email' name='email' value='{{.Get "email"}}'>
+        <div class="form-group row">
+            <div class="col">
+                <labe for="email" class='text-white'l>Email:</label>
+                {{with .Errors.Get "email"}}
+                    <label for="email" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type='email' name='email'
+                       value='{{.Get "email"}}'>
+            </div>
         </div>
-        <div>
-            <label>Password:</label>
-            {{with .Errors.Get "password"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type='password' name='password'>
+        <div class="form-group row">
+            <div class="col">
+                <label for="password" class='text-white'>Password:</label>
+                {{with .Errors.Get "password"}}
+                    <label for="password" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type='password' name='password'>
+            </div>
         </div>
-        <div>
-            <input type='submit' value='Signup'>
+        <div class="form-group row">
+            <div class="col">
+                <input class="btn btn-secondary btn-block" type='submit' value='Signup'>
+            </div>
         </div>
     {{end}}
 </form>
