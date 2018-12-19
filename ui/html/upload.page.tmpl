@@ -6,14 +6,18 @@
 <form action='/pairs/upload' method='POST' enctype='multipart/form-data'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
-        <div>
-            {{with .Errors.Get "fileName"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type="file" name="fileName">{{.Get "uploadFile"}}</input>
+        <div class="form-group row">
+            <div class="col">
+                {{with .Errors.Get "fileName"}}
+                    <label for="filename" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control-file form-control-lg" type="file" name="fileName">{{.Get "uploadFile"}}</input>
+            </div>
         </div>
-        <div>
-            <input type="submit" value="Upload file" />
+        <div class="form-group row">
+            <div class="col">
+                <input class="btn btn-secondary btn-block" type="submit" value="Upload file" />
+            </div>
         </div>
     {{end}}
 </form>
