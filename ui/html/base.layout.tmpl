@@ -78,12 +78,20 @@
             </nav>
         </header>
 
-        <main id="swup" class="container content bg-dark transition-fade">
+        <div id="swup" class="first-container">
             {{with .Flash}}
-                <div class='flash '>{{.}}</div>
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <div class='alert alert-success font-weight-bold text-center'>{{.}}</div>
+                    </div>
+                </div>
+            </div>
             {{end}}
-            {{template "body" .}}
-        </main>
+            <main class="container content bg-dark transition-fade">
+                {{template "body" .}}
+            </main>
+        </div>
         {{template "footer" .}}
         <!-- And include the JavaScript file -->
         <!--
