@@ -299,6 +299,7 @@ main {
 }
 
 /* Layout 1 */
+
 .grid--layout-1 .grid__item:first-child {grid-area: 3 / 1 / 8 / 4;}
 .grid--layout-1 .grid__item:nth-child(2) {grid-area: 1 / 2 / 3 / 4;}
 .grid--layout-1 .grid__item:nth-child(3) {grid-area: 5 / 4 / 8 / 8; }
@@ -341,16 +342,6 @@ main {
 .grid--layout-4 .grid__item:nth-child(7) {grid-area: 4 / 7 / 8 / 11;}
 .grid--layout-4 .grid__item:nth-child(8) {grid-area: 8 / 9 / 11 / 4;}
 
-/* Layout 5 */
-.grid--layout-5 .grid__item:first-child {grid-area: 2 / 1 / 5 / 4;}
-.grid--layout-5 .grid__item:nth-child(2) {grid-area: 1 / 4 / 5 / 7;}
-.grid--layout-5 .grid__item:nth-child(3) {grid-area: 5 / 2 / 7 / 5;}
-.grid--layout-5 .grid__item:nth-child(4) {grid-area: 1 / 7 / 4 / 11;}
-.grid--layout-5 .grid__item:nth-child(5) {grid-area: 5 / 7 / 7 / 5;}
-.grid--layout-5 .grid__item:nth-child(6) {grid-area: 7 / 5 / 10 / 1;}
-.grid--layout-5 .grid__item:nth-child(7) {grid-area: 4 / 7 / 7 / 9;}
-.grid--layout-5 .grid__item:nth-child(8) {grid-area: 4 / 9 / 9 / 11;}
-.grid--layout-5 .grid__item:nth-child(9) {grid-area: 7 / 5 / 11 / 9;}
 
 .content__item {
 	max-width: 600px;
