@@ -1,3 +1,5 @@
+/*
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -66,6 +68,7 @@ textarea, input:not([type="submit"]) {
     font-family: "Ubuntu Mono", monospace;
 }
 
+
 header {
     background-image: -webkit-linear-gradient(left, #34495e, #34495e 25%, #9b59b6 25%, #9b59b6 35%, #3498db 35%, #3498db 45%, #62cb31 45%, #62cb31 55%, #ffb606 55%, #ffb606 65%, #e67e22 65%, #e67e22 75%, #e74c3c 85%, #e74c3c 85%, #c0392b 85%, #c0392b 100%);
     background-image: -moz-linear-gradient(left, #34495e, #34495e 25%, #9b59b6 25%, #9b59b6 35%, #3498db 35%, #3498db 45%, #62cb31 45%, #62cb31 55%, #ffb606 55%, #ffb606 65%, #e67e22 65%, #e67e22 75%, #e74c3c 85%, #e74c3c 85%, #c0392b 85%, #c0392b 100%);
@@ -79,6 +82,7 @@ header {
     padding-bottom: 27px;
     text-align: center;
 }
+
 
 header a {
     color: #34495E;
@@ -310,4 +314,32 @@ footer {
     height: 60px;
     color: #6A6C6F;
     text-align: center;
+}
+*/
+
+.navbar{ background:#F97300;}
+
+.nav-link , .navbar-brand{ color: #f4f4f4; cursor: pointer;}
+
+.nav-link{ margin-right: 1em !important;}
+
+.nav-link:hover{ background: #f4f4f4; color: #f97300; }
+
+.navbar-collapse{ justify-content: flex-end;}
+
+.navbar-end{ justify-content: flex-end;}
+
+.navbar-toggler{  background:#fff !important;}
+
+.bg-dark{
+    background-color:#343a40!important
+}
+
+.bg-primary{
+    background-color:#007bff!important
+}
+
+.first-container{
+    padding-top: 80px;
+    flex-grow: 100;
 }

@@ -3,75 +3,138 @@
 {{define "title"}}Training operations status{{end}}
 
 {{define "body"}}
-    <h2>Training report</h2>
+<div>
+    <div class="row mt-3 justify-content-center">
+        <h2>Training report</h2>
+    </div>
     {{if and .TrainReport.Running .TrainReport.Error .TrainReport.Cancelled}}
-        <p>Nothing to report yet!</p>
+        <div class="row mt-2 justify-content-center">
+            <p>Nothing to report yet!</p>
+        </div>
     {{end}}
 
-    {{with .TrainReport}}
+    <div class="row mt-3 justify-content-center">
         <h3>Running training operations</h3>
+    <div>
+    {{with .TrainReport}}
         {{if .Running}}
-            <table>
-                <tr>
-                    <th>Operation ID</th>
-                    <th>Create Time</th>
-                    <th>Update Time</th>
-                    <th>Operations</th>
-                </tr>
-                {{range .Running}}
-                <tr>
-                    <td>{{.Id}}</td>
-                    <td>{{humanDate .CreateTime}}</td>
-                    <td>{{humanDate .UpdateTime}}</td>
-                    <td>
-                        <form action='/train/cancel/{{.Id | last}}' method='GET'>
-                            <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                            <input type='submit' value='Cancel'>
-                        </form>
-                    </td>
-                </tr>
-                {{end}}
-            </table>
+            {{range .Running}}
+            <div class="row mt-2">
+                <div class="col">
+                    <div class='card bg-secondary border-dark'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    {{.Id}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <form action='/train/cancel/{{.Id | last}}' method='GET'>
+                                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                    <input class="btn btn-outline-danger btn-sm btn-block" type='submit' value='Cancel'>
+                                </form>
+                            </div>
+                        </div>
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <time>Created on {{humanDate .CreateTime}}</time>
+                                </div>
+                                <div class="col text-center">
+                                    <time>Updated on {{humanDate .UpdateTime}}</time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
         {{end}}
 
-        <h3>Cancelled training operations</h3>
+        <div class="row mt-3 justify-content-center">
+            <h3>Cancelled training operations</h3>
+        <div>
         {{if .Cancelled}}
-            <table>
-                <tr>
-                    <th>Operation ID</th>
-                    <th>Create Time</th>
-                    <th>Update Time</th>
-                </tr>
-                {{range .Cancelled}}
-                <tr>
-                    <td>{{.Id}}</td>
-                    <td>{{humanDate .CreateTime}}</td>
-                    <td>{{humanDate .UpdateTime}}</td>
-                </tr>
-                {{end}}
-            </table>
+            {{range .Cancelled}}
+            <div class="row mt-2">
+                <div class="col">
+                    <div class='card bg-secondary border-dark'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    {{.Id}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <time>Created on {{humanDate .CreateTime}}</time>
+                                </div>
+                                <div class="col text-center">
+                                    <time>Updated on {{humanDate .UpdateTime}}</time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
         {{end}}
 
-        <h3>Failed training operations</h3>
+        <div class="row mt-3 justify-content-center">
+            <h3>Failed training operations</h3>
+        <div>
         {{if .Error}}
-            <table>
-                <tr>
-                    <th>Operation ID</th>
-                    <th>Progess</th>
-                    <th>Error Code</th>
-                    <th>Create Time</th>
-                    <th>Update Time</th>
-                </tr>
-                {{range .Cancelled}}
-                <tr>
-                    <td>{{.Id}}</td>
-                    <td>{{.ProgressPercent}} %</td>
-                    <td>{{.ErrorCode}}</td>
-                    <td>{{humanDate .CreateTime}}</td>
-                    <td>{{humanDate .UpdateTime}}</td>
-                </tr>
-                {{end}}
-            </table>
+            {{range .Error}}
+            <div class="row mt-2">
+                <div class="col">
+                    <div class='card bg-secondary border-dark'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    {{.Id}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="row text-center font-weight-bold">
+                                        Progress
+                                    </div>
+                                    <div class="row text-center">
+                                        {{.ProgressPercent}} %
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row text-center font-weight-bold">
+                                        Error code
+                                    </div>
+                                    <div class="row text-center">
+                                        {{.ErrorCode}}
+                                    </div>
+                                </div>
+                                
+                            </div>
+                        </div>
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <time>Created on {{humanDate .CreateTime}}</time>
+                                </div>
+                                <div class="col text-center">
+                                    <time>Updated on {{humanDate .UpdateTime}}</time>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
         {{end}}
     {{end}}
+</div>
 {{end}}

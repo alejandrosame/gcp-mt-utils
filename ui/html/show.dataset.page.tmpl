@@ -3,41 +3,86 @@
 {{define "title"}}Datasets{{end}}
 
 {{define "body"}}
-    <h2>Datasets created</h2>
+<div>
+    <div class="row mt-2">
+        <div class="col mt-1">
+            <a class="btn btn-outline-light btn-sm btn-block" role="button"
+               href='https://cloud.google.com/automl/ui/translation/datasets/create?project={{getProject}}'>
+                Create a new dataset
+            </a>
+        </div>
+    </div>
+
+    <div class="row mt-3 justify-content-center">
+        <h2>Datasets created</h2>
+    </div>
     {{if .Datasets}}
-     <table>
-        <tr>
-            <th>Display Name</th>
-            <th>Pairs count</th>
-            <th>Source Language</th>
-            <th>Target Language</th>
-            <th>Create Time</th>
-            <th>Operations</th>
-        </tr>
         {{range .Datasets}}
-        <tr>
-            <td>{{.DisplayName}}</td>
-            <td>{{.ExampleCount}}</td>
-            <td>{{.TranslationDatasetMetadata.SourceLanguageCode}}</td>
-            <td>{{.TranslationDatasetMetadata.TargetLanguageCode}}</td>
-            <td>{{humanDate .CreateTime}}</td>
-            <td>
-                <form action='/dataset/delete/{{.Name | last}}' method='GET'>
-                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                    <input type='submit' value='Delete'>
-                </form>
-                <form action='/dataset/train/{{.Name | last}}' method='GET'>
-                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
-                    <input type='submit' value='Train new model'>
-                </form>
-                <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/train?dataset={{.Name | last}}'>
-                    Train existing dataset
-                </a>
-        </tr>
+        <div class="row mt-2">
+            <div class="col">
+                <div class='card bg-secondary border-dark'>
+                    <div class='card-header border-dark'>
+                        <div class="row">
+                            <div class="col text-center font-weight-bold">
+                                {{.DisplayName}}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col text-center">
+                                <span class="font-weight-bold text-uppercase">
+                                    {{.TranslationDatasetMetadata.SourceLanguageCode}}
+                                </span>
+                            </div>
+                            <div class="col text-center">
+                                <span class="font-weight-bold text-uppercase">
+                                    {{.TranslationDatasetMetadata.TargetLanguageCode}}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col text-center small">
+                                {{.ExampleCount}} pairs
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class='card-body border-dark'>
+                        <div class="row">
+                            <div class="col mt-1">
+                                <form action='/dataset/delete/{{.Name | last}}' method='GET'>
+                                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                    <input class="btn btn-danger btn-sm btn-block" type='submit' value='Delete'>
+                                </form>
+                            </div>
+                            <div class="col mt-1">
+                                <form action='/dataset/train/{{.Name | last}}' method='GET'>
+                                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                    <input class="btn btn-info btn-sm btn-block" type='submit' value='Train new model'>
+                                </form>
+                            </div>
+                            <div class="col mt-1">
+                                <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                                   href='https://cloud.google.com/automl/ui/translation/datasets/train?dataset={{.Name | last}}'>
+                                    Train existing model
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class='card-footer border-dark'>
+                        <div class="row">
+                            <div class="col text-center">
+                                <time>Created on {{humanDate .CreateTime}}</time>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         {{end}}
-    </table>
     {{else}}
-        <p>No datasets created yet!</p>
+        <div class="row mt-2 justify-content-center">
+            <p>No datasets created yet!</p>
+        </div>
     {{end}}
-    <a class='button' href='https://cloud.google.com/automl/ui/translation/datasets/create?project={{getProject}}'>Create a new dataset</a>
 {{end}}

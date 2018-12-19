@@ -3,77 +3,79 @@
 {{define "title"}}Validate Pair{{end}}
 
 {{define "body"}}
-{{with .ValidationStats}}
-<div>
-    <p>Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)</p>
-</div>
-{{end}}
-<form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    {{with .Form}}
-        <div>
-            <label>Source:</label>
-            {{with .Errors.Get "sourceLanguage"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            {{$code := or (.Get "sourceLanguage") "EN"}}
-            <input type='radio' name='sourceLanguage' value='EN' {{if (eq $code "EN")}}checked{{end}} readonly> English
-            <input type='radio' name='sourceLanguage' value='ES' {{if (eq $code "ES")}}checked{{end}} readonly> Spanish
-            <input type='radio' name='sourceLanguage' value='FR' {{if (eq $code "FR")}}checked{{end}} readonly> French
-            <input type='radio' name='sourceLanguage' value='PT' {{if (eq $code "PT")}}checked{{end}} readonly> Portuguese
-            <input type='radio' name='sourceLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}} readonly> Swahili
+    <div>
+        <div class="row">
+            <div class="col mt-1 text-center">
+                {{with .ValidationStats}}
+                    <div class="alert alert-info font-weight-bold">
+                        Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                    </div>
+                {{end}}
+            </div>
         </div>
-        <div>
-            <label>Source text version:</label>
-            {{with .Errors.Get "sourceVersion"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type="text" name='sourceVersion' value='{{.Get "sourceVersion"}}' readonly/>
+        <div class="row mt-2">
+            <div class='card bg-secondary border-dark'>
+                <div class='card-header border-dark'>
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            #{{.Form.Get "id"}}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.Form.Get "sourceLanguage"}}</span>
+                            <span class="small">({{.Form.Get "sourceVersion"}})</span>
+                        </div>
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.Form.Get "targetLanguage"}}</span>
+                            <span class="small">({{.Form.Get "targetVersion"}})</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center font-italic small">
+                            {{.Form.Get "detail"}}
+                        </div>
+                    </div>
+                </div>
+                <div class='card-body border-dark'>
+                    <div class="row">
+                        <div class="col text-justify">
+                            {{.Form.Get "sourceText"}}
+                        </div>
+                        <div class="col text-justify">
+                            {{.Form.Get "targetText"}}
+                        </div>
+                    </div>
+                </div>
+
+                <div class='card-footer border-dark'>
+                    <div class="row">
+                        <div class="col text-center">
+                            <time>Created on {{.Form.Get "created"}}</time>
+                        </div>
+                        <div class="col text-center">
+                            <time>Updated on {{.Form.Get "updated"}}</time>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>
-            <label>Source text:</label>
-            {{with .Errors.Get "sourceText"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <textarea name='sourceText' readonly>{{.Get "sourceText"}}</textarea>
+        <div class="row mt-2">
+            <div class="col mt-1">
+                <form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                    <input type='hidden' name='sourceLanguage' value='{{.Form.Get "sourceLanguage"}}' readonly/>
+                    <input type='hidden' name='targetLanguage' value='{{.Form.Get "targetLanguage"}}' readonly/>
+                    <div class="col mt-1">
+                        <input class="btn btn-outline-danger btn-sm btn-block" role="button" type='submit' 
+                               name="no-validate" value='Do not validate pair'>
+                    </div>
+                    <div class="col mt-1">
+                        <input class="btn btn-outline-success btn-sm btn-block" role="button" type='submit'
+                               name="validate" value='Validate pair'>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div>
-            <label>Target:</label>
-            {{with .Errors.Get "targetLanguage"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            {{$code := or (.Get "targetLanguage") "ES"}}
-            <input type='radio' name='targetLanguage' value='EN' {{if (eq $code "EN")}}checked{{end}} readonly> English
-            <input type='radio' name='targetLanguage' value='ES' {{if (eq $code "ES")}}checked{{end}} readonly> Spanish
-            <input type='radio' name='targetLanguage' value='FR' {{if (eq $code "FR")}}checked{{end}} readonly> French
-            <input type='radio' name='targetLanguage' value='PT' {{if (eq $code "PT")}}checked{{end}} readonly> Portuguese
-            <input type='radio' name='targetLanguage' value='SW' {{if (eq $code "SW")}}checked{{end}} readonly> Swahili
-        </div>
-        <div>
-            <label>Target text version:</label>
-            {{with .Errors.Get "targetVersion"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type="text" name='targetVersion' value='{{.Get "targetVersion"}}' readonly/>
-        </div>
-        <div>
-            <label>Target text:</label>
-            {{with .Errors.Get "targetText"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <textarea name='targetText' readonly>{{.Get "targetText"}}</textarea>
-        </div>
-        <div>
-            <label>Translation detail:</label>
-            {{with .Errors.Get "detail"}}
-                <label class='error'>{{.}}</label>
-            {{end}}
-            <input type="text" name='detail' value='{{.Get "detail"}}' readonly/>
-        </div>
-        <div>
-            <input type='submit' name="no-validate" value='Do not validate pair'>
-            <input type='submit' name="validate" value='Validate pair'>
-        </div>
-    {{end}}
-</form>
+    </div>
 {{end}}

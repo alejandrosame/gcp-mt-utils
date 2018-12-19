@@ -4,16 +4,43 @@
 
 {{define "body"}}
     {{with .SignUpInvitation}}
-    <div class='snippet'>
-        <div class='metadata'>
-            Invitation link for <strong>{{.Email}}</strong> with role <strong>{{.Role}}</strong>
-        </div>
-        <div>
-            <div><strong>Invitation link: </strong><code>/user/signup?token={{tokenToString .Token}}</code></div>
-        </div>
-        <div class='metadata'>
-            <time>Expires: {{humanDate .Expires}}</time>
+    <div>
+        <div class="row">
+            <div class='card bg-secondary border-dark'>
+                <div class='card-header border-dark'>
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            Invitation link for <kbd>{{.Email}}</kbd> with role <kbd>{{.Role}}</kbd>
+                        </div>
+                    </div>
+                </div>
+                <div class='card-body border-dark'>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    Invitation link
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <kbd>/user/signup?token={{tokenToString .Token}}</kbd>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class='card-footer border-dark'>
+                    <div class="row">
+                        <div class="col text-center">
+                            <time>Expires on {{humanDate .Expires}}</time>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+
     {{end}}
 {{end}}

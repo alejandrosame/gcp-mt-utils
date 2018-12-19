@@ -2,6 +2,7 @@ package main
 
 import (
     "bufio"
+    "fmt"
     "html/template"
     "path/filepath"
     "strings"
@@ -44,6 +45,17 @@ func tokenToString(b []byte) string {
     return string(b[:60])
 }
 
+func truncate(s string, count int) string {
+    r := []rune(s)
+    m := count
+    ellipsis := "..."
+    if len(r) < m {
+        m = len(r)
+        ellipsis = ""
+    }
+    return fmt.Sprintf("%s%s", string(r[:m]), ellipsis)
+}
+
 func getProject() string {
     file, err := os.Open("./auth/auth.txt")
     if err != nil {
@@ -66,6 +78,7 @@ var functions = template.FuncMap{
     "last": last,
     "getProject": getProject,
     "tokenToString": tokenToString,
+    "truncate": truncate,
 }
 
 

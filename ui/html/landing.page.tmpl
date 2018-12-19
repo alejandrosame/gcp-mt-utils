@@ -1,0 +1,191 @@
+{{template "base" .}}
+
+{{define "title"}}Choose language{{end}}
+{{define "headScript"}}
+<link rel="stylesheet" type="text/css" href="/static/css/landing/base.css"/>
+<script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this page in a modern browser that supports CSS Variables.");</script>
+{{end}}
+{{define "postScript"}}
+<script src="/static/js/landing/imagesloaded.pkgd.min.js"></script>
+<script src="/static/js/landing/TweenMax.min.js"></script>
+<script src="/static/js/landing/demo.js"></script>
+{{end}}
+
+{{define "body"}}
+	<div class="container">
+		<div id="landing-menu" class="menu">
+			<div class="menu__item">
+				<span class="menu__item-number">ES</span>
+				<span class="menu__item-textwrap"><span class="menu__item-text">Spanish</span></span>
+				<a class="menu__item-link">enter</a>
+			</div>
+			<div class="menu__item">
+				<span class="menu__item-number">FR</span>
+				<span class="menu__item-textwrap"><span class="menu__item-text">French</span></span>
+				<a class="menu__item-link">enter</a>
+			</div>
+			<div class="menu__item">
+				<span class="menu__item-number">PT</span>
+				<span class="menu__item-textwrap"><span class="menu__item-text">Portuguese</span></span>
+				<a class="menu__item-link">enter</a>
+			</div>
+			<div class="menu__item">
+				<span class="menu__item-number">SW</span>
+				<span class="menu__item-textwrap"><span class="menu__item-text">Swahili</span></span>
+				<a href="/user/login" class="menu__item-link">enter</a>
+			</div>
+		</div>
+		<div class="page">
+			<div class="gridwrap">
+				<div class="grid grid--layout-1">
+					<!-- Spain -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/es.png)"></div>
+					<!-- Argentina -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ar.png)"></div>
+					<!-- Bolivia -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/bo.png)"></div>
+					<!-- Chile -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cl.png)"></div>
+					<!-- Colombia -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/co.png)"></div>
+					<!-- Costa Rica -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cr.png)"></div>
+					<!-- Cuba -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cu.png)"></div>
+					<!-- Dominican Republic -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/do.png)"></div>
+					<!-- Ecuador -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ec.png)"></div>
+					<!-- El Salvador -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/sv.png)"></div>
+					<!-- Guatemala -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gt.png)"></div>
+					<!-- Honduras -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/hn.png)"></div>
+					<!-- Mexico -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mx.png)"></div>
+					<!-- Nicaragua -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ni.png)"></div>
+					<!-- Panama -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/pa.png)"></div>
+					<!-- Paraguay -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/py.png)"></div>
+					<!-- Peru -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/pe.png)"></div>
+					<!-- Urugay -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/uy.png)"></div>
+					<!-- Venezuela -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ve.png)"></div>
+					<!-- Equatorial Guinea -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gq.png)"></div>
+
+				</div>
+				<div class="grid grid--layout-2">
+					<!-- Democratic Republic of the Congo -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cd.png)"></div>
+					<!-- France -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/fr.png)"></div>
+					<!-- Canada -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ca.png)"></div>
+					<!-- Madagascar -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mg.png)"></div>
+					<!-- Cameroon -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cm.png)"></div>
+					<!-- Ivory Coast -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ci.png)"></div>
+					<!-- Niger -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ne.png)"></div>
+					<!-- Burkina Faso -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/bf.png)"></div>
+					<!-- Mali -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ml.png)"></div>
+					<!-- Senegal -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/sn.png)"></div>
+					<!-- Chad -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/td.png)"></div>
+					<!-- Guiena -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gn.png)"></div>
+					<!-- Rwanda -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/rw.png)"></div>
+					<!-- Belgium -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/be.png)"></div>
+					<!-- Burundi -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/bi.png)"></div>
+					<!-- Benin -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/bj.png)"></div>
+					<!-- Haiti -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ht.png)"></div>
+					<!-- Switzerland -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ch.png)"></div>
+					<!-- Togo -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/tg.png)"></div>
+					<!-- Central African Republic -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cf.png)"></div>
+					<!-- Congo -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cg.png)"></div>
+					<!-- Gabon -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ga.png)"></div>
+					<!-- Equatorial Guinea -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gq.png)"></div>
+					<!-- Djibouti -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/dj.png)"></div>
+					<!-- Comoros -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/km.png)"></div>
+					<!-- Lucembourg -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/lu.png)"></div>
+					<!-- Vanuatu -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/vu.png)"></div>
+					<!-- Seychelles -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/sc.png)"></div>
+					<!-- Monaco -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mc.png)"></div>
+				</div>
+				<div class="grid grid--layout-3">
+					<!-- Brazil -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/br.png)"></div>
+					<!-- Angola -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ao.png)"></div>
+					<!-- Mozambique -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mz.png)"></div>
+					<!-- Portugal -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/pt.png)"></div>
+					<!-- Guinea-Bissau -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gw.png)"></div>
+					<!-- East Timor -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/tl.png)"></div>
+					<!-- Equatorial Guinea -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/gq.png)"></div>
+					<!-- Cape Verde -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cv.png)"></div>
+					<!-- Sao Tome Principe -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/st.png)"></div>
+				</div>
+				<div class="grid grid--layout-4">
+					<!-- Tanzania -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/tz.png)"></div>
+					<!-- Democratic Republic of the Congo -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/cd.png)"></div>
+					<!-- Kenya-->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ke.png)"></div>
+					<!-- Somalia -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/so.png)"></div>
+					<!-- Mozambique -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mz.png)"></div>
+					<!-- Burundi -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/bi.png)"></div>
+					<!-- Uganda -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/ug.png)"></div>
+					<!-- Comoros -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/km.png)"></div>
+					<!-- Zambia -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/zm.png)"></div>
+					<!-- Malawi -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mw.png)"></div>
+					<!-- Madagascar -->
+					<div class="grid__item" style="background-image: url(/static/img/flags/mg.png)"></div>
+				</div>
+				<button class="gridback"><svg class="icon icon--arrow"><use xlink:href="#icon-arrow"></use></svg></button>
+			</div><!-- /gridwrap -->
+		</div><!-- /page -->
+	</div>
+{{end}}

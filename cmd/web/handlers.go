@@ -23,7 +23,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    app.render(w, r, "home.page.tmpl", &templateData{Pairs: p})
+    app.render(w, r, "landing.page.tmpl", &templateData{Pairs: p})
 }
 
 
@@ -590,11 +590,15 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
 
     form := forms.New(url.Values{})
     form.Add("id", fmt.Sprintf("%d", p.ID))
+    form.Add("sourceLanguage", p.SourceLanguage)
+    form.Add("targetLanguage", p.TargetLanguage)
     form.Add("sourceText", p.SourceText)
     form.Add("targetText", p.TargetText)
     form.Add("sourceVersion", p.SourceVersion)
     form.Add("targetVersion", p.TargetVersion)
     form.Add("detail", p.Detail)
+    form.Add("updated", humanDate(p.Updated))
+    form.Add("created", humanDate(p.Created))
 
     app.render(w, r, "validate.pair.page.tmpl", &templateData{
         Form: form,
@@ -618,14 +622,6 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
 
     form := forms.New(r.PostForm)
     form.OneRequired("no-validate", "validate")
-    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-    form.MaxLength("targetText", maxChar)
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -659,7 +655,7 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     }
 
     if form.Get("validate") != ""{
-        app.session.Put(r, "flash", "Pair successfully validated!")
+        app.session.Put(r, "flash", fmt.Sprintf("Pair %d successfully validated!", id))
     }
     http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newPair), http.StatusSeeOther)
 }

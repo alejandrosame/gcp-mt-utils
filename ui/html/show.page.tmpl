@@ -4,26 +4,106 @@
 
 {{define "body"}}
     {{with .Pair}}
-    <div class='snippet'>
-        <div class='metadata'>
-            <strong>{{.SourceLanguage}}({{.SourceVersion}}) - {{.TargetLanguage}}({{.TargetVersion}})</strong>
-            <span>#{{.ID}} Detail: {{.Detail}}</span>
-        </div>
-        <div>
-            <div><strong>Source: </strong><span>{{.SourceText}}</span></div>
-            <div><strong>Target: </strong><span>{{.TargetText}}</span></div>
-        </div>
-        <div>
+    <div>
+        <div class="row">
+            <div class='card bg-secondary border-dark'>
+                <div class='card-header border-dark'>
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            #{{.ID}}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.SourceLanguage}}</span>
+                            <span class="small">({{.SourceVersion}})</span>
+                        </div>
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.TargetLanguage}}</span>
+                            <span class="small">({{.TargetVersion}})</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center font-italic small">
+                            {{.Detail}}
+                        </div>
+                    </div>
+                </div>
+                <div class='card-body border-dark'>
+                    <div class="row">
+                        <div class="col text-justify">
+                            {{.SourceText}}
+                        </div>
+                        <div class="col text-justify">
+                            {{.TargetText}}
+                        </div>
+                    </div>
+                </div>
 
-            <div><strong>Comments: </strong><span>{{if .Comments.Valid}}{{.Comments.Value}}{{end}}</span></div>
-            <div><strong>GCP Dataset: </strong>
-                <span>{{if .GcpDataset.Valid}}{{.GcpDataset.Value}}{{else}}Not uploaded yet{{end}}</span>
+                <div class='card-body border-dark'>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    Comments
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    {{if .Comments.Valid}}
+                                        {{.Comments.Value}}
+                                    {{else}}
+                                        No comments yet
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    GCP Dataset
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    {{if .GcpDataset.Valid}}
+                                        {{.GcpDataset.Value}}
+                                    {{else}}
+                                        Not uploaded yet
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
+                        {{if .Validated}}
+                            <div class="col text-center bg-success">
+                                Validated
+                            </div>
+                        {{else}}
+                            <div class="col text-center bg-danger">
+                                Not validated
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+
+                <div class='card-footer border-dark'>
+                    <div class="row">
+                        <div class="col text-center">
+                            <time>Created on {{humanDate .Created}}</time>
+                        </div>
+                        <div class="col text-center">
+                            <time>Updated on {{humanDate .Updated}}</time>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div><strong>Validated: </strong><span>{{if .Validated}}Yes{{else}}No{{end}}</span></div>
         </div>
-        <div class='metadata'>
-            <time>Created: {{humanDate .Created}}</time>
-            <time>Updated: {{humanDate .Updated}}</time>
+        <div class="row mt-2">
+            <div class="col mt-1">
+                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/validate/{{.ID}}'>
+                    Go to validate this pair
+                </a>
+            </div>
         </div>
     </div>
     {{end}}
