@@ -73,7 +73,7 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText", "sourceVersion", "targetVersion",
+    form.Required("sourceText", "targetText", "sourceVersion", "targetVersion",
                   "detail")
     // Max number of chars for text input
     maxChar := 10000
@@ -82,9 +82,6 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     form.MaxLength("sourceVersion", maxChar)
     form.MaxLength("targetVersion", maxChar)
     form.MaxLength("detail", maxChar)
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -93,8 +90,8 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
     sourceText := form.Get("sourceText")
     targetText := form.Get("targetText")
     sourceVersion := form.Get("sourceVersion")
@@ -395,13 +392,10 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage", "sourceText")
+    form.Required("sourceText")
     // Max number of chars for text input
     maxChar := 10000
     form.MaxLength("sourceText", maxChar)
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -410,8 +404,8 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    //sourceLanguage := form.Get("sourceLanguage")
-    //targetLanguage := form.Get("targetLanguage")
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
     sourceText := form.Get("sourceText")
 
     file, err := os.Open("./auth/auth.txt")
@@ -425,8 +419,6 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     scanner.Scan()
     modelName := scanner.Text()
 
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
 
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
     targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
@@ -452,14 +444,11 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
     }
 
     form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage", "sourceText", "targetText")
+    form.Required("sourceText", "targetText")
     // Max number of chars for text input
     maxChar := 10000
     form.MaxLength("sourceText", maxChar)
     form.MaxLength("targetText", maxChar)
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -468,8 +457,8 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
         return
     }
 
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
     sourceText := form.Get("sourceText")
     targetText := form.Get("targetText")
 
@@ -573,10 +562,6 @@ func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *ht
 
     form := forms.New(r.PostForm)
     form.Required("sourceLanguage", "targetLanguage")
-    // Languages codes to check
-    form.PermittedValues("sourceLanguage", "EN", "ES", "FR", "PT", "SW")
-    form.PermittedValues("targetLanguage", "EN", "ES", "FR", "PT", "SW")
-
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
     if !form.Valid() {
@@ -584,8 +569,8 @@ func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *ht
         return
     }
 
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
 
     newId, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
     if err == models.ErrNoRecord {
@@ -675,8 +660,8 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
         return
     }
     // Do nothing if no-save-no-validate
-    sourceLanguage := form.Get("sourceLanguage")
-    targetLanguage := form.Get("targetLanguage")
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
 
     // Get another pair to validate from the same scope
     newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
