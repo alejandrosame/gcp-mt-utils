@@ -261,13 +261,47 @@ func (app *application) loginUser(w http.ResponseWriter, r *http.Request) {
     // Add the ID of the current user to the session, so that they are now 'logged in'.
     app.session.Put(r, "userID", id)
 
-    // Redirect the user to the create pair page.
-    http.Redirect(w, r, "/", http.StatusSeeOther)
+    user, _ := app.users.Get(id)
+    if user.Admin || user.Translator {
+        http.Redirect(w, r, "/translate", http.StatusSeeOther)
+        return
+    }else{
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
+    }
 }
+
+
+func (app *application) setLanguage(w http.ResponseWriter, r *http.Request) {
+    code := r.URL.Query().Get(":code")
+    if code != "ES" && code != "FR" && code != "PT" && code != "SW" {
+        app.notFound(w)
+        return
+    }
+
+    // Add the language codes of the current user to the session, so that they are now 'logged in'.
+    app.session.Put(r, "sourceLanguage", "EN")
+    app.session.Put(r, "targetLanguage", code)
+
+    user, err := app.users.Get(app.session.GetInt(r, "userID"))
+    if err != nil {
+        http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+        return
+    }
+
+    if user.Admin || user.Translator {
+        http.Redirect(w, r, "/translate", http.StatusSeeOther)
+        return
+    }else{
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
+    }
+}
+
 
 func (app *application) logoutUser(w http.ResponseWriter, r *http.Request) {
     // Remove the userID from the session data so that the user is 'logged out'.
     app.session.Remove(r, "userID")
+    app.session.Remove(r, "sourceLanguage")
+    app.session.Remove(r, "targetLanguage")
     // Add a flash message to the session to confirm to the user that they've been logged out.
     app.session.Put(r, "flash", "You've been logged out successfully!")
     http.Redirect(w, r, "/", 303)

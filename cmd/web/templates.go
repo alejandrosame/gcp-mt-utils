@@ -29,6 +29,7 @@ type templateData struct {
     Datasets          []*automl.Dataset
     ValidationStats   *models.ValidationStats
     SignUpInvitation  *models.Invitation
+    Languages         string
 }
 
 

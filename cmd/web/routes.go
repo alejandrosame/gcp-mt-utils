@@ -12,15 +12,21 @@ func (app *application) routes() http.Handler {
     standardMiddleware := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 
     // Create middleware to be applied only on the dynamic application routes.
-    dynamicMiddleware := alice.New(app.session.Enable, noSurf, app.authenticate)
+    dynamicMiddleware := alice.New(app.session.Enable, noSurf, app.authenticate, app.selectLanguages)
 
     // Create middleware to take care of role access
-    validatorMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireValidatorUser)
-    translatorMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireTranslatorUser)
-    adminMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireAdminUser)
+    validatorMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireValidatorUser,
+                                                    app.requireSelectedLanguages)
+    translatorMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireTranslatorUser,
+                                                     app.requireSelectedLanguages)
+    adminMiddleware := dynamicMiddleware.Append(app.requireAuthenticatedUser, app.requireAdminUser,
+                                                app.requireSelectedLanguages)
 
     mux := pat.New()
     mux.Get("/", dynamicMiddleware.ThenFunc(app.home))
+
+    // Selection routes
+    mux.Get("/language/:code", dynamicMiddleware.ThenFunc(app.setLanguage))
 
     // Validator routes
     mux.Get("/pair/create", validatorMiddleware.ThenFunc(app.createPairForm))
@@ -53,7 +59,7 @@ func (app *application) routes() http.Handler {
     mux.Get("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLinkForm))
     mux.Post("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLink))
 
-    
+
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
     mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))
