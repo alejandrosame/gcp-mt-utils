@@ -2,6 +2,7 @@ package files
 
 import (
     "bufio"
+    "fmt"
     "log"
     "os"
     "strings"
@@ -119,4 +120,22 @@ func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText
     run.AddText(targetText)
 
     doc.SaveToFile(tmp_file)
+}
+
+
+func WriteDataset(tmp_file string, pairs []*models.Pair){
+    file, err := os.Create(tmp_file)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    for _, pair := range pairs {
+        _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", pair.SourceText, pair.TargetText))
+            if err != nil {
+            log.Fatal(err)
+        }
+    }
+
+    file.Sync()
 }

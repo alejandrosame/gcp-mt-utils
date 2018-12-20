@@ -1,6 +1,9 @@
 package mysql
 
 import (
+    "fmt"
+    "log"
+    "regexp"
     "strings"
 
     "database/sql"
@@ -145,7 +148,6 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
     if err != nil {
         return nil, err
     }
-
     defer rows.Close()
 
     pairs := []*models.Pair{}
@@ -287,4 +289,139 @@ func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error
     stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
 
     return stats, nil
+}
+
+
+func (m *PairModel) GetValidatedNotExported(sourceLanguage, targetLanguage string) ([]*models.Pair, error) {
+    sqlStr := `SELECT id, source_language, sl_text_source, target_language, tl_text_source,
+                     source_text, target_text, text_detail, comments, validated,
+                     gcp_dataset,created, updated
+              FROM pairs
+              WHERE gcp_dataset IS NULL AND validated = true
+              ORDER BY id ASC`
+
+    rows, err := m.DB.Query(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    pairs := []*models.Pair{}
+
+    for rows.Next() {
+        p := &models.Pair{}
+
+        err = rows.Scan(&p.ID,
+                        &p.SourceLanguage, &p.SourceVersion,
+                        &p.TargetLanguage, &p.TargetVersion,
+                        &p.SourceText, &p.TargetText,
+                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                        &p.Created, &p.Updated)
+        if err != nil {
+            return nil, err
+        }
+        pairs = append(pairs, p)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return pairs, nil
+}
+
+
+func (m *PairModel) DatasetIsUsed(datasetName string) (bool, error) {
+    sqlStr := ` SELECT count(*) as count
+                FROM pairs
+                WHERE gcp_dataset = ?
+                LIMIT 1`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return true, err
+    }
+
+    count := 0
+
+    err = stmt.QueryRow(datasetName).Scan(&count)
+    if err != nil {
+        return true, err
+    }
+
+    return count == 1, nil
+}
+
+
+func (m *PairModel) GetAndMarkedExported(infoLog, errorLog *log.Logger, idList, datasetName string) ([]*models.Pair, error) {
+
+    b, err := m.DatasetIsUsed(datasetName)
+    if err != nil {
+        return nil, err
+    }
+
+    if b {
+        return nil, models.ErrDuplicateDataset
+    }
+
+    re := regexp.MustCompile(`\b\d+\b`)
+    substitution := `?`
+    idsPlaceholder := re.ReplaceAllString(idList, substitution)
+
+    sqlStr := fmt.Sprintf(`UPDATE pairs SET gcp_dataset = ?
+             WHERE id IN (%s)`, idsPlaceholder)
+
+    infoLog.Println(sqlStr)
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+
+    t := strings.Split(idList, ",")
+    t = append([]string{datasetName}, t...)
+    vals := make([]interface{}, len(t))
+    for i, v := range t {
+        vals[i] = v
+    }
+
+    _, err = stmt.Exec(vals...)
+    if err != nil {
+        return nil, err
+    }
+
+    sqlStr = `SELECT id, source_language, sl_text_source, target_language, tl_text_source,
+                     source_text, target_text, text_detail, comments, validated,
+                     gcp_dataset,created, updated
+              FROM pairs
+              WHERE gcp_dataset = ?`
+
+    rows, err := m.DB.Query(sqlStr, datasetName)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    pairs := []*models.Pair{}
+
+    for rows.Next() {
+        p := &models.Pair{}
+
+        err = rows.Scan(&p.ID,
+                        &p.SourceLanguage, &p.SourceVersion,
+                        &p.TargetLanguage, &p.TargetVersion,
+                        &p.SourceText, &p.TargetText,
+                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                        &p.Created, &p.Updated)
+        if err != nil {
+            return nil, err
+        }
+        pairs = append(pairs, p)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return pairs, nil
 }

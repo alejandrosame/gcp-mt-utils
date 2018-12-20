@@ -318,8 +318,8 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-
     tmp_file, fileType := form.ProcessFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
+
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
@@ -943,4 +943,90 @@ func (app *application) cancelTrainingOperation(w http.ResponseWriter, r *http.R
     }
 
     http.Redirect(w, r, fmt.Sprintf("/train/status"), http.StatusSeeOther)
+}
+
+
+func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.Request) {
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "export.pair.page.tmpl", &templateData{
+        Pairs: p,
+        Form: forms.New(nil),
+    })
+}
+
+
+func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("name", "idList")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        sourceLanguage := app.session.GetString(r, "sourceLanguage")
+        targetLanguage := app.session.GetString(r, "targetLanguage")
+
+        p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        app.render(w, r, "export.pair.page.tmpl", &templateData{
+            Pairs: p,
+            Form: form,
+        })
+        return
+    }
+
+    pairs, err := app.pairs.GetAndMarkedExported(app.infoLog, app.errorLog, form.Get("idList"), form.Get("name"))
+    if err == models.ErrDuplicateDataset {
+        sourceLanguage := app.session.GetString(r, "sourceLanguage")
+        targetLanguage := app.session.GetString(r, "targetLanguage")
+
+        p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        form.Errors.Add("name", "Dataset name already used")
+
+        app.render(w, r, "export.pair.page.tmpl", &templateData{
+            Pairs: p,
+            Form: form,
+        })
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    name := fmt.Sprintf("dataset_%s", time.Now().Format("20060102150405"))
+    tmp_file := fmt.Sprintf("./tmp/%s.tsv", name)
+    files.WriteDataset(tmp_file, pairs)
+
+
+    // Add download file for user
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", form.Get("name")))
+    w.Header().Add("Content-Type", "text/tab-separated-values")
+    http.ServeFile(w, r, tmp_file)
+
+    // Add feedback for the user as session information
+    app.session.Put(r, "flash", "Dataset successfully exported!")
+    //http.Redirect(w, r, fmt.Sprintf("/pair"), http.StatusSeeOther)
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Form: form})
 }

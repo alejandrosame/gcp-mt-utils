@@ -11,6 +11,8 @@ var (
     ErrInvalidCredentials = errors.New("models: invalid credentials")
     ErrDuplicateEmail = errors.New("models: duplicate email")
     ErrTokenNotFound = errors.New("models: token not found, expired or does not match with email")
+    ErrDuplicateDataset = errors.New("models: duplicate dataset")
+    ErrInjection = errors.New("models: input is not the expected")
 )
 
 // Misc models
