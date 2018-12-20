@@ -61,7 +61,7 @@ func main() {
 
     // Sessions always expires after 10 minutes
     session := sessions.New([]byte(*secret))
-    session.Lifetime = 10 * time.Minute
+    session.Lifetime = 60 * time.Minute
     session.Secure = true
     session.SameSite = http.SameSiteStrictMode
 
