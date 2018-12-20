@@ -31,7 +31,7 @@
     <body class="bg-dark">
         <header>
             <nav class="navbar navbar-expand-lg bg-dark navbar-dark fixed-top">
-                <a class="navbar-brand" href="/">Custom translations</a>
+                <a class="navbar-brand" id="swup" href="/">Custom translations {{if .AuthenticatedUser}}{{.Languages}}{{end}}</a>
                 <button class="navbar-toggler bg-dark" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
                     <span class="navbar-toggler-icon"></span>
                 </button>

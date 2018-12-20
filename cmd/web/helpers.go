@@ -36,6 +36,7 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) *templ
     }
 
     td.AuthenticatedUser = app.authenticatedUser(r)
+    td.Languages = app.selectedLanguages(r)
     td.CSRFToken = nosurf.Token(r)
     td.CurrentYear = time.Now().Year()
     // Recover feedback message for the user
@@ -99,4 +100,13 @@ func (app *application) translatorUser(r *http.Request) bool {
         return false
     }
     return user.Translator || user.Admin || user.Super
+}
+
+
+func (app *application) selectedLanguages(r *http.Request) string {
+    languages, ok := r.Context().Value(contextKeyLanguages).(string)
+    if !ok {
+        return ""
+    }
+    return languages
 }

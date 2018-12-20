@@ -19,6 +19,7 @@ import (
 type contextKey string
 
 var contextKeyUser = contextKey("user")
+var contextKeyLanguages = contextKey("languages")
 
 type application struct {
     errorLog      *log.Logger
