@@ -548,26 +548,13 @@ func (app *application) showDatasets(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (app *application) chooseLanguagesValidatePairForm(w http.ResponseWriter, r *http.Request) {
-    app.render(w, r, "choose.validate.pair.page.tmpl", &templateData{Form: forms.New(nil)})
-}
-
-
-func (app *application) chooseLanguagesValidatePair(w http.ResponseWriter, r *http.Request) {
+func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request) {
     err := r.ParseForm()
     if err != nil {
         app.clientError(w, http.StatusBadRequest)
         return
     }
 
-    form := forms.New(r.PostForm)
-    form.Required("sourceLanguage", "targetLanguage")
-    // If the form isn't valid, redisplay the template passing in the
-    // form.Form object as the data.
-    if !form.Valid() {
-        app.render(w, r, "choose.validate.pair.page.tmpl", &templateData{Form: form})
-        return
-    }
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
