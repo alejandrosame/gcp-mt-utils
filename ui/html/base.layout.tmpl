@@ -119,6 +119,31 @@
             init();
             document.addEventListener('swup:willReplaceContent', init);
             document.addEventListener('swup:contentReplaced', init);
+
+            function selectAllExport(source) {
+                checkboxes = document.getElementsByClassName('export-pair');
+                for(var i=0, n=checkboxes.length;i<n;i++) {
+                    checkboxes[i].checked = source.checked;
+                }
+            }
+
+            function getPairIdsToExport() {
+                checkboxes = document.getElementsByClassName('export-pair');
+                ids = ""
+                for(var i=0, n=checkboxes.length;i<n;i++) {
+                    if(checkboxes[i].checked){
+                        ids = ids + checkboxes[i].value + ","
+                    }
+                }
+                return ids.replace(/,$/g, '');
+            }
+
+            function submitExportPairForm() {
+                document.exportPairForm.idList.value = getPairIdsToExport()
+                document.theForm.action="/pairs/export";
+                document.exportPairForm.submit()
+            }
+
         </script>
     </body>
 </html>

@@ -1,52 +1,59 @@
 {{template "base" .}}
 
-{{define "title"}}Manage pairs{{end}}
+{{define "title"}}Select validated pairs to export{{end}}
 
 {{define "body"}}
-    <div>
+<div>
+    {{if .Pairs}}
         <div class="row mt-2">
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/validate'>
-                    Validate training pairs
-                </a>
+            <div class="col">
+                <label><input onClick="selectAllExport(this)" type="checkbox"> Select all</label>
             </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/create'>
-                    Create new training pair
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/export'>
-                    Export validated pairs to dataset
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/upload'>
-                    Upload training pairs from file
-                </a>
-            </div>
-        </div>
+            <div class="col">
+                {{with $.Form.Errors.Get "idList"}}
+                    <div class='bg-danger text-white'>No pairs selected</div>
+                {{end}}
 
-        <div class="row mt-2 justify-content-center">
-            <h2>Latest Pairs</h2>
+                <form name="exportPairForm" action='' method='POST' novalidate>
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                    <input type='hidden' name='idList' value=''>
+                    {{with .Form}}
+                        <div class="form-group">
+                            <label for="name" class="text-white">Dataset name: </label>
+                                {{with .Errors.Get "name"}}
+                                    <span class='bg-danger text-white'>{{.}}</span>
+                                {{end}}
+                            <input type='text' class="form-control bg-secondary text-white" name='name' value='{{.Get "name"}}'>
+                        </div>
+                        <div class="form-group">
+                            <input onClick="submitExportPairForm()" type='submit' class="btn btn-secondary" value='Export selected'>
+                        </div>
+                    {{end}}
+                </form>
+            </div>
         </div>
-        {{if .Pairs}}
-            {{range .Pairs}}
-            <div class="row mt-2">
-                <div class="col">
-                    <div class='card bg-secondary border-dark'>
+        {{range .Pairs}}
+        <div class="row mt-2">
+            <div class="col">
+                <div class='card bg-secondary border-dark'>
+                    <label>
                         <div class='card-header border-dark'>
                             <div class="row">
+                                <div class="col col-lg-1 col-md-1 col-sm-1">
+                                    <input class="export-pair" value="{{.ID}}" type="checkbox">
+                                </div>
                                 <div class="col text-center font-weight-bold">
-                                    <a href='/pair/{{.ID}}'>#{{.ID}}</a>
+                                    #{{.ID}}
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col text-center">
                                     <span class="font-weight-bold">{{.SourceLanguage}}</span>
+                                    <span class="small">({{.SourceVersion}})</span>
                                 </div>
                                 <div class="col text-center">
                                     <span class="font-weight-bold">{{.TargetLanguage}}</span>
+                                    <span class="small">({{.TargetVersion}})</span>
                                 </div>
                             </div>
                             <div class="row">
@@ -57,11 +64,11 @@
                         </div>
                         <div class='card-body border-dark'>
                             <div class="row">
-                                <div class="col text-justify-center">
-                                    {{truncate .SourceText 27}}
+                                <div class="col text-justify">
+                                    {{.SourceText}}
                                 </div>
-                                <div class="col text-justify-center">
-                                    {{truncate .TargetText 27}}
+                                <div class="col text-justify">
+                                    {{.TargetText}}
                                 </div>
                             </div>
                         </div>
@@ -77,7 +84,7 @@
                                     <div class="row">
                                         <div class="col text-center">
                                             {{if .Comments.Valid}}
-                                                {{truncate .Comments.Value 27}}
+                                                {{.Comments.Value}}
                                             {{else}}
                                                 No comments yet
                                             {{end}}
@@ -111,7 +118,6 @@
                                 {{end}}
                             </div>
                         </div>
-
                         <div class='card-footer border-dark'>
                             <div class="row">
                                 <div class="col text-center">
@@ -122,14 +128,20 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </label>
                 </div>
             </div>
-            {{end}}
-        {{else}}
-            <div class="row">
-                <p>There's nothing to see here... yet!</p>
-            </div>
+            <div class="w-100"></div>
+        </div>
         {{end}}
-    </div>
+    {{else}}
+        <div class="row mt-2">
+            <div class="col">
+                <div class="alert alert-info font-weight-bold">
+                    No pairs available to export
+                </div>
+            </div>
+        </div>
+    {{end}}
+</div>
 {{end}}
