@@ -3,6 +3,7 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
+<!--
 <form action='/translate' method='POST'>
     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
     {{with .Form}}
@@ -34,4 +35,29 @@
         </div>
     {{end}}
 </form>
+-->
+<div id="translation-motion">
+
+    <div class="deco deco--bg"></div>
+    <div id="slideshow" class="slideshow row">
+        <div class="col">
+            <div class="slide row mt-1">
+                <p contenteditable="true" class="slide__title text-white" id="source-text"
+                >Your text to translate</p>
+                <!--<input class="slide__title text-white">Masupitami (Source)</p>-->
+            </div>
+            <div class="slide row mt-1 " id="target-text">
+                <p class="slide__title slide__title--hidden text-white">Waldorfian</p>
+            </div>
+        </div>
+        <div class="col ml-4">
+            <div class="row mt-2">
+                <button class="btn btn-secondary translate__button">Translate text</button>
+            </div>
+            <div class="row mt-2">
+                <button class="btn btn-secondary reset__button">Write new text to translate</button>
+            </div>
+        </div>
+    </div>
+</div>
 {{end}}

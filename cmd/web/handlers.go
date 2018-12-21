@@ -2,6 +2,7 @@ package main
 
 import (
     "fmt"
+    "encoding/json"
     "net/http"
     "net/url"
     "strconv"
@@ -433,6 +434,46 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "flash", fmt.Sprintf("Translation completed successfully!"))
 
     app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request) {
+    type Reply struct {
+        Translation     string
+    }
+
+    text := r.URL.Query().Get(":source")
+    if text == "" {
+        reply := Reply{Translation: ""}
+        json.NewEncoder(w).Encode(reply)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+    sourceText := text
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    modelName := scanner.Text()
+
+
+    //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    reply := Reply{Translation: targetText}
+    json.NewEncoder(w).Encode(reply)
 }
 
 
