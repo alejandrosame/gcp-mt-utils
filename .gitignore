@@ -2,3 +2,4 @@ auth/*
 tls/*
 tmp/*
 ui/old/*
+*tooltip*
