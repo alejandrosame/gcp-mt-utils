@@ -107,18 +107,41 @@ a:focus {
 	color: var(--color-link-hover);
 }
 
+#translation-motion{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	overflow-x:hidden;
+	overflow-y:hidden;
+}
+
 .slide {
 	opacity: 0;
+	/*position: absolute;*/
+    left: 0%;
+    right: 0%;
+	font-size: 20px;
+	margin-bottom: 20%;
+	z-index: 2;
+}
+
+.slide--target {
+	opacity: 0;
+	position: absolute;
+    left: 0%;
+    right: 0%;
+	z-index: 1;
+}
+
+.slide--hidden {
+	opacity: 0;
+	/*pointer-events: none;*/
+	/*display: none;*/
 }
 
 .slide--current {
 	opacity: 1;
 	pointer-events: auto;
-}
-
-.slide__title--hidden {
-	opacity: 0;
-	pointer-events: none;
 }
 
 .nav {
@@ -145,13 +168,16 @@ a:focus {
 
 .deco--bg {
 	overflow: hidden;
+	overflow-y:hidden
 	opacity: 0;
+	display: none;
 	background-image: url(/static/img/motion/noise1.png);
 	position: absolute;
-	height: 160%;
-	width: 300%;
+	height: 300%;
+	width: 400%;
 	left: -100%;
 	top: -100%;
+	z-index: 10;
 	animation-name: grained;
 	animation-iteration-count: infinite;
 	animation-duration: 0.5s;
@@ -173,68 +199,9 @@ a:focus {
 	100% { transform: translate(-10%, 10%); }
 }
 
-/*
-.deco--shape {
-	opacity: 0;
-	background: var(--color-shape);
-	transform-origin: 50% 50%;
-	animation-iteration-count: infinite;
-	animation-direction: alternate;
-	animation-duration: 0.15s;
-	animation-timing-function: linear;
-}
-
-.deco--shape-hor {
-	left: 0;
-	width: 100vw;
-	transform: scale3d(1,0.2,1);
-	animation-name: vibrateHorizontal;
-}
-
-.deco--shape-ver {
-	top: 0;
-	height: 100vw;
-	transform: scale3d(0.2,1,1);
-	animation-name: vibrateVertical;
-}
-
-.deco--shape-1 {
-	animation-delay: 0.05s;
-}
-
-@keyframes vibrateHorizontal {
-	0% { transform: scale3d(1,0.2,1); }
-	100% { transform: scale3d(1,1,1); }
-}
-
-@keyframes vibrateVertical {
-	0% { transform: scale3d(0.2,1,1); }
-	100% { transform: scale3d(1,1,1); }
-}
-
-.deco--shape-hor.deco--shape-1 {
-	bottom: 40vh;
-	height: 10vh;
-}
-
-.deco--shape-hor.deco--shape-2 {
-	bottom: 10vh;
-	height: 20vh;
-}
-
-.deco--shape-ver.deco--shape-1 {
-	width: 5vw;
-	left: 15vw;
-}
-
-.deco--shape-ver.deco--shape-2 {
-	width: 15vw;
-	left: 25vw;
-}
-*/
-
 .show-deco .deco {
 	opacity: 1;
+	display: inline;
 }
 
 @media screen and (min-width: 53em) {
@@ -290,8 +257,9 @@ a:focus {
 		pointer-events: auto;
 	}
 	.slideshow {
+		position: relative;
+		width: 100%;
 		padding: 5rem 0 0 0;
-		height: 100vh;
 		justify-content: center;
 		grid-template-rows: calc(100vh - 10rem) 5rem;
 	}
