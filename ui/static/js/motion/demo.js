@@ -111,8 +111,10 @@ class Slideshow {
         this.tl = new TimelineMax({
             onStart: () => {
                 upcomingSlide.DOM.el.classList.add('slide--current');
+                upcomingSlide.DOM.el.classList.remove('slide--hidden');
             },
             onComplete: () => {
+                currentSlide.DOM.el.classList.add('slide--hidden');
                 currentSlide.DOM.el.classList.remove('slide--current');
                 this.isAnimating = false;
 
@@ -127,22 +129,7 @@ class Slideshow {
         }).add('begin');
 
         this.tl
-        //.set(currentImg, {transformOrigin: direction === 'next' ? '100% 50%' : '0% 50%'})
         .set(upcomingTitle, {x: direction === 'next' ? 600 : -600, y: 0, opacity: 0})
-        /*
-        .to(currentImg, 0.3, {
-            ease: Quad.easeOut,
-            scaleX: 2,
-            scaleY: 0.95,
-            opacity: 0.5
-        }, 'begin')
-        */
-        /*
-        .to(currentImg, 0.5, {
-            ease: Expo.easeOut,
-            x: direction === 'next' ? -1*winsize.width : winsize.width
-        }, 'begin+=0.2')
-        */
         .to(currentTitle, 0.1, {
             ease: Quad.easeOut,
             x: direction === 'next' ? 8 : -8,
@@ -157,25 +144,6 @@ class Slideshow {
             },
             opacity: 0
         }, 0.5/currentTitleLettersTotal, 'begin+=0.6')
-        /*
-        .set(upcomingImg, {
-            transformOrigin: direction === 'next' ? '0% 50%' : '100% 50%',
-            x: direction === 'next' ? winsize.width : -1*winsize.width,
-            scaleX: 1.5,
-            scaleY: 0.8,
-            opacity: 0.3
-        }, 'begin+=1.05')
-        .to(upcomingImg, 0.2, {
-            ease: Expo.easeOut,
-            x: 0
-        }, 'begin+=1.05')
-        .to(upcomingImg, 0.6, {
-            ease: Elastic.easeOut.config(1,0.7),
-            scaleX: 1,
-            scaleY: 1,
-            opacity: 1
-        }, 'begin+=1.1')
-        */
         .to(upcomingTitle, 0.6, {
             ease: Elastic.easeOut.config(1,0.7),
             x: 0,
@@ -192,7 +160,3 @@ class Slideshow {
         }, 'begin+=1.1');
     }
 }
-
-    //new Slideshow(document.querySelector('.slideshow'));
-
-    //imagesLoaded(document.querySelectorAll('.slide__image'), {background: true}, () => document.body.classList.remove('loading'));

@@ -115,14 +115,20 @@ a:focus {
 	opacity: 0;
 }
 
+.slide-source {
+	margin-right: -16.2%;
+}
+
+.slide--hidden {
+	opacity: 0;
+	pointer-events: none;
+	display: none;
+}
+
 .slide--current {
 	opacity: 1;
 	pointer-events: auto;
-}
-
-.slide__title--hidden {
-	opacity: 0;
-	pointer-events: none;
+	font-size: 20px;
 }
 
 .nav {
