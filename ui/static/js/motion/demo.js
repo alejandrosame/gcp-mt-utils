@@ -78,31 +78,21 @@ class Slideshow {
         this.slidesTotal = this.slides.length;
     }
     initEvents() {
-        this.navigationCtrls.translate.addEventListener('click', () => {
+        this.navigationCtrls.translate.addEventListener('click', () => this.navigate('next'));
+        this.navigationCtrls.reset.addEventListener('click', () => this.navigate('prev'));
+    }
+    navigate(direction = 'next') {
+        if ( this.isAnimating ) return;
+        this.isAnimating = true;
+
+        if (direction == 'next'){
             var title = this.slides[0].DOM.el.querySelector('.slide__title');
             var text = reconstructText(title);
             var url = "/translateQuery/" + encodeURIComponent(text);
             var raw = httpGet(url);
             var reply = JSON.parse(raw);
-            console.log("Result -> ." + reply["Translation"] +".");
-
             this.refresh(reply["Translation"]);
-
-            this.navigate('next');
-        });
-        this.navigationCtrls.reset.addEventListener('click', () => this.navigate('prev'));
-    }
-    navigate(direction = 'next') {
-        if (direction == 'next'){
-            this.DOM.el.querySelector('.translate__button').disabled = true;
-            this.DOM.el.querySelector('.reset__button').disabled = false;
-        } else {
-            this.DOM.el.querySelector('.translate__button').disabled = false;
-            this.DOM.el.querySelector('.reset__button').disabled = true;
         }
-
-        if ( this.isAnimating ) return;
-        this.isAnimating = true;
 
         const currentSlide = this.slides[this.current];
         this.current = direction === 'next' ? this.current < this.slidesTotal - 1 ? this.current+1 : 0 :
@@ -124,6 +114,14 @@ class Slideshow {
             onComplete: () => {
                 currentSlide.DOM.el.classList.remove('slide--current');
                 this.isAnimating = false;
+
+                if (direction == 'next'){
+                    this.DOM.el.querySelector('.translate__button').disabled = true;
+                    this.DOM.el.querySelector('.reset__button').disabled = false;
+                } else {
+                    this.DOM.el.querySelector('.translate__button').disabled = false;
+                    this.DOM.el.querySelector('.reset__button').disabled = true;
+                }
             }
         }).add('begin');
 
