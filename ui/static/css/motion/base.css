@@ -113,10 +113,9 @@ a:focus {
 
 .slide {
 	opacity: 0;
-}
-
-.slide-source {
-	margin-right: -16.2%;
+	position: absolute;
+    left: 0%;
+    right: 0%;
 }
 
 .slide--hidden {

@@ -37,9 +37,7 @@ function deleteSpans(ele) {
 class Slide {
     constructor(el) {
         this.DOM = {el: el};
-        //this.DOM.img = this.DOM.el.querySelector('.slide__image');
         this.DOM.title = this.DOM.el.querySelector('.slide__title');
-        //charming(this.DOM.title, {splitRegex: " "});
         charming(this.DOM.title);
         this.DOM.titleLetters = Array.from(this.DOM.title.querySelectorAll('span'));
         this.titleLettersTotal = this.DOM.titleLetters.length;
@@ -101,11 +99,9 @@ class Slideshow {
         const upcomingSlide = this.slides[this.current];
 
         // The elements we will animate.
-        //const currentImg = currentSlide.DOM.img;
         const currentTitle = currentSlide.DOM.title;
         const currentTitleLetters = currentSlide.DOM.titleLetters;
         const currentTitleLettersTotal = currentSlide.titleLettersTotal;
-        //const upcomingImg = upcomingSlide.DOM.img;
         const upcomingTitle = upcomingSlide.DOM.title;
 
         this.tl = new TimelineMax({
