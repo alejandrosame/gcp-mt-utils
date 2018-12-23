@@ -33,7 +33,7 @@
         word += split[i]
         nWords += 1
 
-        if (nWords == 10){
+        if (nWords == 30){
             node.appendChild(document.createTextNode(word))
             word = ""
             nWords = 0
