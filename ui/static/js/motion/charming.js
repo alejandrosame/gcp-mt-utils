@@ -1,5 +1,5 @@
 !function(element){
-	"undefined"==typeof module?this.charming=element:module.exports=element
+    "undefined"==typeof module?this.charming=element:module.exports=element
 }(function (element, options) {
   options = options || {}
   element.normalize()
@@ -14,6 +14,7 @@
     var string = element.nodeValue
     var split = splitRegex ? string.split(splitRegex) : string
     var length = split.length
+    var word = ""
     var i = -1
     while (++i < length) {
       var node = document.createElement(tagName)
@@ -22,13 +23,23 @@
         count++
       }
       if (split[i] == "\n"){
-      	node.appendChild(document.createElement("br"))
+        node.appendChild(document.createTextNode(word))
+        node.appendChild(document.createElement("br"))
+        word = ""
       }
-      else{
-      	node.appendChild(document.createTextNode(split[i]))
+      else if (split[i] == " "){
+        word += split[i]
+        node.appendChild(document.createTextNode(word))
+        word = ""
+      }
+      else {
+        word += split[i]
       }
       node.setAttribute('aria-hidden', 'true')
       parentNode.insertBefore(node, element)
+    }
+    if (word != ""){
+        node.appendChild(document.createTextNode(word))
     }
     if (string.trim() !== '') {
       parentNode.setAttribute('aria-label', string)

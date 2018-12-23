@@ -107,6 +107,10 @@ a:focus {
 	color: var(--color-link-hover);
 }
 
+#translation-motion{
+	width: 100%;
+}
+
 .slide {
 	opacity: 0;
 }

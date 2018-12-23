@@ -39,6 +39,7 @@ class Slide {
         this.DOM = {el: el};
         //this.DOM.img = this.DOM.el.querySelector('.slide__image');
         this.DOM.title = this.DOM.el.querySelector('.slide__title');
+        //charming(this.DOM.title, {splitRegex: " "});
         charming(this.DOM.title);
         this.DOM.titleLetters = Array.from(this.DOM.title.querySelectorAll('span'));
         this.titleLettersTotal = this.DOM.titleLetters.length;
