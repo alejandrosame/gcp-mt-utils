@@ -816,6 +816,7 @@ func (app *application) trainDataset(w http.ResponseWriter, r *http.Request) {
     if form.Get("cancel") != "" {
         app.session.Put(r, "flash", "Training not launched!")
         http.Redirect(w, r, fmt.Sprintf("/dataset"), http.StatusSeeOther)
+        return
     }
 
     form.Required("modelDisplayName")
