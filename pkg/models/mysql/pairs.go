@@ -139,12 +139,15 @@ func (m *PairModel) Get(id int) (*models.Pair, error) {
 }
 
 
-func (m *PairModel) Latest() ([]*models.Pair, error) {
+func (m *PairModel) Latest(sourceLanguage, targetLanguage string) ([]*models.Pair, error) {
 
-    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    ORDER BY created DESC, id DESC LIMIT 10`
+    stmt := `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text, 
+                    text_detail, comments, validated, gcp_dataset, created, updated 
+             FROM pairs
+             WHERE source_language = ? AND target_language = ?
+             ORDER BY created DESC, id DESC LIMIT 10`
 
-    rows, err := m.DB.Query(stmt)
+    rows, err := m.DB.Query(stmt, sourceLanguage, targetLanguage)
     if err != nil {
         return nil, err
     }
@@ -155,7 +158,12 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
     for rows.Next() {
         p := &models.Pair{}
 
-        err = rows.Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, &p.Created)
+        err = rows.Scan(&p.ID,
+                        &p.SourceLanguage, &p.SourceVersion,
+                        &p.TargetLanguage, &p.TargetVersion,
+                        &p.SourceText, &p.TargetText,
+                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                        &p.Created, &p.Updated)
         if err != nil {
             return nil, err
         }
@@ -191,33 +199,19 @@ func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (i
 
 func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
 
-    stmt := "SELECT source_language, target_language FROM pairs WHERE id = ?"
-
-    previous := &models.Pair{}
-
-    err := m.DB.QueryRow(stmt, id).Scan(&previous.SourceLanguage, &previous.TargetLanguage)
-    if err == sql.ErrNoRows {
-        return nil, models.ErrNoRecord
-    } else if err != nil {
-        return nil, err
-    }
-
-    stmt = `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text, 
-                   text_detail, comments, validated, gcp_dataset, created, updated
-    FROM pairs
-    WHERE source_language = ? AND target_language = ? AND NOT validated
-    ORDER BY RAND()
-    LIMIT 1`
+    stmt := `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text,
+                    text_detail, comments, validated, gcp_dataset, created, updated
+            FROM pairs
+            WHERE id = ?`
 
     p := &models.Pair{}
 
-    err = m.DB.QueryRow(stmt, previous.SourceLanguage,
-                        previous.TargetLanguage).Scan(&p.ID,
-                                                      &p.SourceLanguage, &p.SourceVersion,
-                                                      &p.TargetLanguage, &p.TargetVersion,
-                                                      &p.SourceText, &p.TargetText,
-                                                      &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
-                                                      &p.Created, &p.Updated)
+    err := m.DB.QueryRow(stmt, id).Scan(&p.ID,
+                                        &p.SourceLanguage, &p.SourceVersion,
+                                        &p.TargetLanguage, &p.TargetVersion,
+                                        &p.SourceText, &p.TargetText,
+                                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                                        &p.Created, &p.Updated)
     if err == sql.ErrNoRows {
         return nil, models.ErrNoRecord
     } else if err != nil {
@@ -297,10 +291,10 @@ func (m *PairModel) GetValidatedNotExported(sourceLanguage, targetLanguage strin
                      source_text, target_text, text_detail, comments, validated,
                      gcp_dataset,created, updated
               FROM pairs
-              WHERE gcp_dataset IS NULL AND validated = true
+              WHERE source_language = ? AND target_language = ? AND gcp_dataset IS NULL AND validated = true
               ORDER BY id ASC`
 
-    rows, err := m.DB.Query(sqlStr)
+    rows, err := m.DB.Query(sqlStr, sourceLanguage, targetLanguage)
     if err != nil {
         return nil, err
     }

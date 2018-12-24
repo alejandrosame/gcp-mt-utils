@@ -18,18 +18,15 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-    p, err := app.pairs.Latest()
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    app.render(w, r, "landing.page.tmpl", &templateData{Pairs: p})
+    app.render(w, r, "landing.page.tmpl", &templateData{})
 }
 
 
 func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
-    p, err := app.pairs.Latest()
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    p, err := app.pairs.Latest(sourceLanguage, targetLanguage)
     if err != nil {
         app.serverError(w, err)
         return
@@ -596,13 +593,13 @@ func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request)
         return
     }
 
-
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
     newId, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
     if err == models.ErrNoRecord {
-        app.notFound(w)
+        app.session.Put(r, "flash", "No pairs to validate found")
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
         return
     } else if err != nil {
         app.serverError(w, err)
@@ -626,6 +623,12 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
         return
     } else if err != nil {
         app.serverError(w, err)
+        return
+    }
+
+    if p.Validated {
+        app.session.Put(r, "flash", fmt.Sprintf("Pair %d is already validated!", id))
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
         return
     }
 
@@ -694,7 +697,8 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     // Get another pair to validate from the same scope
     newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
     if err == models.ErrNoRecord {
-        app.notFound(w)
+        app.session.Put(r, "flash", "No pairs found to be validated!")
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
         return
     } else if err != nil {
         app.serverError(w, err)
@@ -995,6 +999,12 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
     p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
     if err != nil {
         app.serverError(w, err)
+        return
+    }
+
+    if len(p) == 0 {
+        app.session.Put(r, "flash", "No pairs available to be exported!")
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
         return
     }
 
