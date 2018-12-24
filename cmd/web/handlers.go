@@ -18,18 +18,15 @@ import (
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-    p, err := app.pairs.Latest()
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    app.render(w, r, "landing.page.tmpl", &templateData{Pairs: p})
+    app.render(w, r, "landing.page.tmpl", &templateData{})
 }
 
 
 func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
-    p, err := app.pairs.Latest()
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    p, err := app.pairs.Latest(sourceLanguage, targetLanguage)
     if err != nil {
         app.serverError(w, err)
         return

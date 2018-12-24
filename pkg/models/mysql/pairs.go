@@ -139,12 +139,14 @@ func (m *PairModel) Get(id int) (*models.Pair, error) {
 }
 
 
-func (m *PairModel) Latest() ([]*models.Pair, error) {
+func (m *PairModel) Latest(sourceLanguage, targetLanguage string) ([]*models.Pair, error) {
 
-    stmt := `SELECT id, source_language, target_language, source_text, target_text, created FROM pairs
-    ORDER BY created DESC, id DESC LIMIT 10`
+    stmt := `SELECT id, source_language, target_language, source_text, target_text, created, updated
+             FROM pairs
+             WHERE source_language = ? AND target_language = ?
+             ORDER BY created DESC, id DESC LIMIT 10`
 
-    rows, err := m.DB.Query(stmt)
+    rows, err := m.DB.Query(stmt, sourceLanguage, targetLanguage)
     if err != nil {
         return nil, err
     }
@@ -155,7 +157,8 @@ func (m *PairModel) Latest() ([]*models.Pair, error) {
     for rows.Next() {
         p := &models.Pair{}
 
-        err = rows.Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, &p.Created)
+        err = rows.Scan(&p.ID, &p.SourceLanguage, &p.TargetLanguage, &p.SourceText, &p.TargetText, &p.Created, 
+                        &p.Updated)
         if err != nil {
             return nil, err
         }
