@@ -1002,6 +1002,12 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
         return
     }
 
+    if len(p) == 0 {
+        app.session.Put(r, "flash", "No pairs available to be exported!")
+        http.Redirect(w, r, "/pair", http.StatusSeeOther)
+        return
+    }
+
     app.render(w, r, "export.pair.page.tmpl", &templateData{
         Pairs: p,
         Form: forms.New(nil),

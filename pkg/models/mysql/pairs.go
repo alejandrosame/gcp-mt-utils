@@ -291,10 +291,10 @@ func (m *PairModel) GetValidatedNotExported(sourceLanguage, targetLanguage strin
                      source_text, target_text, text_detail, comments, validated,
                      gcp_dataset,created, updated
               FROM pairs
-              WHERE gcp_dataset IS NULL AND validated = true
+              WHERE source_language = ? AND target_language = ? AND gcp_dataset IS NULL AND validated = true
               ORDER BY id ASC`
 
-    rows, err := m.DB.Query(sqlStr)
+    rows, err := m.DB.Query(sqlStr, sourceLanguage, targetLanguage)
     if err != nil {
         return nil, err
     }
