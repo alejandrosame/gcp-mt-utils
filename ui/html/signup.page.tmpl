@@ -13,7 +13,7 @@
                 {{with .Errors.Get "name"}}
                     <label for="name" class='bg-danger text-white'>{{.}}</label>
                 {{end}}
-                <input class="form-control form-control-lg bg-secondary" type='text' name='name'
+                <input class="form-control form-control-lg bg-secondary text-white" type='text' name='name'
                        value='{{.Get "name"}}'>
             </div>
         </div>
@@ -23,7 +23,7 @@
                 {{with .Errors.Get "email"}}
                     <label for="email" class='bg-danger text-white'>{{.}}</label>
                 {{end}}
-                <input class="form-control form-control-lg bg-secondary" type='email' name='email'
+                <input class="form-control form-control-lg bg-secondary text-white" type='email' name='email'
                        value='{{.Get "email"}}'>
             </div>
         </div>
@@ -33,7 +33,7 @@
                 {{with .Errors.Get "password"}}
                     <label for="password" class='bg-danger text-white'>{{.}}</label>
                 {{end}}
-                <input class="form-control form-control-lg bg-secondary" type='password' name='password'>
+                <input class="form-control form-control-lg bg-secondary text-white" type='password' name='password'>
             </div>
         </div>
         <div class="form-group row">

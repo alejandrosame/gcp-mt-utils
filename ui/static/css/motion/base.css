@@ -177,7 +177,7 @@ a:focus {
 	width: 400%;
 	left: -100%;
 	top: -100%;
-	z-index: 10;
+	z-index: 2000;
 	animation-name: grained;
 	animation-iteration-count: infinite;
 	animation-duration: 0.5s;

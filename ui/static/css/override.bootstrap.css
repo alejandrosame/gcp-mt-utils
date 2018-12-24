@@ -1,0 +1,15 @@
+h1, h2, h3, h4, h5, h6 {
+    color: white;
+}
+
+.bg-dark{
+    background-color:#222222!important
+}
+
+.card{
+    color: white;
+}
+
+.alert{
+    z-index: 99999;
+}

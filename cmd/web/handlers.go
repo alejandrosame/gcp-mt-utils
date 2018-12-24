@@ -353,7 +353,7 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     // Add feedback for the user as session information
     app.session.Put(r, "flash", fmt.Sprintf("%d Pairs successfully uploaded!", count))
 
-    http.Redirect(w, r, "/", http.StatusSeeOther)
+    http.Redirect(w, r, "/pair", http.StatusSeeOther)
 }
 
 
