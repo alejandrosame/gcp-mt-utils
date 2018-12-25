@@ -88,7 +88,7 @@ class Slideshow {
         var sourceText = reconstructText(sourceTitle);
         var targetTitle = this.slides[1].DOM.el.querySelector('.slide__title');
         var targetText = reconstructText(targetTitle);
-        var url = "/translateExportQuery?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
+        var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
 
         console.log(url)
 
@@ -101,7 +101,7 @@ class Slideshow {
         if (direction == 'next'){
             var title = this.slides[0].DOM.el.querySelector('.slide__title');
             var text = reconstructText(title);
-            var url = "/translateQuery/" + encodeURIComponent(text);
+            var url = "/translate/" + encodeURIComponent(text);
             var raw = httpGet(url);
             var reply = JSON.parse(raw);
             this.refresh(reply["Translation"]);

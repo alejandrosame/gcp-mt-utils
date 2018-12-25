@@ -354,87 +354,12 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (app *application) translateForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 
-func (app *application) translateOrExport(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    form := forms.New(r.PostForm)
-    form.OneRequired("translate", "export")
-
-    if !form.Valid() {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    if form.Get("translate") != "" {
-        app.translate(w, r)
-    } else {
-        app.exportTranslation(w, r)
-    }
-}
-
-
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    form := forms.New(r.PostForm)
-    form.Required("sourceText")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-
-    // If the form isn't valid, redisplay the template passing in the
-    // form.Form object as the data.
-    if !form.Valid() {
-        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
-        return
-    }
-
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := form.Get("sourceText")
-
-    file, err := os.Open("./auth/auth.txt")
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-    defer file.Close()
-
-    scanner := bufio.NewScanner(file)
-    scanner.Scan()
-    modelName := scanner.Text()
-
-
-    //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    form.Set("targetText", targetText)
-
-    // Add feedback for the user as session information
-    app.session.Put(r, "flash", fmt.Sprintf("Translation completed successfully!"))
-
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
-}
-
-
-func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request) {
     type Reply struct {
         Translation     string
     }
@@ -461,7 +386,6 @@ func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request
     scanner.Scan()
     modelName := scanner.Text()
 
-
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
     targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
     if err != nil {
@@ -475,41 +399,6 @@ func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request
 
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    form := forms.New(r.PostForm)
-    form.Required("sourceText", "targetText")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-    form.MaxLength("targetText", maxChar)
-
-    // If the form isn't valid, redisplay the template passing in the
-    // form.Form object as the data.
-    if !form.Valid() {
-        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
-        return
-    }
-
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := form.Get("sourceText")
-    targetText := form.Get("targetText")
-
-    tmpFile := "./tmp/translation.docx"
-    fileSize := files.WriteTranslationToDocx(tmpFile, sourceLanguage, targetLanguage, sourceText, targetText)
-
-    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
-
-    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
-}
-
-
-func (app *application) translateExportQueryGet(w http.ResponseWriter, r *http.Request) {
     sourceText, ok := r.URL.Query()["source"]
     if !ok {
         app.notFound(w)
