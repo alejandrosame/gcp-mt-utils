@@ -122,7 +122,7 @@ func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText
 
     doc.SaveToFile(tmp_file)
 
-    file, err := os.Create(tmp_file)
+    file, err := os.Open(tmp_file)
     if err != nil {
         log.Fatal(err)
     }

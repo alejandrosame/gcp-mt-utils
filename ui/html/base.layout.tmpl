@@ -160,6 +160,13 @@
                 document.exportPairForm.submit();
                 window.location = "/pair";
             }
+
+            function submitExportTranslation() {
+                document.exportPairForm.idList.value = getPairIdsToExport()
+                document.exportPairForm.action="/pairs/export";
+                document.exportPairForm.submit();
+                window.location = "/pair";
+            }
         </script>
     </body>
 </html>

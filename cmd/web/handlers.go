@@ -505,8 +505,37 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
 
     name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
 
-    app.downloadFile(w, r, tmpFile, name, fileSize)
+    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
 }
+
+
+func (app *application) translateExportQueryGet(w http.ResponseWriter, r *http.Request) {
+    sourceText, ok := r.URL.Query()["source"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
+
+    targetText, ok := r.URL.Query()["target"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
+
+    app.infoLog.Printf("%v", sourceText[0])
+    app.infoLog.Printf("%v", targetText[0])
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    tmpFile := "./tmp/translation.docx"
+    fileSize := files.WriteTranslationToDocx(tmpFile, sourceLanguage, targetLanguage, sourceText[0], targetText[0])
+
+    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
+
+    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
+}
+
 
 func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
 
@@ -1008,9 +1037,13 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
 }
 
 
-func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, tmpFile, name, fileSize string) {
+func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, fileType, tmpFile, name, fileSize string) {
     w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
-    w.Header().Add("Content-Type", "text/tab-separated-values")
+    if fileType == "tsv"{
+        w.Header().Add("Content-Type", "text/tab-separated-values")
+    } else {
+        w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    }
     w.Header().Set("Content-Length", fileSize)
     http.ServeFile(w, r, tmpFile)
 }
@@ -1073,5 +1106,5 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
     fileSize := files.WriteDataset(tmpFile, pairs)
 
     app.session.Put(r, "flash", "Dataset successfully exported!")
-    app.downloadFile(w, r, tmpFile, form.Get("name"), fileSize)
+    app.downloadFile(w, r, "tsv", tmpFile, form.Get("name"), fileSize)
 }

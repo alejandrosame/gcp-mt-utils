@@ -3,45 +3,12 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<!--
-<form action='/translate' method='POST'>
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    {{with .Form}}
-        <div class="form-group row">
-            <div class="col">
-                <label for="sourceText" class='text-white'>Source text:</label>
-                {{with .Errors.Get "sourceText"}}
-                    <label for="sourceText" class='bg-danger text-white'>{{.}}</label>
-                {{end}}
-                <textarea class="form-control form-control-lg bg-secondary" name='sourceText'>{{.Get "sourceText"}}</textarea>
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class="col">
-                <label for="targetText" class="text-white">Target text:</label>
-                {{with .Errors.Get "targetText"}}
-                    <label for="targetText" class='bg-danger text-white'>{{.}}</label>
-                {{end}}
-                <textarea class="form-control form-control-lg bg-secondary text-white" name='targetText'>
-                    {{.Get "targetText"}}
-                </textarea>
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class="col">
-                <input class="btn btn-secondary" type='submit' name="translate" value='Translate text'>
-                <input class="btn btn-secondary" type='submit' name="export" value='Export translation'>
-            </div>
-        </div>
-    {{end}}
-</form>
--->
-
 <div id="slideshow" class="slideshow">
     <div class="row text-center">
         <div class="col text-center">
             <button class="btn btn-secondary translate__button">Translate text</button>
             <button class="btn btn-secondary reset__button">Write new text to translate</button>
+            <button class="btn btn-secondary export__button">Export translation</button>
         </div>
     </div>
     <div class="row mt-4">

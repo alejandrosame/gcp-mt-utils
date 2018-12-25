@@ -43,6 +43,7 @@ func (app *application) routes() http.Handler {
 
     // Translator routes
     mux.Get("/translateQuery/:source", translatorMiddleware.ThenFunc(app.translateQueryGet))
+    mux.Get("/translateExportQuery", translatorMiddleware.ThenFunc(app.translateExportQueryGet))
     mux.Get("/translate", translatorMiddleware.ThenFunc(app.translateForm))
     mux.Post("/translate", translatorMiddleware.ThenFunc(app.translateOrExport))
 
