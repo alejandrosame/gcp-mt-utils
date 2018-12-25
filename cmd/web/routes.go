@@ -42,9 +42,9 @@ func (app *application) routes() http.Handler {
     mux.Post("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairs))
 
     // Translator routes
-    mux.Get("/translateQuery/:source", translatorMiddleware.ThenFunc(app.translateQueryGet))
-    mux.Get("/translate", translatorMiddleware.ThenFunc(app.translateForm))
-    mux.Post("/translate", translatorMiddleware.ThenFunc(app.translateOrExport))
+    mux.Get("/translate/export", translatorMiddleware.ThenFunc(app.exportTranslation))
+    mux.Get("/translate/:source", translatorMiddleware.ThenFunc(app.translate))
+    mux.Get("/translate", translatorMiddleware.ThenFunc(app.translatePage))
 
     // Admin routes
     mux.Get("/model/delete/:name", adminMiddleware.ThenFunc(app.deleteModelForm))

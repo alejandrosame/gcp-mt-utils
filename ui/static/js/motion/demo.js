@@ -54,10 +54,12 @@ class Slideshow {
         this.slides[this.current].DOM.el.classList.add('slide--current');
 
         this.DOM.el.querySelector('.reset__button').disabled = true;
+        this.DOM.el.querySelector('.export__button').disabled = true;
 
         this.navigationCtrls = {
             translate: this.DOM.el.querySelector('.translate__button'),
-            reset: this.DOM.el.querySelector('.reset__button')
+            reset: this.DOM.el.querySelector('.reset__button'),
+            export: this.DOM.el.querySelector('.export__button')
         };
         this.initEvents();
     }
@@ -79,6 +81,18 @@ class Slideshow {
     initEvents() {
         this.navigationCtrls.translate.addEventListener('click', () => this.navigate('next'));
         this.navigationCtrls.reset.addEventListener('click', () => this.navigate('prev'));
+        this.navigationCtrls.export.addEventListener('click', () => this.exportTranslation());
+    }
+    exportTranslation() {
+        var sourceTitle = this.slides[0].DOM.el.querySelector('.slide__title');
+        var sourceText = reconstructText(sourceTitle);
+        var targetTitle = this.slides[1].DOM.el.querySelector('.slide__title');
+        var targetText = reconstructText(targetTitle);
+        var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
+
+        console.log(url)
+
+        window.open(url, "_blank");
     }
     navigate(direction = 'next') {
         if ( this.isAnimating ) return;
@@ -87,7 +101,7 @@ class Slideshow {
         if (direction == 'next'){
             var title = this.slides[0].DOM.el.querySelector('.slide__title');
             var text = reconstructText(title);
-            var url = "/translateQuery/" + encodeURIComponent(text);
+            var url = "/translate/" + encodeURIComponent(text);
             var raw = httpGet(url);
             var reply = JSON.parse(raw);
             this.refresh(reply["Translation"]);
@@ -117,9 +131,11 @@ class Slideshow {
                 if (direction == 'next'){
                     this.DOM.el.querySelector('.translate__button').disabled = true;
                     this.DOM.el.querySelector('.reset__button').disabled = false;
+                    this.DOM.el.querySelector('.export__button').disabled = false;
                 } else {
                     this.DOM.el.querySelector('.translate__button').disabled = false;
                     this.DOM.el.querySelector('.reset__button').disabled = true;
+                    this.DOM.el.querySelector('.export__button').disabled = true;
                 }
             }
         }).add('begin');

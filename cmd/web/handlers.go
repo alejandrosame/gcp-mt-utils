@@ -354,87 +354,12 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (app *application) translateForm(w http.ResponseWriter, r *http.Request) {
+func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
 
-func (app *application) translateOrExport(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    form := forms.New(r.PostForm)
-    form.OneRequired("translate", "export")
-
-    if !form.Valid() {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    if form.Get("translate") != "" {
-        app.translate(w, r)
-    } else {
-        app.exportTranslation(w, r)
-    }
-}
-
-
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
-        return
-    }
-
-    form := forms.New(r.PostForm)
-    form.Required("sourceText")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-
-    // If the form isn't valid, redisplay the template passing in the
-    // form.Form object as the data.
-    if !form.Valid() {
-        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
-        return
-    }
-
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := form.Get("sourceText")
-
-    file, err := os.Open("./auth/auth.txt")
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-    defer file.Close()
-
-    scanner := bufio.NewScanner(file)
-    scanner.Scan()
-    modelName := scanner.Text()
-
-
-    //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    form.Set("targetText", targetText)
-
-    // Add feedback for the user as session information
-    app.session.Put(r, "flash", fmt.Sprintf("Translation completed successfully!"))
-
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
-}
-
-
-func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request) {
     type Reply struct {
         Translation     string
     }
@@ -461,7 +386,6 @@ func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request
     scanner.Scan()
     modelName := scanner.Text()
 
-
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
     targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
     if err != nil {
@@ -475,45 +399,32 @@ func (app *application) translateQueryGet(w http.ResponseWriter, r *http.Request
 
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
+    sourceText, ok := r.URL.Query()["source"]
+    if !ok {
+        app.notFound(w)
         return
     }
 
-    form := forms.New(r.PostForm)
-    form.Required("sourceText", "targetText")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-    form.MaxLength("targetText", maxChar)
-
-    // If the form isn't valid, redisplay the template passing in the
-    // form.Form object as the data.
-    if !form.Valid() {
-        app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+    targetText, ok := r.URL.Query()["target"]
+    if !ok {
+        app.notFound(w)
         return
     }
+
+    app.infoLog.Printf("%v", sourceText[0])
+    app.infoLog.Printf("%v", targetText[0])
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := form.Get("sourceText")
-    targetText := form.Get("targetText")
 
-    tmp_file := "./tmp/translation.docx"
-    files.WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText)
+    tmpFile := "./tmp/translation.docx"
+    fileSize := files.WriteTranslationToDocx(tmpFile, sourceLanguage, targetLanguage, sourceText[0], targetText[0])
 
     name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
 
-    // Add download file for user
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
-    w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    http.ServeFile(w, r, tmp_file)
-
-    // Add feedback for the user as session information
-    app.session.Put(r, "flash", "Translation successfully exported!")
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
 }
+
 
 func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
 
@@ -1015,6 +926,18 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
 }
 
 
+func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, fileType, tmpFile, name, fileSize string) {
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
+    if fileType == "tsv"{
+        w.Header().Add("Content-Type", "text/tab-separated-values")
+    } else {
+        w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    }
+    w.Header().Set("Content-Length", fileSize)
+    http.ServeFile(w, r, tmpFile)
+}
+
+
 func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Request) {
     err := r.ParseForm()
     if err != nil {
@@ -1067,18 +990,10 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
         return
     }
 
-    name := fmt.Sprintf("dataset_%s", time.Now().Format("20060102150405"))
-    tmp_file := fmt.Sprintf("./tmp/%s.tsv", name)
-    files.WriteDataset(tmp_file, pairs)
+    tmpName := fmt.Sprintf("dataset_%s", time.Now().Format("20060102150405"))
+    tmpFile := fmt.Sprintf("./tmp/%s.tsv", tmpName)
+    fileSize := files.WriteDataset(tmpFile, pairs)
 
-
-    // Add download file for user
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", form.Get("name")))
-    w.Header().Add("Content-Type", "text/tab-separated-values")
-    http.ServeFile(w, r, tmp_file)
-
-    // Add feedback for the user as session information
     app.session.Put(r, "flash", "Dataset successfully exported!")
-    //http.Redirect(w, r, fmt.Sprintf("/pair"), http.StatusSeeOther)
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Form: form})
+    app.downloadFile(w, r, "tsv", tmpFile, form.Get("name"), fileSize)
 }

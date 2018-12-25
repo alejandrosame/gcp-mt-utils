@@ -14,7 +14,7 @@
                     <div class='bg-danger text-white'>No pairs selected</div>
                 {{end}}
 
-                <form name="exportPairForm" action='' method='POST' novalidate>
+                <form name="exportPairForm" action='' method='POST' target='_blank' novalidate>
                     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <input type='hidden' name='idList' value=''>
                     {{with .Form}}

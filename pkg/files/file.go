@@ -5,6 +5,7 @@ import (
     "fmt"
     "log"
     "os"
+    "strconv"
     "strings"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
@@ -93,7 +94,7 @@ func ReadPairsFromXlsx(path string) *TranslationPairFile {
 }
 
 
-func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText string){
+func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText string) string{
     doc := document.New()
 
     para := doc.AddParagraph()
@@ -120,10 +121,20 @@ func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText
     run.AddText(targetText)
 
     doc.SaveToFile(tmp_file)
+
+    file, err := os.Open(tmp_file)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    fileStat, _ := file.Stat() //Get info from file
+    fileSize := strconv.FormatInt(fileStat.Size(), 10)
+    return fileSize
 }
 
 
-func WriteDataset(tmp_file string, pairs []*models.Pair){
+func WriteDataset(tmp_file string, pairs []*models.Pair) string{
     file, err := os.Create(tmp_file)
     if err != nil {
         log.Fatal(err)
@@ -132,10 +143,13 @@ func WriteDataset(tmp_file string, pairs []*models.Pair){
 
     for _, pair := range pairs {
         _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", pair.SourceText, pair.TargetText))
-            if err != nil {
+        if err != nil {
             log.Fatal(err)
         }
     }
 
     file.Sync()
+    fileStat, _ := file.Stat() //Get info from file
+    fileSize := strconv.FormatInt(fileStat.Size(), 10)
+    return fileSize
 }
