@@ -48,7 +48,43 @@ func (app *application) requireAuthenticatedUser(next http.Handler) http.Handler
         // return from the middleware chain so that no subsequent handlers in
         // the chain are executed.
         if app.authenticatedUser(r) == nil {
-            http.Redirect(w, r, "/user/login", 302)
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) requireAdminUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.adminUser(r) == false {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) requireTranslatorUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.translatorUser(r) == false {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) requireValidatorUser(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.validatorUser(r) == false {
+            http.Redirect(w, r, "/", 302)
             return
         }
 
@@ -100,6 +136,40 @@ func (app *application) authenticate(next http.Handler) http.Handler {
         // call the next handler in the chain *using this new copy of the
         // request*.
         ctx := context.WithValue(r.Context(), contextKeyUser, user)
+        next.ServeHTTP(w, r.WithContext(ctx))
+    })
+}
+
+
+func (app *application) requireSelectedLanguages(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        if app.selectedLanguages(r) == "" {
+            http.Redirect(w, r, "/", 302)
+            return
+        }
+
+        next.ServeHTTP(w, r)
+    })
+}
+
+
+func (app *application) selectLanguages(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        exists := app.session.Exists(r, "sourceLanguage")
+        if !exists {
+            next.ServeHTTP(w, r)
+            return
+        }
+
+        exists = app.session.Exists(r, "targetLanguage")
+        if !exists {
+            next.ServeHTTP(w, r)
+            return
+        }
+
+        languages := fmt.Sprintf("%s - %s", app.session.Get(r, "sourceLanguage"), app.session.Get(r, "targetLanguage"))
+
+        ctx := context.WithValue(r.Context(), contextKeyLanguages, languages)
         next.ServeHTTP(w, r.WithContext(ctx))
     })
 }

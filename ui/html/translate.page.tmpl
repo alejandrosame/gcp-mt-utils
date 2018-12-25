@@ -1,0 +1,24 @@
+{{template "base" .}}
+
+{{define "title"}}Translate text{{end}}
+
+{{define "body"}}
+<div id="slideshow" class="slideshow">
+    <div class="row text-center">
+        <div class="col text-center">
+            <button class="btn btn-secondary translate__button">Translate text</button>
+            <button class="btn btn-secondary reset__button">Write new text to translate</button>
+            <button class="btn btn-secondary export__button">Export translation</button>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="slide text-white" >
+            <p class="slide__title" contenteditable="true"
+            >Your text to translate</p>
+        </div>
+        <div class="slide slide--target">
+            <p class="slide__title text-white"></p>
+        </div>
+    </div>
+</div>
+{{end}}

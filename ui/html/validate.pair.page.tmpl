@@ -1,0 +1,81 @@
+{{template "base" .}}
+
+{{define "title"}}Validate Pair{{end}}
+
+{{define "body"}}
+    <div>
+        <div class="row">
+            <div class="col mt-1 text-center">
+                {{with .ValidationStats}}
+                    <div class="alert alert-info font-weight-bold">
+                        Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                    </div>
+                {{end}}
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class='card bg-secondary border-dark'>
+                <div class='card-header border-dark'>
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            #{{.Form.Get "id"}}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.Form.Get "sourceLanguage"}}</span>
+                            <span class="small">({{.Form.Get "sourceVersion"}})</span>
+                        </div>
+                        <div class="col text-center">
+                            <span class="font-weight-bold">{{.Form.Get "targetLanguage"}}</span>
+                            <span class="small">({{.Form.Get "targetVersion"}})</span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center font-italic small">
+                            {{.Form.Get "detail"}}
+                        </div>
+                    </div>
+                </div>
+                <div class='card-body border-dark'>
+                    <div class="row">
+                        <div class="col text-justify">
+                            {{.Form.Get "sourceText"}}
+                        </div>
+                        <div class="col text-justify">
+                            {{.Form.Get "targetText"}}
+                        </div>
+                    </div>
+                </div>
+
+                <div class='card-footer border-dark'>
+                    <div class="row">
+                        <div class="col text-center">
+                            <time>Created on {{.Form.Get "created"}}</time>
+                        </div>
+                        <div class="col text-center">
+                            <time>Updated on {{.Form.Get "updated"}}</time>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col mt-1">
+                <form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                    <input type='hidden' name='sourceLanguage' value='{{.Form.Get "sourceLanguage"}}' readonly/>
+                    <input type='hidden' name='targetLanguage' value='{{.Form.Get "targetLanguage"}}' readonly/>
+                    <div class="col mt-1">
+                        <input class="btn btn-outline-danger btn-sm btn-block" role="button" type='submit' 
+                               name="no-validate" value='Do not validate pair'>
+                    </div>
+                    <div class="col mt-1">
+                        <input class="btn btn-outline-success btn-sm btn-block" role="button" type='submit'
+                               name="validate" value='Validate pair'>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{{end}}

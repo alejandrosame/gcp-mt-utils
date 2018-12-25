@@ -1,10 +1,15 @@
 package main
 
 import (
+    "bufio"
+    "fmt"
     "html/template"
     "path/filepath"
+    "strings"
+    "os"
     "time"
 
+    "github.com/alejandrosame/gcp-mt-utils/pkg/automl"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 )
@@ -19,6 +24,12 @@ type templateData struct {
     Form              *forms.Form
     Pair              *models.Pair
     Pairs             []*models.Pair
+    Models            []*automl.Model
+    TrainReport       *automl.TrainOperationReport
+    Datasets          []*automl.Dataset
+    ValidationStats   *models.ValidationStats
+    SignUpInvitation  *models.Invitation
+    Languages         string
 }
 
 
@@ -26,11 +37,49 @@ func humanDate(t time.Time) string {
     return t.Format("02 Jan 2006 at 15:04")
 }
 
+func last(s string) string {
+    temp := strings.Split(s, "/")
+    return temp[len(temp)-1]
+}
+
+func tokenToString(b []byte) string {
+    return string(b[:60])
+}
+
+func truncate(s string, count int) string {
+    r := []rune(s)
+    m := count
+    ellipsis := "..."
+    if len(r) < m {
+        m = len(r)
+        ellipsis = ""
+    }
+    return fmt.Sprintf("%s%s", string(r[:m]), ellipsis)
+}
+
+func getProject() string {
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        return ""
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    return scanner.Text()
+}
+
+
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
 // custom template functions and the functions themselves.
 var functions = template.FuncMap{
     "humanDate": humanDate,
+    "last": last,
+    "getProject": getProject,
+    "tokenToString": tokenToString,
+    "truncate": truncate,
 }
 
 

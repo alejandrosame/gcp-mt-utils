@@ -1,0 +1,147 @@
+{{template "base" .}}
+
+{{define "title"}}Select validated pairs to export{{end}}
+
+{{define "body"}}
+<div>
+    {{if .Pairs}}
+        <div class="row mt-2 text-white">
+            <div class="col">
+                <label><input onClick="selectAllExport(this)" type="checkbox"> Select all</label>
+            </div>
+            <div class="col">
+                {{with $.Form.Errors.Get "idList"}}
+                    <div class='bg-danger text-white'>No pairs selected</div>
+                {{end}}
+
+                <form name="exportPairForm" action='' method='POST' target='_blank' novalidate>
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                    <input type='hidden' name='idList' value=''>
+                    {{with .Form}}
+                        <div class="form-group">
+                            <label for="name" class="text-white">Dataset name: </label>
+                                {{with .Errors.Get "name"}}
+                                    <span class='bg-danger text-white'>{{.}}</span>
+                                {{end}}
+                            <input type='text' class="form-control bg-secondary text-white" name='name' value='{{.Get "name"}}'>
+                        </div>
+                        <div class="form-group">
+                            <input onClick="submitExportPairForm()" type='submit' class="btn btn-secondary" value='Export selected'>
+                        </div>
+                    {{end}}
+                </form>
+            </div>
+        </div>
+        {{range .Pairs}}
+        <div class="row mt-2">
+            <div class="col">
+                <div class='card bg-secondary border-dark'>
+                    <label>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col col-lg-1 col-md-1 col-sm-1">
+                                    <input class="export-pair" value="{{.ID}}" type="checkbox">
+                                </div>
+                                <div class="col text-center font-weight-bold">
+                                    #{{.ID}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <span class="font-weight-bold">{{.SourceLanguage}}</span>
+                                    <span class="small">({{.SourceVersion}})</span>
+                                </div>
+                                <div class="col text-center">
+                                    <span class="font-weight-bold">{{.TargetLanguage}}</span>
+                                    <span class="small">({{.TargetVersion}})</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center font-italic small">
+                                    {{.Detail}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <div class="col text-justify">
+                                    {{.SourceText}}
+                                </div>
+                                <div class="col text-justify">
+                                    {{.TargetText}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class='card-body border-dark'>
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col text-center font-weight-bold">
+                                            Comments
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            {{if .Comments.Valid}}
+                                                {{.Comments.Value}}
+                                            {{else}}
+                                                No comments yet
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col text-center font-weight-bold">
+                                            GCP Dataset
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            {{if .GcpDataset.Valid}}
+                                                {{.GcpDataset.Value}}
+                                            {{else}}
+                                                Not uploaded yet
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                                {{if .Validated}}
+                                    <div class="col text-center bg-success">
+                                        Validated
+                                    </div>
+                                {{else}}
+                                    <div class="col text-center bg-danger">
+                                        Not validated
+                                    </div>
+                                {{end}}
+                            </div>
+                        </div>
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <time>Created on {{humanDate .Created}}</time>
+                                </div>
+                                <div class="col text-center">
+                                    <time>Updated on {{humanDate .Updated}}</time>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="w-100"></div>
+        </div>
+        {{end}}
+    {{else}}
+        <div class="row mt-2">
+            <div class="col">
+                <div class="alert alert-info font-weight-bold">
+                    No pairs available to export
+                </div>
+            </div>
+        </div>
+    {{end}}
+</div>
+{{end}}

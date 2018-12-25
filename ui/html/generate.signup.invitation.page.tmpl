@@ -1,0 +1,49 @@
+{{template "base" .}}
+
+{{define "title"}}Signup invitation link generator{{end}}
+
+{{define "body"}}
+<form action='/user/signup/invitation/generate' method='POST' novalidate>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    {{with .Form}}
+        <div class="form-group row">
+            <div class="col">
+                <label for="email" class='text-white'>Email: </label>
+                {{with .Errors.Get "email"}}
+                    <label for="email" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary text-white" type='email' name='email'
+                       value='{{.Get "email"}}'>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="role" class='text-white'>Role: </label>
+                {{with .Errors.Get "role"}}
+                    <label for="role" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" class="custom-control-input bg-secondary" id="roleValidator"
+                           name='role' value='validator'>
+                    <label class="custom-control-label text-white" for="roleValidator">Validator</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" class="custom-control-input bg-secondary" id="roleTranslator"
+                           name='role' value='translator'>
+                    <label class="custom-control-label text-white" for="roleTranslator">Translator</label>
+                </div>
+                <div class="custom-control custom-radio custom-control-inline">
+                    <input type="radio" class="custom-control-input bg-secondary" id="roleAdmin"
+                           name='role' value='admin'>
+                    <label class="custom-control-label text-white" for="roleAdmin">Admin</label>
+                </div>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <input class="btn btn-secondary" type='submit' name="invite" value='Generate invitation link'>
+            </div>
+        </div>
+    {{end}}
+</form>
+{{end}}
