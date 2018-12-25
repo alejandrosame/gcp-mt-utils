@@ -500,19 +500,12 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
     sourceText := form.Get("sourceText")
     targetText := form.Get("targetText")
 
-    tmp_file := "./tmp/translation.docx"
-    files.WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText)
+    tmpFile := "./tmp/translation.docx"
+    fileSize := files.WriteTranslationToDocx(tmpFile, sourceLanguage, targetLanguage, sourceText, targetText)
 
     name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
 
-    // Add download file for user
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
-    w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
-    http.ServeFile(w, r, tmp_file)
-
-    // Add feedback for the user as session information
-    app.session.Put(r, "flash", "Translation successfully exported!")
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: form})
+    app.downloadFile(w, r, tmpFile, name, fileSize)
 }
 
 func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
@@ -1015,6 +1008,14 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
 }
 
 
+func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, tmpFile, name, fileSize string) {
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
+    w.Header().Add("Content-Type", "text/tab-separated-values")
+    w.Header().Set("Content-Length", fileSize)
+    http.ServeFile(w, r, tmpFile)
+}
+
+
 func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Request) {
     err := r.ParseForm()
     if err != nil {
@@ -1067,18 +1068,10 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
         return
     }
 
-    name := fmt.Sprintf("dataset_%s", time.Now().Format("20060102150405"))
-    tmp_file := fmt.Sprintf("./tmp/%s.tsv", name)
-    files.WriteDataset(tmp_file, pairs)
+    tmpName := fmt.Sprintf("dataset_%s", time.Now().Format("20060102150405"))
+    tmpFile := fmt.Sprintf("./tmp/%s.tsv", tmpName)
+    fileSize := files.WriteDataset(tmpFile, pairs)
 
-
-    // Add download file for user
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", form.Get("name")))
-    w.Header().Add("Content-Type", "text/tab-separated-values")
-    http.ServeFile(w, r, tmp_file)
-
-    // Add feedback for the user as session information
     app.session.Put(r, "flash", "Dataset successfully exported!")
-    //http.Redirect(w, r, fmt.Sprintf("/pair"), http.StatusSeeOther)
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Form: form})
+    app.downloadFile(w, r, tmpFile, form.Get("name"), fileSize)
 }

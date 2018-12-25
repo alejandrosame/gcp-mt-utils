@@ -156,8 +156,9 @@
 
             function submitExportPairForm() {
                 document.exportPairForm.idList.value = getPairIdsToExport()
-                document.theForm.action="/pairs/export";
-                document.exportPairForm.submit()
+                document.exportPairForm.action="/pairs/export";
+                document.exportPairForm.submit();
+                window.location = "/pair";
             }
         </script>
     </body>
