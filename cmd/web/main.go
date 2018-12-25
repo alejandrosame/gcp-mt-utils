@@ -91,7 +91,7 @@ func main() {
         TLSConfig:    tlsConfig,
         IdleTimeout:  time.Minute,
         ReadTimeout:  5 * time.Second,
-        WriteTimeout: 10 * time.Second,
+        WriteTimeout: 5 * time.Minute,
     }
 
     infoLog.Printf("Starting server on %s", *addr)
