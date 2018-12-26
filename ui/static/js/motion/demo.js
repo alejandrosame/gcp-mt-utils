@@ -13,6 +13,14 @@ const getRandomNumber = (min, max) => (Math.random() * (max - min) + min);
 const body = document.body;
 //const winsize = {width: window.innerWidth, height: window.innerHeight};
 
+function sleep(milliseconds) {
+  var start = new Date().getTime();
+  for (var i = 0; i < 1e7; i++) {
+    if ((new Date().getTime() - start) > milliseconds){
+      break;
+    }
+  }
+}
 
 function httpGet(theUrl)
 {
@@ -100,11 +108,34 @@ class Slideshow {
 
         if (direction == 'next'){
             var title = this.slides[0].DOM.el.querySelector('.slide__title');
-            var text = reconstructText(title);
-            var url = "/translate/" + encodeURIComponent(text);
-            var raw = httpGet(url);
-            var reply = JSON.parse(raw);
-            this.refresh(reply["Translation"]);
+            var text = reconstructText(title).split("\n");
+            var paragraphCount = 0;
+            var totalReply = "";
+            var currentText = "";
+            for (var i=0;i<text.length;i++)
+            {
+                currentText += text[i] + "\n";
+                paragraphCount++;
+                if (paragraphCount == 30){
+                    var url = "/translate/" + encodeURIComponent(currentText);
+                    var raw = httpGet(url);
+                    var reply = JSON.parse(raw);
+
+                    totalReply += reply["Translation"] + "\n";
+
+                    currentText = "";
+                    paragraphCount = 0;
+                    sleep(1000);
+                }
+            }
+            if (currentText != ""){
+                var url = "/translate/" + encodeURIComponent(currentText);
+                var raw = httpGet(url);
+                var reply = JSON.parse(raw);
+
+                totalReply += reply["Translation"];
+            }
+            this.refresh(totalReply);
         }
 
         const currentSlide = this.slides[this.current];

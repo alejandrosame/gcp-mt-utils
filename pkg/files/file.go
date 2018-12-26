@@ -105,20 +105,24 @@ func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText
     run = para.AddRun()
     run.AddText(sourceLanguage)
 
-    para = doc.AddParagraph()
-    para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-    run = para.AddRun()
-    run.AddText(sourceText)
+    for _, text := range strings.Split(sourceText, "\n") {
+        para = doc.AddParagraph()
+        para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+        run = para.AddRun()
+        run.AddText(text)
+    }
 
     para = doc.AddParagraph()
     para.SetStyle("Heading1")
     run = para.AddRun()
     run.AddText(targetLanguage)
 
-    para = doc.AddParagraph()
-    para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-    run = para.AddRun()
-    run.AddText(targetText)
+    for _, text := range strings.Split(targetText, "\n") {
+        para = doc.AddParagraph()
+        para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+        run = para.AddRun()
+        run.AddText(text)
+    }
 
     doc.SaveToFile(tmp_file)
 
