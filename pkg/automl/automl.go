@@ -251,7 +251,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText strin
 func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
     defaultValue := ""
 
-    urlQuery := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2?source=%s&target=%s",
+    urlQuery := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2?format=text&source=%s&target=%s",
                             source, target)
 
     totalText, err := url.QueryUnescape(sourceText)

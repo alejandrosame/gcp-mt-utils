@@ -12,42 +12,22 @@
   function inject (element) {
     var parentNode = element.parentNode
     var string = element.nodeValue
-    var split = splitRegex ? string.split(splitRegex) : string
+    var split = string.split("\n");
     var length = split.length
     var word = ""
     var nWords = 0
     var i = -1
+
     while (++i < length) {
       var node = document.createElement(tagName)
       if (classPrefix) {
         node.className = classPrefix + count
         count++
       }
-      if (split[i] == "\n"){
-        node.appendChild(document.createTextNode(word))
-        node.appendChild(document.createElement("br"))
-        word = ""
-        nWords = 0
-      }
-      else if (split[i] == " "){
-        word += split[i]
-        nWords += 1
-
-        if (nWords == 30){
-            node.appendChild(document.createTextNode(word))
-            word = ""
-            nWords = 0
-        }
-
-      }
-      else {
-        word += split[i]
-      }
+      node.appendChild(document.createTextNode(split[i]))
+      node.appendChild(document.createElement("br"))
       node.setAttribute('aria-hidden', 'true')
       parentNode.insertBefore(node, element)
-    }
-    if (word != ""){
-        node.appendChild(document.createTextNode(word))
     }
     if (string.trim() !== '') {
       parentNode.setAttribute('aria-label', string)
