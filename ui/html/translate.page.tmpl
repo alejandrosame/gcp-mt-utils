@@ -3,7 +3,7 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<div id="slideshow" class="slideshow">
+<!--<div id="slideshow" class="slideshow">
     <div class="row text-center">
         <div class="col text-center">
             <button class="btn btn-secondary translate__button">Translate text</button>
@@ -18,6 +18,57 @@
         </div>
         <div class="slide slide--target">
             <p class="slide__title text-white"></p>
+        </div>
+    </div>
+</div>-->
+<div class="col-container">
+    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+        <div class='card bg-secondary border-dark flex-fill'>
+            <div class='card-header border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class='card-body border-dark'>
+                <div class="row">
+                    <div class="col text-justify translation-text" id="source-text" contenteditable="true">
+                        <div>Your text to translate</div>
+                    </div>
+                </div>
+            </div>
+            <div class='card-footer border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <a href="#" class="btn btn-dark" onClick="translate()">Translate</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+        <div class='card bg-secondary border-dark flex-fill'>
+            <div class='card-header border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class='card-body border-dark'>
+                <div class="row">
+                    <div class="col text-justify translation-text" id="target-text"></div>
+                </div>
+            </div>
+
+            <div class='card-footer border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <a href="#" class="btn btn-dark export__button" onClick="exportTranslation()">Export</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

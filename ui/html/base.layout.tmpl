@@ -30,8 +30,10 @@
         <script src="/static/js/landing/TweenMax.min.js"></script>
         <script src="/static/js/landing/demo.js"></script>
         <!-- Translate motion js -->
+        <!--
         <script src="/static/js/motion/charming.js"></script>
         <script src="/static/js/motion/demo.js"></script>
+        -->
 
         <script>document.documentElement.className="js";var supportsCssVars=function(){var e,t=document.createElement("style");return t.innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e};supportsCssVars()||alert("Please view this page in a modern browser that supports CSS Variables.");</script>
     </head>
@@ -130,11 +132,20 @@
                 {
                     new Slideshow(document.querySelector('#slideshow'));
                 }
+
+                var element = document.getElementById('source-text');
+                if (typeof(element) != 'undefined' && element != null)
+                {
+                    document.getElementById('source-text').addEventListener('keydown', keyBoardListener);
+                }
+
+
             }
 
             init();
             document.addEventListener('swup:willReplaceContent', init);
             document.addEventListener('swup:contentReplaced', init);
+            window.addEventListener('paste', systemPasteListener);
 
             function selectAllExport(source) {
                 checkboxes = document.getElementsByClassName('export-pair');
@@ -166,6 +177,133 @@
                 document.exportPairForm.action="/pairs/export";
                 document.exportPairForm.submit();
                 window.location = "/pair";
+            }
+
+            function sleep(milliseconds) {
+              var start = new Date().getTime();
+              for (var i = 0; i < 1e7; i++) {
+                if ((new Date().getTime() - start) > milliseconds){
+                  break;
+                }
+              }
+            }
+
+            function httpGet(theUrl)
+            {
+                var xmlHttp = new XMLHttpRequest();
+                xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+                xmlHttp.send( null );
+                return xmlHttp.responseText;
+            }
+
+            function reconstructText(ele) {
+                var text = "";
+                var divs = ele.getElementsByTagName("div");
+                for(var i = 0; i < divs.length; i++){
+                   text += divs[i].textContent + "\n";
+                }
+
+                return text;
+            }
+
+            function formatTextWithDiv(inputText){
+                var formattedText = "";
+
+                var text = inputText.split("\n");
+                for (var i=0;i<text.length;i++){
+                    formattedText += "<div>" + text[i]+"</div>";
+                    console.log("."+formattedText+".");
+                }
+
+                return formattedText;
+            }
+
+            function getTranslation(currentText){
+                var url = "/translate/" + encodeURIComponent(currentText);
+                var raw = httpGet(url);
+                var reply = JSON.parse(raw);
+
+                return formatTextWithDiv(reply["Translation"]);
+            }
+
+            function translate() {
+                var title = document.getElementById('source-text');
+                var b = reconstructText(title);
+                console.log(b);
+                var text = reconstructText(title).split("\n");
+                var paragraphCount = 0;
+                var totalReply = "";
+                var currentText = "";
+                for (var i=0;i<text.length;i++)
+                {
+                    currentText += text[i] + "\n";
+                    paragraphCount++;
+                    if (paragraphCount == 30){
+                        totalReply += getTranslation(currentText);
+
+                        currentText = "";
+                        paragraphCount = 0;
+                        sleep(1000);
+                    }
+                }
+                if (currentText != ""){
+                    totalReply += getTranslation(currentText);
+                }
+                var target = document.getElementById('target-text');
+                target.innerHTML = totalReply;
+            }
+
+            function exportTranslation(){
+                var sourceTitle = document.getElementById('source-text');
+                var sourceText = reconstructText(sourceTitle);
+                var targetTitle = document.getElementById('target-text');
+                var targetText = reconstructText(targetTitle);
+                var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
+
+                console.log(url)
+
+                window.open(url, "_blank");
+            }
+
+            function keyBoardListener(evt) {
+                if (evt.ctrlKey) {
+                    switch(evt.keyCode) {
+                        case 86: // v
+                            paste(evt.target);
+                            break;
+                    }
+                }
+            }
+
+            function paste(target) {
+                systemPasteReady = false;
+                function waitForPaste() {
+                    if (!systemPasteReady) {
+                        setTimeout(waitForPaste, 250);
+                        return;
+                    }
+
+                    target.innerHTML = formatTextWithDiv(systemPasteContent);
+                    systemPasteReady = false;
+                    document.body.removeChild(textArea);
+                    textArea = null;
+
+                }
+
+                // FireFox requires at least one editable
+                // element on the screen for the paste event to fire
+                textArea = document.createElement('textarea');
+                textArea.setAttribute('style', 'width:1px;border:0;opacity:0;');
+
+                document.body.appendChild(textArea);
+                textArea.select();
+                waitForPaste();
+            }
+
+            function systemPasteListener(evt) {
+                systemPasteContent = evt.clipboardData.getData('text/plain');
+                systemPasteReady = true;
+                evt.preventDefault();
             }
         </script>
     </body>

@@ -16,3 +16,18 @@
     padding-top: 80px;
     flex-grow: 100;
 }
+
+.translation-text div {
+    display: block;
+    line-height: 1.5rem;
+    counter-increment: line;
+}
+
+.translation-text div:before {
+    content: counter(line);
+    display: inline-block;
+    border-right: 1px solid #ddd;
+    padding: 0 .5em;
+    margin-right: .5em;
+    color: white;
+}
