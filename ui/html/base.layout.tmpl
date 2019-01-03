@@ -264,7 +264,7 @@
                 var sourceText = reconstructText(sourceTitle);
                 var targetTitle = document.getElementById('target-text');
                 var targetText = reconstructText(targetTitle);
-                var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
+                var url = "/translate/export?target=" + encodeURIComponent(targetText);
 
                 window.open(url, "_blank");
             }
