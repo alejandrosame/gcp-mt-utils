@@ -3,24 +3,6 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<!--<div id="slideshow" class="slideshow">
-    <div class="row text-center">
-        <div class="col text-center">
-            <button class="btn btn-secondary translate__button">Translate text</button>
-            <button class="btn btn-secondary reset__button">Write new text to translate</button>
-            <button class="btn btn-secondary export__button">Export translation</button>
-        </div>
-    </div>
-    <div class="row mt-4">
-        <div class="slide text-white" >
-            <p class="slide__title" contenteditable="true"
-            >Your text to translate</p>
-        </div>
-        <div class="slide slide--target">
-            <p class="slide__title text-white"></p>
-        </div>
-    </div>
-</div>-->
 <div class="col-container">
     <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
         <div class='card bg-secondary border-dark flex-fill'>
@@ -41,7 +23,21 @@
             <div class='card-footer border-dark'>
                 <div class="row">
                     <div class="col text-center">
-                        <a href="#" class="btn btn-dark" onClick="translate()">Translate</a>
+                        <a id="translate-button" href="#" class="btn btn-dark" onClick="translate()">Translate</a>
+                        <div id="translating-wheel" class="sk-circle invisible">
+                            <div class="sk-circle1 sk-child"></div>
+                            <div class="sk-circle2 sk-child"></div>
+                            <div class="sk-circle3 sk-child"></div>
+                            <div class="sk-circle4 sk-child"></div>
+                            <div class="sk-circle5 sk-child"></div>
+                            <div class="sk-circle6 sk-child"></div>
+                            <div class="sk-circle7 sk-child"></div>
+                            <div class="sk-circle8 sk-child"></div>
+                            <div class="sk-circle9 sk-child"></div>
+                            <div class="sk-circle10 sk-child"></div>
+                            <div class="sk-circle11 sk-child"></div>
+                            <div class="sk-circle12 sk-child"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -65,7 +61,21 @@
             <div class='card-footer border-dark'>
                 <div class="row">
                     <div class="col text-center">
-                        <a href="#" class="btn btn-dark export__button" onClick="exportTranslation()">Export</a>
+                        <a id="export-button" href="#" class="btn btn-dark export__button" onClick="exportTranslation()">Export</a>
+                        <div id="exporting-wheel" class="sk-circle" style="display: none;">
+                            <div class="sk-circle1 sk-child"></div>
+                            <div class="sk-circle2 sk-child"></div>
+                            <div class="sk-circle3 sk-child"></div>
+                            <div class="sk-circle4 sk-child"></div>
+                            <div class="sk-circle5 sk-child"></div>
+                            <div class="sk-circle6 sk-child"></div>
+                            <div class="sk-circle7 sk-child"></div>
+                            <div class="sk-circle8 sk-child"></div>
+                            <div class="sk-circle9 sk-child"></div>
+                            <div class="sk-circle10 sk-child"></div>
+                            <div class="sk-circle11 sk-child"></div>
+                            <div class="sk-circle12 sk-child"></div>
+                        </div>
                     </div>
                 </div>
             </div>

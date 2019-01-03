@@ -17,6 +17,10 @@
     flex-grow: 100;
 }
 
+.translation-text {
+    font-size: 20px;
+}
+
 .translation-text div {
     display: block;
     line-height: 1.5rem;
@@ -30,4 +34,8 @@
     padding: 0 .5em;
     margin-right: .5em;
     color: white;
+}
+
+.invisible {
+    display: none;
 }

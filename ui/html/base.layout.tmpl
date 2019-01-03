@@ -7,6 +7,7 @@
         <title>{{template "title" .}} - Custom translations</title>
         <!-- Link to the CSS stylesheet and favicon -->
         <link rel='stylesheet' type="text/css"  href='/static/css/main.css'>
+        <link rel='stylesheet' type="text/css"  href='/static/css/loading.animation.css'>
         <link rel="stylesheet" type="text/css" href="/static/css/swup/base.css" />
         <!-- Head script for landingpage -->
         <link rel="stylesheet" type="text/css" href="/static/css/landing/base.css"/>
@@ -196,7 +197,6 @@
                 var text = inputText.split("\n");
                 for (var i=0;i<text.length;i++){
                     formattedText += "<div>" + text[i]+"</div>";
-                    console.log("."+formattedText+".");
                 }
 
                 return formattedText;
@@ -210,10 +210,30 @@
                 return formatTextWithDiv(reply["Translation"]);
             }
 
+            function translatingStatusStarted() {
+                translatingWheel = document.getElementById('translating-wheel');
+                translateButton = document.getElementById('translate-button');
+                exportButton = document.getElementById('export-button');
+
+                translateButton.disabled = true;
+                exportButton.disabled = true;
+                translatingWheel.classList.remove("invisible");
+            }
+
+            function translatingStatusFinished() {
+                translatingWheel = document.getElementById('translating-wheel');
+                translateButton = document.getElementById('translate-button');
+                exportButton = document.getElementById('export-button');
+
+                translateButton.disabled = false;
+                exportButton.disabled = false;
+                translatingWheel.classList.add("invisible");
+            }
+
             function translate() {
+                translatingStatusStarted();
+
                 var title = document.getElementById('source-text');
-                var b = reconstructText(title);
-                console.log(b);
                 var text = reconstructText(title).split("\n");
                 var paragraphCount = 0;
                 var totalReply = "";
@@ -235,6 +255,8 @@
                 }
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
+
+                translatingStatusFinished();
             }
 
             function exportTranslation(){
@@ -243,8 +265,6 @@
                 var targetTitle = document.getElementById('target-text');
                 var targetText = reconstructText(targetTitle);
                 var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
-
-                console.log(url)
 
                 window.open(url, "_blank");
             }
@@ -271,7 +291,6 @@
                     systemPasteReady = false;
                     document.body.removeChild(textArea);
                     textArea = null;
-
                 }
 
                 // FireFox requires at least one editable
