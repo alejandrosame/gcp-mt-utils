@@ -399,26 +399,17 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
-    sourceText, ok := r.URL.Query()["source"]
-    if !ok {
-        app.notFound(w)
-        return
-    }
-
     targetText, ok := r.URL.Query()["target"]
     if !ok {
         app.notFound(w)
         return
     }
 
-    app.infoLog.Printf("%v", sourceText[0])
-    app.infoLog.Printf("%v", targetText[0])
-
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
     tmpFile := "./tmp/translation.docx"
-    fileSize := files.WriteTranslationToDocx(tmpFile, sourceLanguage, targetLanguage, sourceText[0], targetText[0])
+    fileSize := files.WriteTranslationToDocx(tmpFile, targetText[0])
 
     name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
 

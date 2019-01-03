@@ -94,28 +94,11 @@ func ReadPairsFromXlsx(path string) *TranslationPairFile {
 }
 
 
-func WriteTranslationToDocx(tmp_file, sourceLanguage, targetLanguage, sourceText, targetText string) string{
+func WriteTranslationToDocx(tmp_file, targetText string) string{
     doc := document.New()
 
     para := doc.AddParagraph()
     run := para.AddRun()
-
-    para = doc.AddParagraph()
-    para.SetStyle("Heading1")
-    run = para.AddRun()
-    run.AddText(sourceLanguage)
-
-    for _, text := range strings.Split(sourceText, "\n") {
-        para = doc.AddParagraph()
-        para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-        run = para.AddRun()
-        run.AddText(text)
-    }
-
-    para = doc.AddParagraph()
-    para.SetStyle("Heading1")
-    run = para.AddRun()
-    run.AddText(targetLanguage)
 
     for _, text := range strings.Split(targetText, "\n") {
         para = doc.AddParagraph()
