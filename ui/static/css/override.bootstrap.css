@@ -13,3 +13,18 @@ h1, h2, h3, h4, h5, h6 {
 .alert{
     z-index: 99999;
 }
+
+.row {
+  max-width: 100%
+}
+
+.col-container {
+  display: flex;
+  width: 100%;
+}
+
+.col {
+  flex: 1;
+  width: 100%;
+  padding: 16px;
+}
