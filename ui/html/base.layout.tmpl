@@ -194,7 +194,7 @@
             function formatTextWithDiv(inputText){
                 var formattedText = "";
 
-                var text = inputText.split("\n");
+                var text = inputText.trim().split("\n");
                 for (var i=0;i<text.length;i++){
                     formattedText += "<div>" + text[i]+"</div>";
                 }
