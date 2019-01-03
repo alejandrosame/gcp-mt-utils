@@ -251,24 +251,25 @@ func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText strin
 func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
     defaultValue := ""
 
-    urlQuery := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2?format=text&source=%s&target=%s",
-                            source, target)
-
-    totalText, err := url.QueryUnescape(sourceText)
-    if err != nil {
-        return defaultValue, err
-    }
-
-    for _, partialText := range strings.Split(strings.Trim(totalText, " \n"), "\n") {
-        urlQuery = fmt.Sprintf("%s&q=%s", urlQuery, url.QueryEscape(partialText))
-    }
+    urlQuery := "https://translation.googleapis.com/language/translate/v2"
 
     client, err := GetClient()
     if err != nil {
         return defaultValue, err
     }
 
-    req, err := http.NewRequest("POST", urlQuery, nil)
+    totalText, err := url.QueryUnescape(sourceText)
+    if err != nil {
+        return defaultValue, err
+    }
+
+    var paragraphs = ""
+    for _, partialText := range strings.Split(strings.Trim(totalText, " \n"), "\n") {
+        paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, partialText)
+    }
+
+    jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s" %s}`, source, target, paragraphs))
+    req, err := http.NewRequest("POST", urlQuery, bytes.NewBuffer(jsonStr))
 
     // Debug request
     dump, err := httputil.DumpRequestOut(req, true)
