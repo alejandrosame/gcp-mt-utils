@@ -211,23 +211,27 @@
             }
 
             function translatingStatusStarted() {
-                translatingWheel = document.getElementById('translating-wheel');
+                translatingWheel1 = document.getElementById('translating-wheel-1');
+                translatingWheel2 = document.getElementById('translating-wheel-2');
                 translateButton = document.getElementById('translate-button');
                 exportButton = document.getElementById('export-button');
 
                 translateButton.disabled = true;
                 exportButton.disabled = true;
-                translatingWheel.classList.remove("invisible");
+                translatingWheel1.classList.remove("invisible");
+                translatingWheel2.classList.remove("invisible");
             }
 
             function translatingStatusFinished() {
-                translatingWheel = document.getElementById('translating-wheel');
+                translatingWheel1 = document.getElementById('translating-wheel-1');
+                translatingWheel2 = document.getElementById('translating-wheel-2');
                 translateButton = document.getElementById('translate-button');
                 exportButton = document.getElementById('export-button');
 
                 translateButton.disabled = false;
                 exportButton.disabled = false;
-                translatingWheel.classList.add("invisible");
+                translatingWheel1.classList.add("invisible");
+                translatingWheel2.classList.add("invisible");
             }
 
             function translate() {
