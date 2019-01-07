@@ -95,6 +95,15 @@
                 {{template "body" .}}
             </main>
         </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <button id="go-top-button" class="btn btn-outline-light btn-sm btn-block invisible">Go to top</a>
+                </div>
+            </div>
+        </div>
+
         {{template "footer" .}}
         <!-- And include the JavaScript file -->
         <!--
@@ -116,6 +125,24 @@
                     // Preload all the images in the page..
                     imagesLoaded(document.querySelectorAll('.grid__item'), {background: true},
                                  () => document.body.classList.remove('loading'));
+                }else
+                {
+                    window.onscroll = function() {scrollFunction()};
+                    document.getElementById("go-top-button").onclick = function() {topFunction();}
+
+                    function scrollFunction() {
+                      if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                        document.getElementById("go-top-button").classList.remove("invisible");
+                      } else {
+                        document.getElementById("go-top-button").classList.add("invisible");
+                      }
+                    }
+
+                    // When the user clicks on the button, scroll to the top of the document
+                    function topFunction() {
+                      document.body.scrollTop = 0;
+                      document.documentElement.scrollTop = 0;
+                    }
                 }
 
                 // Reload only on translate UI
