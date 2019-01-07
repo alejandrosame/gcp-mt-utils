@@ -11,7 +11,7 @@
                     <div class="col text-center">
                         <div>
                             <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button" href="#" class="btn btn-dark" onClick="translate()">Translate</a>
+                            <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
                         </div>
                         <div id="translating-wheel-1" class="sk-circle invisible">
                             <div class="sk-circle1 sk-child"></div>
@@ -42,7 +42,7 @@
                     <div class="col text-center">
                         <div>
                             <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button" href="#" class="btn btn-dark" onClick="translate()">Translate</a>
+                            <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
                         </div>
                         <div id="translating-wheel-2" class="sk-circle invisible">
                             <div class="sk-circle1 sk-child"></div>
@@ -70,7 +70,7 @@
                     <div class="col text-center">
                         <div>
                             <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button" href="#" class="btn btn-dark export__button" onClick="exportTranslation()">Export</a>
+                            <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
                         </div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                     <div class="col text-center">
                         <div>
                             <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button" href="#" class="btn btn-dark export__button" onClick="exportTranslation()">Export</a>
+                            <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
                         </div>
                         <div id="exporting-wheel" class="sk-circle" style="display: none;">
                             <div class="sk-circle1 sk-child"></div>
