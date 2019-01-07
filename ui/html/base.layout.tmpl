@@ -118,19 +118,33 @@
                                  () => document.body.classList.remove('loading'));
                 }
 
+                // Reload only on translate UI
                 var element = document.getElementById('source-text');
                 if (typeof(element) != 'undefined' && element != null)
                 {
+                    window.addEventListener('paste', systemPasteListener);
                     document.getElementById('source-text').addEventListener('keydown', keyBoardListener);
                 }
 
+                // Reload only on translate UI
+                var element = document.getElementById('translating-wheel-1');
+                if (typeof(element) != 'undefined' && element != null)
+                {
+                    translateButton1 = document.getElementById('translate-button-1');
+                    translateButton2 = document.getElementById('translate-button-2');
+                    exportButton1 = document.getElementById('export-button-1');
+                    exportButton2 = document.getElementById('export-button-2');
 
+                    translateButton1.onclick = function() {translate();}
+                    translateButton2.onclick = function() {translate();}
+                    exportButton1.onclick = function() {exportTranslation();}
+                    exportButton2.onclick = function() {exportTranslation();}
+                }
             }
 
             init();
             document.addEventListener('swup:willReplaceContent', init);
             document.addEventListener('swup:contentReplaced', init);
-            window.addEventListener('paste', systemPasteListener);
 
             function selectAllExport(source) {
                 checkboxes = document.getElementsByClassName('export-pair');
@@ -211,23 +225,35 @@
             }
 
             function translatingStatusStarted() {
-                translatingWheel = document.getElementById('translating-wheel');
-                translateButton = document.getElementById('translate-button');
-                exportButton = document.getElementById('export-button');
+                translateButton1 = document.getElementById('translate-button-1');
+                translateButton2 = document.getElementById('translate-button-2');
+                exportButton1 = document.getElementById('export-button-1');
+                exportButton2 = document.getElementById('export-button-2');
+                translatingWheel1 = document.getElementById('translating-wheel-1');
+                translatingWheel2 = document.getElementById('translating-wheel-2');
 
-                translateButton.disabled = true;
-                exportButton.disabled = true;
-                translatingWheel.classList.remove("invisible");
+                translateButton1.disabled = true;
+                translateButton2.disabled = true;
+                exportButton1.disabled = true;
+                exportButton2.disabled = true;
+                translatingWheel1.classList.remove("invisible");
+                translatingWheel2.classList.remove("invisible");
             }
 
             function translatingStatusFinished() {
-                translatingWheel = document.getElementById('translating-wheel');
-                translateButton = document.getElementById('translate-button');
-                exportButton = document.getElementById('export-button');
+                translateButton1 = document.getElementById('translate-button-1');
+                translateButton2 = document.getElementById('translate-button-2');
+                exportButton1 = document.getElementById('export-button-1');
+                exportButton2 = document.getElementById('export-button-2');
+                translatingWheel1 = document.getElementById('translating-wheel-1');
+                translatingWheel2 = document.getElementById('translating-wheel-2');
 
-                translateButton.disabled = false;
-                exportButton.disabled = false;
-                translatingWheel.classList.add("invisible");
+                translateButton1.disabled = false;
+                translateButton2.disabled = false;
+                exportButton1.disabled = false;
+                exportButton2.disabled = false;
+                translatingWheel1.classList.add("invisible");
+                translatingWheel2.classList.add("invisible");
             }
 
             function translate() {
