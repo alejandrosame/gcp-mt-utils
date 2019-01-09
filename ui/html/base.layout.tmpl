@@ -214,14 +214,6 @@
               }
             }
 
-            function httpGet(theUrl)
-            {
-                var xmlHttp = new XMLHttpRequest();
-                xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
-                xmlHttp.send( null );
-                return xmlHttp.responseText;
-            }
-
             function translatingStatusStarted() {
                 translateButton1 = document.getElementById('translate-button-1');
                 translateButton2 = document.getElementById('translate-button-2');
@@ -278,14 +270,6 @@
                 return formattedText;
             }
 
-            function getTranslation(currentText){
-                var url = "/translate/" + encodeURIComponent(currentText);
-                var raw = httpGet(url);
-                var reply = JSON.parse(raw);
-
-                return reply["Translation"];
-            }
-
             function splitLines(text) {
                 var lines = [];
                 var currentLine = "";
@@ -310,30 +294,49 @@
 
                 var title = document.getElementById('source-text');
                 var text = splitLines(reconstructText(title));
-                var paragraphCount = 0;
                 var paragraphLimit = 10;
                 var totalReply = "";
                 var currentText = "";
-                for (var i=0;i<text.length;i++)
-                {
-                    currentText += text[i] + "\n";
 
-                    paragraphCount++;
-                    if (paragraphCount == paragraphLimit){
-                        totalReply += formatTextWithDiv(getTranslation(currentText));
+                asyncTranslate(text, paragraphLimit, 0, totalReply)
+            }
 
-                        currentText = "";
-                        paragraphCount = 0;
-                    }
-                }
-                if (currentText != ""){
-                    totalReply += formatTextWithDiv(getTranslation(currentText));
-                }
+            function endTranslate(totalReply) {
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
 
                 translatingStatusFinished();
             }
+
+            function asyncTranslate(text, paragraphLimit, pos, totalReply) {
+                //let text = inputText;
+                var paragraphCount = 0;
+                var currentText = "";
+                while (pos < text.length && paragraphCount < paragraphLimit){
+                    currentText += text[pos] + "\n";
+                    pos++;
+                    paragraphCount++;
+                }
+                if (currentText != "") {
+                    var url = "/translate/" + encodeURIComponent(currentText);
+                    $.get(url, function(resp, status)
+                    {
+                        var reply = JSON.parse(resp)
+                        totalReply += formatTextWithDiv(reply["Translation"]);
+
+                        if (pos == text.length){
+                            endTranslate(totalReply);
+                        }
+                        else{
+                            asyncTranslate(text, paragraphLimit, pos, totalReply);
+                        }
+                    });
+                }
+                else{
+                    endTranslate("");
+                }
+            }
+
 
             function exportTranslation(){
                 var sourceTitle = document.getElementById('source-text');
@@ -359,7 +362,7 @@
                 systemPasteReady = false;
                 function waitForPaste() {
                     if (!systemPasteReady) {
-                        setTimeout(waitForPaste, 250);
+                        setTimeout(waitForPaste, 50);
                         return;
                     }
 

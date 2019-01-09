@@ -294,7 +294,7 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
         if err == nil { break }
 
         currentTry += 1
-        time.Sleep(6 * time.Second)
+        time.Sleep(10 * time.Second)
     }
     return body, err
 }
@@ -334,7 +334,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
 
     jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s" %s}`, source, target, paragraphs))
 
-    var totalTries = 10
+    var totalTries = 30
     body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
     if err != nil {
         return defaultValue, err
