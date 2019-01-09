@@ -70,6 +70,16 @@ func getProject() string {
     return scanner.Text()
 }
 
+func languageSource(s string) string {
+    temp := strings.Split(s, " - ")
+    return temp[0]
+}
+
+func languageTarget(s string) string {
+    temp := strings.Split(s, " - ")
+    return temp[1]
+}
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -80,6 +90,8 @@ var functions = template.FuncMap{
     "getProject": getProject,
     "tokenToString": tokenToString,
     "truncate": truncate,
+    "languageSource": languageSource,
+    "languageTarget": languageTarget,
 }
 
 

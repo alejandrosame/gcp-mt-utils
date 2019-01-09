@@ -3,21 +3,108 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<div id="slideshow" class="slideshow">
-    <div class="row text-center">
-        <div class="col text-center">
-            <button class="btn btn-secondary translate__button">Translate text</button>
-            <button class="btn btn-secondary reset__button">Write new text to translate</button>
-            <button class="btn btn-secondary export__button">Export translation</button>
+<div class="col-container">
+    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+        <div class='card bg-secondary border-dark flex-fill'>
+            <div class='card-header border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <div>
+                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                            <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
+                        </div>
+                        <div id="translating-wheel-1" class="sk-circle invisible">
+                            <div class="sk-circle1 sk-child"></div>
+                            <div class="sk-circle2 sk-child"></div>
+                            <div class="sk-circle3 sk-child"></div>
+                            <div class="sk-circle4 sk-child"></div>
+                            <div class="sk-circle5 sk-child"></div>
+                            <div class="sk-circle6 sk-child"></div>
+                            <div class="sk-circle7 sk-child"></div>
+                            <div class="sk-circle8 sk-child"></div>
+                            <div class="sk-circle9 sk-child"></div>
+                            <div class="sk-circle10 sk-child"></div>
+                            <div class="sk-circle11 sk-child"></div>
+                            <div class="sk-circle12 sk-child"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class='card-body border-dark'>
+                <div class="row">
+                    <div class="col text-justify translation-text" id="source-text" contenteditable="true">
+                        <div>Your text to translate</div>
+                    </div>
+                </div>
+            </div>
+            <div class='card-footer border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <div>
+                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                            <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
+                        </div>
+                        <div id="translating-wheel-2" class="sk-circle invisible">
+                            <div class="sk-circle1 sk-child"></div>
+                            <div class="sk-circle2 sk-child"></div>
+                            <div class="sk-circle3 sk-child"></div>
+                            <div class="sk-circle4 sk-child"></div>
+                            <div class="sk-circle5 sk-child"></div>
+                            <div class="sk-circle6 sk-child"></div>
+                            <div class="sk-circle7 sk-child"></div>
+                            <div class="sk-circle8 sk-child"></div>
+                            <div class="sk-circle9 sk-child"></div>
+                            <div class="sk-circle10 sk-child"></div>
+                            <div class="sk-circle11 sk-child"></div>
+                            <div class="sk-circle12 sk-child"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row mt-4">
-        <div class="slide text-white" >
-            <p class="slide__title" contenteditable="true"
-            >Your text to translate</p>
-        </div>
-        <div class="slide slide--target">
-            <p class="slide__title text-white"></p>
+    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+        <div class='card bg-secondary border-dark flex-fill'>
+            <div class='card-header border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <div>
+                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                            <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class='card-body border-dark'>
+                <div class="row">
+                    <div class="col text-justify translation-text" id="target-text"></div>
+                </div>
+            </div>
+
+            <div class='card-footer border-dark'>
+                <div class="row">
+                    <div class="col text-center">
+                        <div>
+                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                            <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
+                        </div>
+                        <div id="exporting-wheel" class="sk-circle" style="display: none;">
+                            <div class="sk-circle1 sk-child"></div>
+                            <div class="sk-circle2 sk-child"></div>
+                            <div class="sk-circle3 sk-child"></div>
+                            <div class="sk-circle4 sk-child"></div>
+                            <div class="sk-circle5 sk-child"></div>
+                            <div class="sk-circle6 sk-child"></div>
+                            <div class="sk-circle7 sk-child"></div>
+                            <div class="sk-circle8 sk-child"></div>
+                            <div class="sk-circle9 sk-child"></div>
+                            <div class="sk-circle10 sk-child"></div>
+                            <div class="sk-circle11 sk-child"></div>
+                            <div class="sk-circle12 sk-child"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

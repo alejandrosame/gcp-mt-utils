@@ -1,8 +1,10 @@
 package automl
 
 import (
+    "bufio"
     "bytes"
     "encoding/json"
+    "errors"
     "fmt"
     "io/ioutil"
     "log"
@@ -16,7 +18,6 @@ import (
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
 )
-
 
 // Types for responses
 type Content struct {
@@ -248,50 +249,93 @@ func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText strin
     return t.PayloadList[0].Translation.TranslatedContent.Content, nil
 }
 
+func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response) ([]byte, error) {
+    defer response.Body.Close()
+
+    statusCode := response.StatusCode
+    body, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        return nil, err
+    }
+
+    if statusCode == 200 {
+        return body, nil
+    }
+
+    errorMessage := gjson.GetBytes(body, "error")
+    if errorMessage.Get("code").Exists() && errorMessage.Get("message").Exists() {
+        err = errors.New(fmt.Sprintf("automl: Error code [%s][%s]",
+                                     errorMessage.Get("code").String(), errorMessage.Get("errorMessage").String()))
+    } else{
+        err = errors.New("automl: Undefined Google API Error")
+    }
+
+    return nil, err
+}
+
+func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, jsonStr []byte, totalTries int) ([]byte, error) {
+    var err error;
+    var body []byte;
+
+    client, err := GetClient()
+    if err != nil {
+        return nil, err
+    }
+
+    for currentTry := 0; currentTry < totalTries; currentTry++ {
+        req, err := http.NewRequest("POST", urlQuery, bytes.NewBuffer(jsonStr))
+
+        response, err := client.Do(req)
+        if err != nil {
+            return nil, err
+        }
+
+        body, err = CheckTranslationReply(infoLog, errorLog, response)
+        if err == nil { break }
+
+        currentTry += 1
+        time.Sleep(10 * time.Second)
+    }
+    return body, err
+}
+
+func StringToLines(s string) (lines []string, err error) {
+    scanner := bufio.NewScanner(strings.NewReader(s))
+    for scanner.Scan() {
+        lines = append(lines, scanner.Text())
+    }
+    err = scanner.Err()
+    return
+}
+
 func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
     defaultValue := ""
 
-    urlQuery := fmt.Sprintf("https://translation.googleapis.com/language/translate/v2?source=%s&target=%s",
-                            source, target)
+    urlQuery := "https://translation.googleapis.com/language/translate/v2"
 
     totalText, err := url.QueryUnescape(sourceText)
     if err != nil {
         return defaultValue, err
     }
 
-    for _, partialText := range strings.Split(strings.Trim(totalText, " \n"), "\n") {
-        urlQuery = fmt.Sprintf("%s&q=%s", urlQuery, url.QueryEscape(partialText))
-    }
-
-    client, err := GetClient()
+    lines, err := StringToLines(totalText)
     if err != nil {
         return defaultValue, err
     }
 
-    req, err := http.NewRequest("POST", urlQuery, nil)
-
-    // Debug request
-    dump, err := httputil.DumpRequestOut(req, true)
-    if err != nil {
-        return defaultValue, err
+    var paragraphs = ""
+    for _, partialText := range lines {
+        if partialText == "" {
+            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, ".-1-.")
+        }else {
+            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, partialText)
+        }
     }
 
-    infoLog.Printf("%s", dump)
+    jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s" %s}`, source, target, paragraphs))
 
-    response, err := client.Do(req)
-    if err != nil {
-        return defaultValue, err
-    }
-    defer response.Body.Close()
-
-    // Debug response
-    dump, err = httputil.DumpResponse(response, true)
-    if err != nil {
-        return defaultValue, err
-    }
-    infoLog.Printf("%s", dump)
-
-    body, err := ioutil.ReadAll(response.Body)
+    var totalTries = 30
+    body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
     if err != nil {
         return defaultValue, err
     }
@@ -302,12 +346,25 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
     translations.ForEach(func(key, translation gjson.Result) bool {
         // If it's a train model operation
         if translation.Get("translatedText").Exists(){
-            translatedText += translation.Get("translatedText").String() + "\n"
+
+            //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
+            partialTranslatedText := translation.Get("translatedText").String()
+
+            if partialTranslatedText == ".-1-." {
+                translatedText += partialTranslatedText
+            }else {
+                translatedText += partialTranslatedText + "\n"
+            }
+
         }
         return true // continue iterating
     })
 
-    return strings.Trim(translatedText, " \n"), nil
+    translatedText = strings.Replace(strings.TrimRight(translatedText, "\n"), ".-1-.", "\n", -1)
+
+    //infoLog.Println(fmt.Sprintf("%s", strings.Replace(translatedText, "\n", "\\n", -1)))
+
+    return translatedText, nil
 }
 
 
