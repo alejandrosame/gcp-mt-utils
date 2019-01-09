@@ -222,35 +222,6 @@
                 return xmlHttp.responseText;
             }
 
-            function reconstructText(ele) {
-                var text = "";
-                var divs = ele.getElementsByTagName("div");
-                for(var i = 0; i < divs.length; i++){
-                   text += divs[i].textContent + "\n";
-                }
-
-                return text;
-            }
-
-            function formatTextWithDiv(inputText){
-                var formattedText = "";
-
-                var text = inputText.trim().split("\n");
-                for (var i=0;i<text.length;i++){
-                    formattedText += "<div>" + text[i]+"</div>";
-                }
-
-                return formattedText;
-            }
-
-            function getTranslation(currentText){
-                var url = "/translate/" + encodeURIComponent(currentText);
-                var raw = httpGet(url);
-                var reply = JSON.parse(raw);
-
-                return formatTextWithDiv(reply["Translation"]);
-            }
-
             function translatingStatusStarted() {
                 translateButton1 = document.getElementById('translate-button-1');
                 translateButton2 = document.getElementById('translate-button-2');
@@ -283,28 +254,80 @@
                 translatingWheel2.classList.add("invisible");
             }
 
+            function reconstructText(ele) {
+                var text = "";
+                var divs = ele.getElementsByTagName("div");
+                for(var i = 0; i < divs.length-1; i++){
+                   text += divs[i].textContent + "\n";
+                }
+                text += divs[divs.length-1].textContent
+
+                return text;
+            }
+
+            function formatTextWithDiv(inputText){
+                var formattedText = "";
+
+                if(inputText == "\n") return "<div></div>";
+
+                var text = splitLines(inputText);
+                for (var i=0;i<text.length;i++){
+                    formattedText += "<div>" + text[i]+"</div>";
+                }
+
+                return formattedText;
+            }
+
+            function getTranslation(currentText){
+                var url = "/translate/" + encodeURIComponent(currentText);
+                var raw = httpGet(url);
+                var reply = JSON.parse(raw);
+
+                return reply["Translation"];
+            }
+
+            function splitLines(text) {
+                var lines = [];
+                var currentLine = "";
+                for (var i=0;i<text.length;i++)
+                {
+                    if (text[i] == '\n'){
+                        lines.push(currentLine);
+                        currentLine = "";
+                    }
+                    else {
+                        currentLine += text[i];
+                    }
+                }
+                if (currentLine != ""){
+                    lines.push(currentLine);
+                }
+                return lines;
+            }
+
             function translate() {
                 translatingStatusStarted();
 
                 var title = document.getElementById('source-text');
-                var text = reconstructText(title).split("\n");
+                var text = splitLines(reconstructText(title));
                 var paragraphCount = 0;
+                var paragraphLimit = 10;
                 var totalReply = "";
                 var currentText = "";
                 for (var i=0;i<text.length;i++)
                 {
                     currentText += text[i] + "\n";
+
                     paragraphCount++;
-                    if (paragraphCount == 30){
-                        totalReply += getTranslation(currentText);
+                    if (paragraphCount == paragraphLimit){
+                        totalReply += formatTextWithDiv(getTranslation(currentText));
 
                         currentText = "";
                         paragraphCount = 0;
-                        sleep(1000);
                     }
                 }
                 if (currentText != ""){
-                    totalReply += getTranslation(currentText);
+                    totalReply += formatTextWithDiv(getTranslation(currentText));
                 }
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
