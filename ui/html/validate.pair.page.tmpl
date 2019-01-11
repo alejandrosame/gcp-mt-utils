@@ -47,6 +47,26 @@
                         </div>
                     </div>
                 </div>
+                <div class='card-body border-dark'>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    Comments
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    {{if .Form.Get "comments"}}
+                                        {{.Form.Get "sourceText"}}
+                                    {{else}}
+                                        No comments yet
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class='card-footer border-dark'>
                     <div class="row">
@@ -75,11 +95,13 @@
                     <input type='hidden' name='targetLanguage' value='{{.Form.Get "targetLanguage"}}' readonly/>
                     <div class="col mt-1">
                         <input class="btn btn-outline-danger btn-sm btn-block" role="button" type='submit' 
-                               name="no-validate" value='Do not validate pair'>
+                               name="no-validate" value='Do not validate pair'
+                               onclick="return confirm('Are you sure that you DO NOT want to validate the pair?');">
                     </div>
                     <div class="col mt-1">
                         <input class="btn btn-outline-success btn-sm btn-block" role="button" type='submit'
-                               name="validate" value='Validate pair'>
+                               name="validate" value='Validate pair'
+                               onclick="return confirm('Are you sure that you DO want to validate the pair?');">
                     </div>
                 </form>
             </div>

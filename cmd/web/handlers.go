@@ -665,6 +665,11 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
     form.Add("sourceVersion", p.SourceVersion)
     form.Add("targetVersion", p.TargetVersion)
     form.Add("detail", p.Detail)
+    if p.Comments.Valid{
+        form.Add("comments", p.Comments.String)
+    }else{
+        form.Add("comments", "")
+    }
     form.Add("updated", humanDate(p.Updated))
     form.Add("created", humanDate(p.Created))
 
