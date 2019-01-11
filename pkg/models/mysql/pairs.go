@@ -37,6 +37,33 @@ func (m *PairModel) Insert(sourceLanguage, sourceVersion, targetLanguage, target
 }
 
 
+func (m *PairModel) Edit(id int, sourceText, targetText, comments string) (int, error) {
+    sqlStr := `UPDATE pairs SET sl_text_source = ?, tl_text_source = ?, comments = ?, validated = false,
+                          updated = UTC_TIMESTAMP()
+               WHERE id = ?`
+
+    _, err := m.DB.Exec(sqlStr, sourceText, targetText, comments, id)
+    if err != nil {
+        return 0, err
+    }
+
+    return id, nil
+}
+
+
+func (m *PairModel) EditComments(id int, comments string) (int, error) {
+    sqlStr := `UPDATE pairs SET comments = ?, updated = UTC_TIMESTAMP()
+               WHERE id = ?`
+
+    _, err := m.DB.Exec(sqlStr, comments, id)
+    if err != nil {
+        return 0, err
+    }
+
+    return id, nil
+}
+
+
 func (m *PairModel) BulkInsertHelper(inputSqlStr string, vals []interface{}) (int64, error) {
     sqlStr := strings.TrimSuffix(inputSqlStr, ",")
 

@@ -6,6 +6,7 @@ import (
     "net/http"
     "net/url"
     "strconv"
+    "strings"
     "time"
 
     "os"
@@ -107,6 +108,121 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "flash", "Pair successfully created!")
 
     http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) editPairForm(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    p, err := app.pairs.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    redirectPage := r.URL.Query().Get("redirect")
+    if redirectPage == "validate" {
+        redirectPage = fmt.Sprintf("/pair/validate/%d", id)
+    } else {
+        redirectPage = fmt.Sprintf("/pair/%d", id)
+    }
+
+    form := forms.New(url.Values{})
+    form.Add("id", fmt.Sprintf("%d", p.ID))
+    form.Add("sourceLanguage", p.SourceLanguage)
+    form.Add("targetLanguage", p.TargetLanguage)
+    form.Add("sourceText", p.SourceText)
+    form.Add("targetText", p.TargetText)
+    form.Add("sourceVersion", p.SourceVersion)
+    form.Add("targetVersion", p.TargetVersion)
+    form.Add("detail", p.Detail)
+    if p.Comments.Valid{
+        form.Add("comments", p.Comments.String)
+    }else{
+        form.Add("comments", "")
+    }
+    form.Add("updated", humanDate(p.Updated))
+    form.Add("created", humanDate(p.Created))
+    form.Add("redirectPage", redirectPage)
+
+    app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    p, err := app.pairs.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("sourceText", "targetText", "sourceVersion", "targetVersion", "detail", "redirectPage")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("sourceText", maxChar)
+    form.MaxLength("targetText", maxChar)
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    sourceText := strings.Trim(form.Get("sourceText"), " \n")
+    targetText := strings.Trim(form.Get("targetText"), " \n")
+    comments := strings.Trim(form.Get("comments"), " \n")
+    redirect := form.Get("redirectPage")
+
+    savedComments := ""
+    if p.Comments.Valid{
+        savedComments = p.Comments.String
+    }
+
+    if sourceText != p.SourceText || targetText != p.TargetText {
+        _, err = app.pairs.Edit(id, sourceText, targetText, comments)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        // Add feedback for the user as session information
+        app.session.Put(r, "flash", "Pair successfully edited!")
+    } else if savedComments != comments {
+        _, err = app.pairs.EditComments(id, comments)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        app.session.Put(r, "flash", "Pair comments successfully edited!")
+    } else {
+        app.session.Put(r, "flash", "Pair content was not changed!")
+    }
+
+    http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
