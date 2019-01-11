@@ -205,6 +205,99 @@ func (m *PairModel) Latest(sourceLanguage, targetLanguage string) ([]*models.Pai
 }
 
 
+func (m *PairModel) GetBibleBooks() ([]*models.BibleBook, error) {
+
+    stmt := `SELECT id, name, chapter, testament
+             FROM bible_structure
+             ORDER BY id ASC`
+
+    rows, err := m.DB.Query(stmt)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    books := []*models.BibleBook{}
+
+    for rows.Next() {
+        b := &models.BibleBook{}
+
+        err = rows.Scan(&b.ID,
+                        &b.Name, &b.Chapter, &b.Testament)
+        if err != nil {
+            return nil, err
+        }
+        books = append(books, b)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return books, nil
+}
+
+
+func (m *PairModel) GetBook(id int) (*models.BibleBook, error) {
+
+    stmt := `SELECT id, name, chapter, testament
+             FROM bible_structure
+             WHERE id = ?`
+
+    b := &models.BibleBook{}
+    err := m.DB.QueryRow(stmt, id).Scan(&b.ID,
+                        &b.Name, &b.Chapter, &b.Testament)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return b, nil
+}
+
+
+func (m *PairModel) GetPairs(infoLog *log.Logger, sourceLanguage, targetLanguage string, book, chapter int) ([]*models.Pair, error) {
+
+    stmt := `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text,
+                    text_detail, comments, validated, gcp_dataset, created, updated
+             FROM pairs
+             WHERE source_language = ? AND target_language = ? AND text_detail LIKE ?
+             ORDER BY id ASC`
+
+
+    rows, err := m.DB.Query(stmt, sourceLanguage, targetLanguage,
+                                  fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%"))
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    pairs := []*models.Pair{}
+
+    for rows.Next() {
+        p := &models.Pair{}
+
+        err = rows.Scan(&p.ID,
+                        &p.SourceLanguage, &p.SourceVersion,
+                        &p.TargetLanguage, &p.TargetVersion,
+                        &p.SourceText, &p.TargetText,
+                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                        &p.Created, &p.Updated)
+        if err != nil {
+            return nil, err
+        }
+        pairs = append(pairs, p)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return pairs, nil
+}
+
+
 func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (int, error) {
 
     stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated

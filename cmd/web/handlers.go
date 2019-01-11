@@ -23,17 +23,53 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-
-    p, err := app.pairs.Latest(sourceLanguage, targetLanguage)
+func (app *application) showBooks(w http.ResponseWriter, r *http.Request) {
+    b, err := app.pairs.GetBibleBooks()
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p})
+    app.infoLog.Printf("%v", b[0].Testament)
+
+    app.render(w, r, "show.book.page.tmpl", &templateData{Books: b})
+}
+
+
+func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    p, err := app.pairs.GetPairs(app.infoLog, sourceLanguage, targetLanguage, bookId, chapterId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    b.Chapter = chapterId
+
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, Book: b})
 }
 
 

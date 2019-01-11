@@ -1,9 +1,13 @@
 {{template "base" .}}
 
-{{define "title"}}Manage pairs{{end}}
+{{define "title"}}Manage pairs - {{.Book.Name}} - Chapter {{.Book.Chapter}}{{end}}
 
 {{define "body"}}
     <div>
+        <div class="row mt-2 justify-content-center">
+            <h2>Pairs for {{.Book.Name}} - Chapter {{.Book.Chapter}}</h2>
+        </div>
+
         <div class="row mt-2">
             <div class="col mt-1">
                 <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/validate'>
@@ -11,25 +15,12 @@
                 </a>
             </div>
             <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/create'>
-                    Create new training pair
-                </a>
-            </div>
-            <div class="col mt-1">
                 <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/export'>
                     Export validated pairs to dataset
                 </a>
             </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/upload'>
-                    Upload training pairs from file
-                </a>
-            </div>
         </div>
 
-        <div class="row mt-2 justify-content-center">
-            <h2>Latest Pairs</h2>
-        </div>
         {{if .Pairs}}
             {{range .Pairs}}
             <div class="row mt-2">

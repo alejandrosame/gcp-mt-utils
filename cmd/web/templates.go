@@ -24,6 +24,8 @@ type templateData struct {
     Form              *forms.Form
     Pair              *models.Pair
     Pairs             []*models.Pair
+    Book              *models.BibleBook
+    Books             []*models.BibleBook
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
     Datasets          []*automl.Dataset
@@ -80,6 +82,17 @@ func languageTarget(s string) string {
     return temp[1]
 }
 
+func rangeInt(start, end int) (stream chan int) {
+    stream = make(chan int)
+    go func() {
+        for i := start; i <= end; i++ {
+            stream <- i
+        }
+        close(stream)
+    }()
+    return
+}
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -92,6 +105,7 @@ var functions = template.FuncMap{
     "truncate": truncate,
     "languageSource": languageSource,
     "languageTarget": languageTarget,
+    "rangeInt": rangeInt,
 }
 
 
