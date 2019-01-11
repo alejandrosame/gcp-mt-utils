@@ -62,6 +62,13 @@
         </div>
         <div class="row mt-2">
             <div class="col mt-1">
+                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/edit/{{.Form.Get "id"}}?redirect=validate'>
+                    Edit this pair
+                </a>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col mt-1">
                 <form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
                     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <input type='hidden' name='sourceLanguage' value='{{.Form.Get "sourceLanguage"}}' readonly/>

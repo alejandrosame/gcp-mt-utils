@@ -31,6 +31,8 @@ func (app *application) routes() http.Handler {
     // Validator routes
     mux.Get("/pair/create", validatorMiddleware.ThenFunc(app.createPairForm))
     mux.Post("/pair/create", validatorMiddleware.ThenFunc(app.createPair))
+    mux.Get("/pair/edit/:id", validatorMiddleware.ThenFunc(app.editPairForm))
+    mux.Post("/pair/edit/:id", validatorMiddleware.ThenFunc(app.editPair))
     mux.Get("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePairForm))
     mux.Post("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePair))
     mux.Get("/pair/validate", validatorMiddleware.ThenFunc(app.initValidatePair))
