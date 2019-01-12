@@ -3,105 +3,175 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<div class="col-container">
-    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
-        <div class='card bg-secondary border-dark flex-fill'>
-            <div class='card-header border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
+<div class="col mt-2" style="width:100%;  height: 100%; top:0px;">
+    <ul class="nav nav-tabs" role="tablist" style="width:100%;  top:0px;">
+      <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#box">Translate</a></li>
+      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#file">Translate file</a></li>
+      <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#conf">Export config</a></li>
+    </ul>
+
+    <div class="tab-content" style="width:100%; top:10px;">
+        <div id="box" class="container tab-pane active" style="width:100%;  top:0px;">
+            <div class="row mt-2">
+                <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+                    <div class='card bg-secondary border-dark flex-fill'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <div>
+                                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                                        <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
+                                    </div>
+                                    <div id="translating-wheel-1" class="sk-circle invisible">
+                                        <div class="sk-circle1 sk-child"></div>
+                                        <div class="sk-circle2 sk-child"></div>
+                                        <div class="sk-circle3 sk-child"></div>
+                                        <div class="sk-circle4 sk-child"></div>
+                                        <div class="sk-circle5 sk-child"></div>
+                                        <div class="sk-circle6 sk-child"></div>
+                                        <div class="sk-circle7 sk-child"></div>
+                                        <div class="sk-circle8 sk-child"></div>
+                                        <div class="sk-circle9 sk-child"></div>
+                                        <div class="sk-circle10 sk-child"></div>
+                                        <div class="sk-circle11 sk-child"></div>
+                                        <div class="sk-circle12 sk-child"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="translating-wheel-1" class="sk-circle invisible">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <div class="col text-justify translation-text" id="source-text" contenteditable="true">
+                                    <div>Your text to translate</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <div>
+                                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                                        <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
+                                    </div>
+                                    <div id="translating-wheel-2" class="sk-circle invisible">
+                                        <div class="sk-circle1 sk-child"></div>
+                                        <div class="sk-circle2 sk-child"></div>
+                                        <div class="sk-circle3 sk-child"></div>
+                                        <div class="sk-circle4 sk-child"></div>
+                                        <div class="sk-circle5 sk-child"></div>
+                                        <div class="sk-circle6 sk-child"></div>
+                                        <div class="sk-circle7 sk-child"></div>
+                                        <div class="sk-circle8 sk-child"></div>
+                                        <div class="sk-circle9 sk-child"></div>
+                                        <div class="sk-circle10 sk-child"></div>
+                                        <div class="sk-circle11 sk-child"></div>
+                                        <div class="sk-circle12 sk-child"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class='card-body border-dark'>
-                <div class="row">
-                    <div class="col text-justify translation-text" id="source-text" contenteditable="true">
-                        <div>Your text to translate</div>
-                    </div>
-                </div>
-            </div>
-            <div class='card-footer border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
+                <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+                    <div class='card bg-secondary border-dark flex-fill'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <div>
+                                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                                        <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div id="translating-wheel-2" class="sk-circle invisible">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <div class="col text-justify translation-text" id="target-text"></div>
+                            </div>
+                        </div>
+
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <div>
+                                        <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                                        <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
+                                    </div>
+                                    <div id="exporting-wheel" class="sk-circle" style="display: none;">
+                                        <div class="sk-circle1 sk-child"></div>
+                                        <div class="sk-circle2 sk-child"></div>
+                                        <div class="sk-circle3 sk-child"></div>
+                                        <div class="sk-circle4 sk-child"></div>
+                                        <div class="sk-circle5 sk-child"></div>
+                                        <div class="sk-circle6 sk-child"></div>
+                                        <div class="sk-circle7 sk-child"></div>
+                                        <div class="sk-circle8 sk-child"></div>
+                                        <div class="sk-circle9 sk-child"></div>
+                                        <div class="sk-circle10 sk-child"></div>
+                                        <div class="sk-circle11 sk-child"></div>
+                                        <div class="sk-circle12 sk-child"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
-        <div class='card bg-secondary border-dark flex-fill'>
-            <div class='card-header border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
+
+        <div id="file"  class="container tab-pane fade">
+            <div class="row mt-2">
+                <form action='' method='POST' enctype='multipart/form-data'>
+                <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                {{with .Form}}
+                    <div class="form-group row">
+                        <div class="col">
+                            {{with .Errors.Get "fileName"}}
+                                <label for="filename" class='bg-danger text-white'>{{.}}</label>
+                            {{end}}
+                            <input class="form-control-file form-control-lg text-white" type="file" name="fileName" disabled>{{.Get "uploadFile"}}</input>
                         </div>
                     </div>
-                </div>
+                    <div class="form-group row">
+                        <div class="col">
+                            <input class="btn btn-secondary btn-block" type="submit" value="Upload file to translate" disabled/>
+                        </div>
+                    </div>
+                {{end}}
+                </form>
             </div>
-            <div class='card-body border-dark'>
-                <div class="row">
-                    <div class="col text-justify translation-text" id="target-text"></div>
+        </div>
+        <div id="conf"  class="container tab-pane fade">
+            <div class="row mt-2">
+                <div class="col">
+                    <div class="custom-control custom-radio custom-control-inline bg-dark">
+                      <input type="radio" class="custom-control-input" id="defaultInline1" name="inlineDefaultRadiosExample" checked>
+                      <label class="custom-control-label text-white" for="defaultInline1">Whole file export</label>
+                    </div>
                 </div>
-            </div>
 
-            <div class='card-footer border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
+                <div class="col">
+                    <div class="row">
+                        <div class="custom-control custom-radio custom-control-inline bg-dark">
+                          <input type="radio" class="custom-control-input" id="defaultInline2" name="inlineDefaultRadiosExample">
+                          <label class="custom-control-label text-white" for="defaultInline2">Split file export</label>
                         </div>
-                        <div id="exporting-wheel" class="sk-circle" style="display: none;">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
-                        </div>
+                    </div>
+
+                    <div class="row">
+                      <label class="text-white" for="sel1">Select paragraph grouping: </label>
+                      <select class="custom-control custom-control-inline" id="sel1" name="sellist1">
+                        <option>5</option>
+                        <option>10</option>
+                        <option>15</option>
+                        <option>20</option>
+                        <option>25</option>
+                        <option>30</option>
+                        <option>35</option>
+                        <option>40</option>
+                        <option>45</option>
+                        <option>50</option>
+                      </select>
                     </div>
                 </div>
             </div>
