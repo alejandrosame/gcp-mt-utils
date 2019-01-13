@@ -515,6 +515,49 @@ func (m *PairModel) GetValidatedNotExported(sourceLanguage, targetLanguage strin
 }
 
 
+func (m *PairModel) GetValidatedNotExportedFromChapter(sourceLanguage, targetLanguage string,
+                                                       book, chapter int) ([]*models.Pair, error) {
+    sqlStr := `SELECT id, source_language, sl_text_source, target_language, tl_text_source,
+                     source_text, target_text, text_detail, comments, validated,
+                     gcp_dataset,created, updated
+              FROM pairs
+              WHERE source_language = ? AND target_language = ? AND text_detail LIKE ? AND
+                    gcp_dataset IS NULL AND validated = true
+              ORDER BY id ASC`
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%")
+
+    rows, err := m.DB.Query(sqlStr, sourceLanguage, targetLanguage, detailLike)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    pairs := []*models.Pair{}
+
+    for rows.Next() {
+        p := &models.Pair{}
+
+        err = rows.Scan(&p.ID,
+                        &p.SourceLanguage, &p.SourceVersion,
+                        &p.TargetLanguage, &p.TargetVersion,
+                        &p.SourceText, &p.TargetText,
+                        &p.Detail, &p.Comments, &p.Validated, &p.GcpDataset,
+                        &p.Created, &p.Updated)
+        if err != nil {
+            return nil, err
+        }
+        pairs = append(pairs, p)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return pairs, nil
+}
+
+
 func (m *PairModel) DatasetIsUsed(datasetName string) (bool, error) {
     sqlStr := ` SELECT count(*) as count
                 FROM pairs
