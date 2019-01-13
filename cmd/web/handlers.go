@@ -58,6 +58,8 @@ func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    b.Chapter = chapterId
+
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
@@ -67,9 +69,16 @@ func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    b.Chapter = chapterId
+    var stats *models.ValidationStats = nil
+    if (len(p) > 0){
+        stats, err = app.pairs.ValidationStatisticsBookChapter(p[0].ID)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+    }
 
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, Book: b})
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, ValidationStats: stats, Book: b})
 }
 
 

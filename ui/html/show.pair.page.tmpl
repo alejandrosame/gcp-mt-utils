@@ -8,21 +8,31 @@
             <h2>Pairs for {{.Book.Name}} - Chapter {{.Book.Chapter}}</h2>
         </div>
 
-        <div class="row mt-2">
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button"
-                   href='/pair/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
-                    Validate training pairs
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/export'>
-                    Export validated pairs to dataset
-                </a>
-            </div>
-        </div>
-
         {{if .Pairs}}
+            <div class="row mt-2">
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                       href='/pair/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
+                        Validate training pairs
+                    </a>
+                </div>
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/export'>
+                        Export validated pairs to dataset
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col mt-1 text-center">
+                    {{with .ValidationStats}}
+                        <div class="alert alert-info font-weight-bold">
+                            Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+
             {{range .Pairs}}
             <div class="row mt-2">
                 <div class="col">
