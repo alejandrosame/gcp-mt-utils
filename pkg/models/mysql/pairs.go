@@ -298,15 +298,17 @@ func (m *PairModel) GetPairs(infoLog *log.Logger, sourceLanguage, targetLanguage
 }
 
 
-func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string) (int, error) {
+func (m *PairModel) GetNewIDToValidate(sourceLanguage, targetLanguage string, book, chapter int) (int, error) {
 
-    stmt := `SELECT id FROM pairs WHERE source_language = ? AND target_language = ? AND NOT validated
+    stmt := `SELECT id FROM pairs
+    WHERE source_language = ? AND target_language = ? AND text_detail LIKE ? AND NOT validated
     ORDER BY RAND()
     LIMIT 1;`
 
     p := &models.Pair{}
 
-    err := m.DB.QueryRow(stmt, sourceLanguage, targetLanguage).Scan(&p.ID,)
+    err := m.DB.QueryRow(stmt, sourceLanguage, targetLanguage,
+                               fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%")).Scan(&p.ID,)
     if err == sql.ErrNoRows {
         return 0, models.ErrNoRecord
     } else if err != nil {
