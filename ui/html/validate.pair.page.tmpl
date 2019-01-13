@@ -8,7 +8,7 @@
             <div class="col mt-1 text-center">
                 {{with .ValidationStats}}
                     <div class="alert alert-info font-weight-bold">
-                        Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                        On Book {{$.Book.Name}}, Chapter {{$.Book.Chapter}}: Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
                     </div>
                 {{end}}
             </div>

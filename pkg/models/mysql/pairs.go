@@ -4,6 +4,7 @@ import (
     "fmt"
     "log"
     "regexp"
+    "strconv"
     "strings"
 
     "database/sql"
@@ -257,6 +258,23 @@ func (m *PairModel) GetBook(id int) (*models.BibleBook, error) {
 }
 
 
+func (m *PairModel) GetBookFromDetail(detail string) (*models.BibleBook, error) {
+    detailRe := regexp.MustCompile("book (\\d+), chapter(\\d+), verse (\\d+)")
+    match := detailRe.FindStringSubmatch(detail)
+    bookId, _ := strconv.Atoi(match[1])
+    chapterId, _ := strconv.Atoi(match[2])
+
+    b, err := m.GetBook(bookId)
+    if err != nil {
+        return nil, err
+    }
+
+    b.Chapter = chapterId
+
+    return b, nil
+}
+
+
 func (m *PairModel) GetPairs(infoLog *log.Logger, sourceLanguage, targetLanguage string, book, chapter int) ([]*models.Pair, error) {
 
     stmt := `SELECT id, source_language, sl_text_source, target_language, tl_text_source, source_text, target_text,
@@ -397,6 +415,56 @@ func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error
     stats := &models.ValidationStats{}
 
     err = stmt.QueryRow(id).Scan(&stats.Validated, &stats.NotValidated)
+    if err != nil {
+        return nil, err
+    }
+
+    stats.Total = stats.Validated + stats.NotValidated
+    stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
+
+    return stats, nil
+}
+
+
+func (m *PairModel) ValidationStatisticsBookChapter(id int) (*models.ValidationStats, error) {
+
+    p, err := m.Get(id)
+    if err != nil {
+        return nil, err
+    }
+
+    b, err := m.GetBookFromDetail(p.Detail)
+    if err != nil {
+        return nil, err
+    }
+
+    sqlStr := `WITH p AS (
+                SELECT id, source_language AS sl, target_language AS tl
+                FROM pairs
+                WHERE id = ?
+            ),
+            scope_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = true
+            ),
+            scope_not_validated AS (
+                SELECT COUNT(pairs.id) AS count
+                FROM pairs, p
+                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = false
+            ) SELECT sv.count AS validated, snv.count AS not_validated
+              FROM scope_validated AS sv, scope_not_validated AS snv;`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+
+    stats := &models.ValidationStats{}
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", b.ID, b.Chapter, "%")
+
+    err = stmt.QueryRow(id, detailLike, detailLike).Scan(&stats.Validated, &stats.NotValidated)
     if err != nil {
         return nil, err
     }

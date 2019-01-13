@@ -5,7 +5,6 @@ import (
     "encoding/json"
     "net/http"
     "net/url"
-    "regexp"
     "strconv"
     "strings"
     "time"
@@ -680,7 +679,6 @@ func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request)
     http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
 }
 
-
 func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
@@ -703,7 +701,7 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
         return
     }
 
-    stats, err := app.pairs.ValidationStatistics(id)
+    stats, err := app.pairs.ValidationStatisticsBookChapter(id)
     if err != nil {
         app.serverError(w, err)
         return
@@ -726,9 +724,16 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
     form.Add("updated", humanDate(p.Updated))
     form.Add("created", humanDate(p.Created))
 
+    b, err := app.pairs.GetBookFromDetail(p.Detail)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
     app.render(w, r, "validate.pair.page.tmpl", &templateData{
         Form: form,
         ValidationStats: stats,
+        Book: b,
     })
 }
 
@@ -770,14 +775,14 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    detail := form.Get("detail")
-    detailRe := regexp.MustCompile("book (\\d+), chapter(\\d+), verse (\\d+)")
-    match := detailRe.FindStringSubmatch(detail)
-    bookId, _ := strconv.Atoi(match[1])
-    chapterId, _ := strconv.Atoi(match[2])
+    b, err := app.pairs.GetBookFromDetail(form.Get("detail"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
 
     // Get another pair to validate from the same scope
-    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage, bookId, chapterId)
+    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage, b.ID, b.Chapter)
     if err == models.ErrNoRecord {
         app.session.Put(r, "flash", "No pairs found to be validated!")
         http.Redirect(w, r, "/pair", http.StatusSeeOther)
