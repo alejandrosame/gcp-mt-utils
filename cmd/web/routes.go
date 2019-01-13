@@ -35,12 +35,13 @@ func (app *application) routes() http.Handler {
     mux.Post("/pair/edit/:id", validatorMiddleware.ThenFunc(app.editPair))
     mux.Get("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePairForm))
     mux.Post("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePair))
-    mux.Get("/pair/validate", validatorMiddleware.ThenFunc(app.initValidatePair))
     mux.Get("/pair/:id", validatorMiddleware.ThenFunc(app.showPair))
-    mux.Get("/pair", validatorMiddleware.ThenFunc(app.showPairs))
+    mux.Get("/pair/book/:bookid/chapter/:chapterid/validate", validatorMiddleware.ThenFunc(app.initValidatePair))
+    mux.Get("/pair/book/:bookid/chapter/:chapterid", validatorMiddleware.ThenFunc(app.showPairs))
+    mux.Get("/pair", validatorMiddleware.ThenFunc(app.showBooks))
     mux.Get("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairsForm))
     mux.Post("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairs))
-    mux.Get("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairsForm))
+    mux.Get("/pairs/book/:bookid/chapter/:chapterid/export", validatorMiddleware.ThenFunc(app.exportValidatedPairsForm))
     mux.Post("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairs))
 
     // Translator routes
