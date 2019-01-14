@@ -4,9 +4,10 @@ import (
     "bufio"
     "fmt"
     "html/template"
+    "io/ioutil"
+    "os"
     "path/filepath"
     "strings"
-    "os"
     "time"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/automl"
@@ -93,6 +94,41 @@ func rangeInt(start, end int) (stream chan int) {
     return
 }
 
+func rangeFlags(language string) (stream chan string) {
+    m := make(map[string][]string)
+    m["ES"] = []string{"es", "ar", "bo", "cl", "co", "cr", "cu", "do", "ec", "sv", "gt", "hn", "mx", "ni", "pa", "py",
+                       "pe", "uy", "ve", "gq"}
+    m["FR"] = []string{"cd", "fr", "ca", "mg", "cm", "ci", "ne", "bf", "ml", "sn", "td", "gn", "rw", "be", "bi", "bj",
+                       "ht", "ch", "tg", "cf", "cg", "ga", "gq", "dj", "km", "lu", "vu", "sc", "mc"}
+    m["PT"] = []string{"br", "ao", "mz", "pt", "gw", "tl", "gq", "cv", "st"}
+    m["SW"] = []string{"tz", "cd", "ke", "so", "mz", "bi", "ug", "km", "zm", "mw", "mg"}
+
+    stream = make(chan string)
+    go func() {
+        for i := 0; i < len(m[language]); i++ {
+            stream <- fmt.Sprintf("/static/img/flags/%s.png", m[language][i])
+        }
+        close(stream)
+    }()
+    return
+}
+
+func rangePeople(language string) (stream chan string) {
+    stream = make(chan string)
+    go func() {
+        files, err := ioutil.ReadDir(fmt.Sprintf("./ui/static/img/people/%s", strings.ToLower(language)))
+        if err != nil {
+            stream <- ""
+        } else {
+            for _, f := range files {
+                stream <- fmt.Sprintf("/static/img/people/%s/%s", strings.ToLower(language), f.Name())
+            }
+        }
+        close(stream)
+    }()
+    return
+}
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -106,6 +142,8 @@ var functions = template.FuncMap{
     "languageSource": languageSource,
     "languageTarget": languageTarget,
     "rangeInt": rangeInt,
+    "rangeFlags": rangeFlags,
+    "rangePeople": rangePeople,
 }
 
 
