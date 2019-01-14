@@ -688,6 +688,43 @@ func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request)
     http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
 }
 
+
+func (app *application) validateAllPairs(w http.ResponseWriter, r *http.Request) {
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    err = app.pairs.ValidateAllPairsFromChapter(sourceLanguage, targetLanguage, bookId, chapterId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", "All pairs validated for this chapter")
+    http.Redirect(w, r, fmt.Sprintf("/pair/book/%d/chapter/%d", bookId, chapterId), http.StatusSeeOther)
+}
+
+
 func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {

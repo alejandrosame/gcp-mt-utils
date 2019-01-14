@@ -42,6 +42,7 @@ func (app *application) routes() http.Handler {
     mux.Get("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairsForm))
     mux.Post("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairs))
     mux.Get("/pairs/book/:bookid/chapter/:chapterid/export", validatorMiddleware.ThenFunc(app.exportValidatedPairsForm))
+    mux.Get("/pairs/book/:bookid/chapter/:chapterid/validate", validatorMiddleware.ThenFunc(app.validateAllPairs))
     mux.Post("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairs))
 
     // Translator routes

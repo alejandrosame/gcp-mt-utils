@@ -1,0 +1,93 @@
+{{define "pair"}}
+    <div class='card bg-secondary border-dark'>
+        <div class='card-header border-dark'>
+            <div class="row">
+                <div class="col text-center font-weight-bold">
+                    <a class="text-white" href='/pair/{{.ID}}'>#{{.ID}}</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col text-center">
+                    <span class="font-weight-bold">{{.SourceLanguage}}</span>
+                    <span class="small">({{.SourceVersion}})</span>
+                </div>
+                <div class="col text-center">
+                    <span class="font-weight-bold">{{.TargetLanguage}}</span>
+                    <span class="small">({{.TargetVersion}})</span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col text-center font-italic small">
+                    {{.Detail}}
+                </div>
+            </div>
+        </div>
+        <div class='card-body border-dark'>
+            <div class="row">
+                <div class="col text-justify">
+                    {{.SourceText}}
+                </div>
+                <div class="col text-justify">
+                    {{.TargetText}}
+                </div>
+            </div>
+        </div>
+
+        <div class='card-body border-dark'>
+            <div class="row align-items-center">
+                <div class="col">
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            Comments
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            {{if .Comments.Valid}}
+                                {{.Comments.Value}}
+                            {{else}}
+                                No comments yet
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="row">
+                        <div class="col text-center font-weight-bold">
+                            GCP Dataset
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col text-center">
+                            {{if .GcpDataset.Valid}}
+                                {{.GcpDataset.Value}}
+                            {{else}}
+                                Not uploaded yet
+                            {{end}}
+                        </div>
+                    </div>
+                </div>
+                {{if .Validated}}
+                    <div class="col text-center bg-success">
+                        Validated
+                    </div>
+                {{else}}
+                    <div class="col text-center bg-danger">
+                        Not validated
+                    </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class='card-footer border-dark'>
+            <div class="row">
+                <div class="col text-center">
+                    <time>Created on {{humanDate .Created}}</time>
+                </div>
+                <div class="col text-center">
+                    <time>Updated on {{humanDate .Updated}}</time>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
