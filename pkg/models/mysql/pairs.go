@@ -558,6 +558,21 @@ func (m *PairModel) GetValidatedNotExportedFromChapter(sourceLanguage, targetLan
 }
 
 
+func (m *PairModel) ValidateAllPairsFromChapter(sourceLanguage, targetLanguage string, book, chapter int) (error) {
+    sqlStr := `UPDATE pairs SET validated = true
+    WHERE source_language = ? AND target_language = ? AND text_detail LIKE ? AND
+          validated = false`
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%")
+    _, err := m.DB.Exec(sqlStr, sourceLanguage, targetLanguage, detailLike)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
 func (m *PairModel) DatasetIsUsed(datasetName string) (bool, error) {
     sqlStr := ` SELECT count(*) as count
                 FROM pairs
