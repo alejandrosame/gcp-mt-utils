@@ -388,22 +388,17 @@ func (m *PairModel) Update(id int) error {
 }
 
 
-func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error) {
+func (m *PairModel) ValidationStatistics(sourceLanguage, targetLanguage string) (*models.ValidationStats, error) {
 
-    sqlStr := `WITH p AS (
-                SELECT id, source_language AS sl, target_language AS tl
-                FROM pairs
-                WHERE id = ?
-            ),
-            scope_validated AS (
+    sqlStr := `WITH scope_validated AS (
                 SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = true
+                FROM pairs
+                WHERE pairs.source_language = ? AND pairs.target_language = ? AND validated = true
             ),
             scope_not_validated AS (
                 SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = false
+                FROM pairs
+                WHERE pairs.source_language = ? AND pairs.target_language = ? AND validated = false
             ) SELECT sv.count AS validated, snv.count AS not_validated
               FROM scope_validated AS sv, scope_not_validated AS snv;`
 
@@ -412,46 +407,27 @@ func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error
         return nil, err
     }
 
-    stats := &models.ValidationStats{}
-
-    err = stmt.QueryRow(id).Scan(&stats.Validated, &stats.NotValidated)
-    if err != nil {
-        return nil, err
-    }
-
-    stats.Total = stats.Validated + stats.NotValidated
-    stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
-
-    return stats, nil
+    return m.ExecuteValidationStatistics(stmt.QueryRow(sourceLanguage, targetLanguage, sourceLanguage, targetLanguage))
 }
 
 
-func (m *PairModel) ValidationStatisticsBookChapter(id int) (*models.ValidationStats, error) {
+func (m *PairModel) ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, detail, 
+                                                    level string) (*models.ValidationStats, error) {
 
-    p, err := m.Get(id)
+    b, err := m.GetBookFromDetail(detail)
     if err != nil {
         return nil, err
     }
 
-    b, err := m.GetBookFromDetail(p.Detail)
-    if err != nil {
-        return nil, err
-    }
-
-    sqlStr := `WITH p AS (
-                SELECT id, source_language AS sl, target_language AS tl
-                FROM pairs
-                WHERE id = ?
-            ),
-            scope_validated AS (
+    sqlStr := `WITH scope_validated AS (
                 SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = true
+                FROM pairs
+                WHERE pairs.source_language = ? AND pairs.target_language = ? AND pairs.text_detail LIKE ? AND validated = true
             ),
             scope_not_validated AS (
                 SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = false
+                FROM pairs
+                WHERE pairs.source_language = ? AND pairs.target_language = ? AND pairs.text_detail LIKE ? AND validated = false
             ) SELECT sv.count AS validated, snv.count AS not_validated
               FROM scope_validated AS sv, scope_not_validated AS snv;`
 
@@ -460,11 +436,21 @@ func (m *PairModel) ValidationStatisticsBookChapter(id int) (*models.ValidationS
         return nil, err
     }
 
-    stats := &models.ValidationStats{}
-
     detailLike := fmt.Sprintf("book %d, chapter%d,%s", b.ID, b.Chapter, "%")
 
-    err = stmt.QueryRow(id, detailLike, detailLike).Scan(&stats.Validated, &stats.NotValidated)
+    if level == "book" {
+        detailLike = fmt.Sprintf("book %d,%s", b.ID, "%")
+    }
+
+    return m.ExecuteValidationStatistics(stmt.QueryRow(sourceLanguage, targetLanguage, detailLike,
+                                                       sourceLanguage, targetLanguage, detailLike))
+}
+
+
+func (m *PairModel) ExecuteValidationStatistics(query *sql.Row) (*models.ValidationStats, error) {
+    stats := &models.ValidationStats{}
+
+    err := query.Scan(&stats.Validated, &stats.NotValidated)
     if err != nil {
         return nil, err
     }

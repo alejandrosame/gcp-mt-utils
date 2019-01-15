@@ -30,9 +30,16 @@ func (app *application) showBooks(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    app.infoLog.Printf("%v", b[0].Testament)
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    app.render(w, r, "show.book.page.tmpl", &templateData{Books: b})
+    stats, err := app.pairs.ValidationStatistics(sourceLanguage, targetLanguage)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.book.page.tmpl", &templateData{Books: b, ValidationStats: stats})
 }
 
 
@@ -71,7 +78,7 @@ func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
 
     var stats *models.ValidationStats = nil
     if (len(p) > 0){
-        stats, err = app.pairs.ValidationStatisticsBookChapter(p[0].ID)
+        stats, err = app.pairs.ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, p[0].Detail, "chapter")
         if err != nil {
             app.serverError(w, err)
             return
@@ -766,7 +773,10 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
         return
     }
 
-    stats, err := app.pairs.ValidationStatisticsBookChapter(id)
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    stats, err := app.pairs.ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, p.Detail, "chapter")
     if err != nil {
         app.serverError(w, err)
         return
