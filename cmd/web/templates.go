@@ -129,6 +129,10 @@ func rangePeople(language string) (stream chan string) {
     return
 }
 
+func minus(a, b int) (int) {
+    return a-b
+}
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -144,6 +148,7 @@ var functions = template.FuncMap{
     "rangeInt": rangeInt,
     "rangeFlags": rangeFlags,
     "rangePeople": rangePeople,
+    "minus": minus,
 }
 
 
