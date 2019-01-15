@@ -206,29 +206,63 @@ func (m *PairModel) Latest(sourceLanguage, targetLanguage string) ([]*models.Pai
 }
 
 
-func (m *PairModel) GetBibleBooks() ([]*models.BibleBook, error) {
+func (m *PairModel) GetBibleBooks(sourceLanguage, targetLanguage string) ([]*models.BibleBook, error) {
 
-    stmt := `SELECT id, name, chapter, testament
-             FROM bible_structure
-             ORDER BY id ASC`
+    sqlStr := `SELECT id, name, chapter, testament
+               FROM bible_structure
+               ORDER BY id ASC`
 
-    rows, err := m.DB.Query(stmt)
+    rows, err := m.DB.Query(sqlStr)
     if err != nil {
         return nil, err
     }
     defer rows.Close()
 
+    allStats, err := m.ValidationStatisticsAllBooksChapters(sourceLanguage, targetLanguage)
+    if err != nil {
+        return nil, err
+    }
     books := []*models.BibleBook{}
 
+    bookIdx := 1
     for rows.Next() {
         b := &models.BibleBook{}
+        chapterStats := []*models.ValidationStats{}
+        bookStats := models.ValidationStats{Validated: 0, NotValidated: 0, Total: 0, Percent: 0}
 
         err = rows.Scan(&b.ID,
                         &b.Name, &b.Chapter, &b.Testament)
         if err != nil {
             return nil, err
         }
+
+        for chapterIdx := 1; chapterIdx <= b.Chapter; chapterIdx++ {
+            stats := models.ValidationStats{Validated: 0, NotValidated: 0, Total: 0, Percent: 100}
+
+            _, exists := (*allStats)[bookIdx]
+            if exists {
+                _, exists := (*allStats)[bookIdx][chapterIdx]
+                if exists {
+                    stats = (*allStats)[bookIdx][chapterIdx]
+                    bookStats.Validated += stats.Validated
+                    bookStats.NotValidated += stats.NotValidated
+                    bookStats.Total += stats.Total
+                }
+            }
+
+            chapterStats = append(chapterStats, &stats)
+        }
+
+        if bookStats.Total == 0 {
+            bookStats.Percent = 100
+        } else {
+            bookStats.Percent = 100*float64(bookStats.Validated)/float64(bookStats.Total)
+        }
+
+        b.Stats = &bookStats
+        b.ChapterStats = chapterStats
         books = append(books, b)
+        bookIdx++
     }
 
     if err = rows.Err(); err != nil {
@@ -388,88 +422,134 @@ func (m *PairModel) Update(id int) error {
 }
 
 
-func (m *PairModel) ValidationStatistics(id int) (*models.ValidationStats, error) {
+func (m *PairModel) ValidationStatisticsAllBooksChapters(sourceLanguage, targetLanguage string) (*map[int]map[int]models.ValidationStats, error) {
 
-    sqlStr := `WITH p AS (
-                SELECT id, source_language AS sl, target_language AS tl
-                FROM pairs
-                WHERE id = ?
-            ),
-            scope_validated AS (
-                SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = true
-            ),
-            scope_not_validated AS (
-                SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND validated = false
-            ) SELECT sv.count AS validated, snv.count AS not_validated
-              FROM scope_validated AS sv, scope_not_validated AS snv;`
+    bookStats := make(map[int]map[int]models.ValidationStats)
+    var stats models.ValidationStats
+    var bookIdx int
+    var chapterIdx int
 
-    stmt, err := m.DB.Prepare(sqlStr)
+    sqlStr := `SELECT book,
+               chapter,
+               COUNT(CASE WHEN validated=true THEN 1 END) as validated,
+               COUNT(CASE WHEN validated=false THEN 1 END) as not_validated,
+               COUNT(CASE WHEN true THEN 1 END) as total
+        FROM (SELECT CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(text_detail, ',', 1), " ", -1) AS UNSIGNED) AS book,
+                     CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(text_detail, ',', 2), "r", -1) AS UNSIGNED) AS chapter,
+                     source_language,
+                     target_language,
+                    validated FROM pairs
+              WHERE source_language = ? AND
+                    target_language = ?
+             ) AS expanded_pairs
+        GROUP BY source_language,
+                 target_language,
+                 book,
+                 chapter`
+
+
+    rows, err := m.DB.Query(sqlStr, sourceLanguage, targetLanguage)
     if err != nil {
         return nil, err
     }
+    defer rows.Close()
 
-    stats := &models.ValidationStats{}
+    for rows.Next() {
+        stats = models.ValidationStats{}
 
-    err = stmt.QueryRow(id).Scan(&stats.Validated, &stats.NotValidated)
-    if err != nil {
-        return nil, err
+        err := rows.Scan(&bookIdx, &chapterIdx, &stats.Validated, &stats.NotValidated, &stats.Total)
+        if err != nil {
+            return nil, err
+        }
+        stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
+
+        _, exists := bookStats[bookIdx]
+        if !exists {
+            bookStats[bookIdx] = make(map[int]models.ValidationStats)
+        }
+
+        bookStats[bookIdx][chapterIdx] = stats
     }
 
-    stats.Total = stats.Validated + stats.NotValidated
-    stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
-
-    return stats, nil
+    return &bookStats, nil
 }
 
 
-func (m *PairModel) ValidationStatisticsBookChapter(id int) (*models.ValidationStats, error) {
+func (m *PairModel) ValidationStatistics(sourceLanguage, targetLanguage string) (*models.ValidationStats, error) {
 
-    p, err := m.Get(id)
-    if err != nil {
-        return nil, err
-    }
-
-    b, err := m.GetBookFromDetail(p.Detail)
-    if err != nil {
-        return nil, err
-    }
-
-    sqlStr := `WITH p AS (
-                SELECT id, source_language AS sl, target_language AS tl
+    sqlStr := `SELECT COUNT(CASE WHEN validated=true THEN 1 END) as validated,
+                      COUNT(CASE WHEN validated=false THEN 1 END) as not_validated,
+                      COUNT(CASE WHEN true THEN 1 END) as total
                 FROM pairs
-                WHERE id = ?
-            ),
-            scope_validated AS (
-                SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = true
-            ),
-            scope_not_validated AS (
-                SELECT COUNT(pairs.id) AS count
-                FROM pairs, p
-                WHERE pairs.source_language = p.sl AND pairs.target_language = p.tl AND pairs.text_detail LIKE ? AND validated = false
-            ) SELECT sv.count AS validated, snv.count AS not_validated
-              FROM scope_validated AS sv, scope_not_validated AS snv;`
+                WHERE source_language = ? AND target_language = ?`
 
     stmt, err := m.DB.Prepare(sqlStr)
     if err != nil {
         return nil, err
     }
 
-    stats := &models.ValidationStats{}
+    return m.ExecuteValidationStatistics(stmt.QueryRow(sourceLanguage, targetLanguage))
+}
 
-    detailLike := fmt.Sprintf("book %d, chapter%d,%s", b.ID, b.Chapter, "%")
 
-    err = stmt.QueryRow(id, detailLike, detailLike).Scan(&stats.Validated, &stats.NotValidated)
+func (m *PairModel) ValidationStatisticsBook(sourceLanguage, targetLanguage string, book int) (*models.ValidationStats, error) {
+
+    sqlStr := `SELECT COUNT(CASE WHEN validated=true THEN 1 END) as validated,
+                      COUNT(CASE WHEN validated=false THEN 1 END) as not_validated,
+                      COUNT(CASE WHEN true THEN 1 END) as total
+                FROM (SELECT CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(text_detail, ',', 1), " ", -1) AS UNSIGNED) AS book,
+                             source_language,
+                             target_language,
+                            validated FROM pairs
+                      WHERE source_language = ? AND
+                            target_language = ?
+                     ) AS expanded_pairs
+                WHERE book = ?
+                GROUP BY source_language,
+                         target_language,
+                         book,
+                         chapter`
+
+    stmt, err := m.DB.Prepare(sqlStr)
     if err != nil {
         return nil, err
     }
 
-    stats.Total = stats.Validated + stats.NotValidated
+    return m.ExecuteValidationStatistics(stmt.QueryRow(sourceLanguage, targetLanguage, book))
+}
+
+func (m *PairModel) ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, detail string) (*models.ValidationStats, error) {
+
+    b, err := m.GetBookFromDetail(detail)
+    if err != nil {
+        return nil, err
+    }
+
+    sqlStr := `SELECT COUNT(CASE WHEN validated=true THEN 1 END) as validated,
+                      COUNT(CASE WHEN validated=false THEN 1 END) as not_validated,
+                      COUNT(CASE WHEN true THEN 1 END) as total
+                FROM pairs
+                WHERE source_language = ? AND target_language = ? AND text_detail LIKE ?`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return nil, err
+    }
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", b.ID, b.Chapter, "%")
+
+    return m.ExecuteValidationStatistics(stmt.QueryRow(sourceLanguage, targetLanguage, detailLike))
+}
+
+
+func (m *PairModel) ExecuteValidationStatistics(query *sql.Row) (*models.ValidationStats, error) {
+    stats := &models.ValidationStats{}
+
+    err := query.Scan(&stats.Validated, &stats.NotValidated, &stats.Total)
+    if err != nil {
+        return nil, err
+    }
+
     stats.Percent = 100*float64(stats.Validated)/float64(stats.Total)
 
     return stats, nil

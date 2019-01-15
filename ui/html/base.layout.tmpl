@@ -117,6 +117,11 @@
             const swup = new Swup(options);
 
             function init () {
+                // Enable tooltips
+                $('[data-toggle="tooltip"]').tooltip()
+                $('[data-toggle="tooltip"]').tooltip('disable')
+                $('[data-toggle="tooltip"]').tooltip('enable')
+
                 // Reload only on landing page
                 var element = document.getElementById('landing-menu');
                 if (typeof(element) != 'undefined' && element != null)

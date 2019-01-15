@@ -70,8 +70,10 @@ type Invitation struct {
 }
 
 type BibleBook struct {
-    ID          int
-    Name        string
-    Chapter     int
-    Testament   string
+    ID              int
+    Name            string
+    Chapter         int
+    Testament       string
+    Stats           *ValidationStats
+    ChapterStats    []*ValidationStats
 }

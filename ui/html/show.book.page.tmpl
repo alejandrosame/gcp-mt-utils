@@ -21,7 +21,17 @@
             <h2>Book and chapter selection</h2>
         </div>
 
-        <div class="row mt-2 w-100">
+        <div class="row">
+            <div class="col mt-1 text-center">
+                {{with .ValidationStats}}
+                    <div class="alert alert-info font-weight-bold">
+                        Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                    </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="row w-100">
             <div class="col">
                 <div class="row w-100">
                     <h3 class="white-text">
@@ -34,15 +44,35 @@
                         {{if eq .Testament "OT" }}
                         <div class="row w-100">
                             <div class="col col-3 text-white">
-                                <div class="white-text">
-                                    <strong>{{.Name}}</strong>
+                                <div
+                                    {{ if eq .Stats.Validated .Stats.Total }}
+                                        class="text-white"
+                                    {{ else }}
+                                        class="text-warning"
+                                    {{ end }}
+                                    >
+                                    <strong data-toggle="tooltip" data-placement="top"
+                                            title="{{printf "%.2f" .Stats.Percent}}%"
+                                    >{{.Name}}</strong>
                                 </div>
                             </div>
                             <div class="col col-9">
                                 <ul class="list-inline">
                                     {{ $book := . }}
                                     {{ range $i :=  rangeInt 1 .Chapter }}
-                                    <li class="list-inline-item"><a class="text-white" href="/pair/book/{{$book.ID}}/chapter/{{$i}}" >{{$i}}</a></li>
+                                        {{ $accessIndex := minus $i 1 }}
+                                        {{ $stat := index $book.ChapterStats $accessIndex }}
+                                        <li class="list-inline-item">
+                                            <a
+                                                {{ if eq $stat.Validated $stat.Total }}
+                                                    class="text-white"
+                                                {{ else }}
+                                                    class="text-warning"
+                                                {{ end }}
+                                               href="/pair/book/{{$book.ID}}/chapter/{{$i}}"
+                                               data-toggle="tooltip" data-placement="top"
+                                               title="{{printf "%.2f" $stat.Percent}}%">{{$i}}</a>
+                                        </li>
                                     {{end}}
                                 </ul>
                             </div>
@@ -67,15 +97,35 @@
                         {{if eq .Testament "NT" }}
                         <div class="row w-100">
                             <div class="col col-3 text-white">
-                                <div class="white-text">
-                                    <strong>{{.Name}}</strong>
+                                <div
+                                    {{ if eq .Stats.Validated .Stats.Total }}
+                                        class="text-white"
+                                    {{ else }}
+                                        class="text-warning"
+                                    {{ end }}
+                                    >
+                                    <strong data-toggle="tooltip" data-placement="top"
+                                            title="{{printf "%.2f" .Stats.Percent}}%"
+                                    >{{.Name}}</strong>
                                 </div>
                             </div>
                             <div class="col col-9">
                                 <ul class="list-inline">
                                     {{ $book := . }}
                                     {{ range $i :=  rangeInt 1 .Chapter }}
-                                    <li class="list-inline-item"><a class="text-white" href="/pair/book/{{$book.ID}}/chapter/{{$i}}">{{$i}}</a></li>
+                                        {{ $accessIndex := minus $i 1 }}
+                                        {{ $stat := index $book.ChapterStats $accessIndex }}
+                                        <li class="list-inline-item">
+                                            <a
+                                                {{ if eq $stat.Validated $stat.Total }}
+                                                    class="text-white"
+                                                {{ else }}
+                                                    class="text-warning"
+                                                {{ end }}
+                                               href="/pair/book/{{$book.ID}}/chapter/{{$i}}"
+                                               data-toggle="tooltip" data-placement="top"
+                                               title="{{printf "%.2f" $stat.Percent}}%">{{$i}}</a>
+                                        </li>
                                     {{end}}
                                 </ul>
                             </div>
@@ -85,6 +135,6 @@
                     </ul>
                 </div>
             </div>
-        </div>     
+        </div>
     </div>
 {{end}}
