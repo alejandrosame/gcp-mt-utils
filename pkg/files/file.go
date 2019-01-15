@@ -12,6 +12,7 @@ import (
 
     "baliance.com/gooxml/document"
     "baliance.com/gooxml/measurement"
+    "github.com/mholt/archiver"
     "github.com/360EntSecGroup-Skylar/excelize"
 )
 
@@ -120,4 +121,42 @@ func WriteTranslationToDocx(tmp_file, targetText string) string{
     doc.SaveToFile(tmp_file)
 
     return GetFileSize(tmp_file)
+}
+
+
+func GetFileSize(fileName string) string {
+    file, err := os.Open(fileName)
+    if err != nil {
+        return "ERROR OPENING FILE"
+    }
+    defer file.Close()
+
+    fileStat, _ := file.Stat() //Get info from file
+    return strconv.FormatInt(fileStat.Size(), 10)
+}
+
+
+func WriteDataset(tmp_file string, pairs []*models.Pair) string{
+    file, err := os.Create(tmp_file)
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer file.Close()
+
+    for _, pair := range pairs {
+        _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", pair.SourceText, pair.TargetText))
+        if err != nil {
+            log.Fatal(err)
+        }
+    }
+
+    file.Sync()
+    fileStat, _ := file.Stat() //Get info from file
+    fileSize := strconv.FormatInt(fileStat.Size(), 10)
+    return fileSize
+}
+
+
+func ArchiveFiles(fileName string, files []string) error {
+    return archiver.Archive(files, fileName)
 }
