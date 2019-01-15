@@ -560,6 +560,12 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
+    sourceText, ok := r.URL.Query()["source"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
+
     targetText, ok := r.URL.Query()["target"]
     if !ok {
         app.notFound(w)
@@ -569,12 +575,25 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    tmpFile := "./tmp/translation.docx"
-    fileSize := files.WriteTranslationToDocx(tmpFile, targetText[0])
+    timeRequest := time.Now().Format("20060102150405")
 
-    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
+    tmpFileSource := fmt.Sprintf("./tmp/translation_%s_%s.docx", sourceLanguage, timeRequest)
+    tmpFileTarget := fmt.Sprintf("./tmp/translation_%s_%s.docx", targetLanguage, timeRequest)
 
-    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
+    zipName := fmt.Sprintf("translation_%s-%s_%s.zip",
+                           sourceLanguage, targetLanguage, timeRequest)
+    tmpZipFile := fmt.Sprintf("./tmp/%s", zipName)
+
+    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText[0])
+    _ = files.WriteTranslationToDocx(tmpFileTarget, targetText[0])
+
+    fileList := []string{tmpFileSource, tmpFileTarget}
+    err := files.ArchiveFiles(tmpZipFile, fileList)
+    if err != nil {
+        app.serverError(w, err)
+    }
+
+    app.downloadFile(w, r, "zip", tmpZipFile, zipName, files.GetFileSize(tmpZipFile))
 }
 
 
@@ -1174,12 +1193,16 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
 
 
 func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, fileType, tmpFile, name, fileSize string) {
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
     if fileType == "tsv"{
-        w.Header().Add("Content-Type", "text/tab-separated-values")
-    } else {
-        w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        w.Header().Set("Content-Type", "text/tab-separated-values")
+    } else if fileType == "docx"{
+        w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    } else if fileType == "zip"{
+        w.Header().Set("Content-Type", "application/zip")
+    }  else if fileType == "tar"{
+        w.Header().Set("Content-Type", "application/x-tar")
     }
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
     w.Header().Set("Content-Length", fileSize)
     http.ServeFile(w, r, tmpFile)
 }
