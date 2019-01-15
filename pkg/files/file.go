@@ -100,43 +100,24 @@ func WriteTranslationToDocx(tmp_file, targetText string) string{
     para := doc.AddParagraph()
     run := para.AddRun()
 
+    counter := 1
+
     for _, text := range strings.Split(targetText, "\n") {
         para = doc.AddParagraph()
         para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+        if text != "" {
+            run = para.AddRun()
+            run.Properties().SetBold(true)
+            run.AddText(fmt.Sprintf("%d - ",counter))
+            counter = counter + 1
+        }
         run = para.AddRun()
+        run.Properties()
         run.AddText(text)
+
     }
 
     doc.SaveToFile(tmp_file)
 
-    file, err := os.Open(tmp_file)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer file.Close()
-
-    fileStat, _ := file.Stat() //Get info from file
-    fileSize := strconv.FormatInt(fileStat.Size(), 10)
-    return fileSize
-}
-
-
-func WriteDataset(tmp_file string, pairs []*models.Pair) string{
-    file, err := os.Create(tmp_file)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer file.Close()
-
-    for _, pair := range pairs {
-        _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", pair.SourceText, pair.TargetText))
-        if err != nil {
-            log.Fatal(err)
-        }
-    }
-
-    file.Sync()
-    fileStat, _ := file.Stat() //Get info from file
-    fileSize := strconv.FormatInt(fileStat.Size(), 10)
-    return fileSize
+    return GetFileSize(tmp_file)
 }
