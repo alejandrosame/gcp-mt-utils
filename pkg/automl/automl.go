@@ -293,7 +293,8 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
         body, err = CheckTranslationReply(infoLog, errorLog, response)
         if err == nil { break }
 
-        currentTry += 1
+        infoLog.Println(fmt.Sprintf("Try translation again: %d", currentTry))
+
         time.Sleep(10 * time.Second)
     }
     return body, err
