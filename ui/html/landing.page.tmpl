@@ -38,35 +38,23 @@
 		<div class="page">
 			<div class="gridwrap">
 				<div class="grid grid--layout-1">
-					{{ range $peopleURL :=  rangePeople "ES" }}
+					{{ range $peopleURL :=  rangePeople "ES" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
-					{{end}}
-					{{ range $flagURL :=  rangeFlags "ES" }}
-						<div class="grid__item" style="background-image: url({{$flagURL}})"></div>
 					{{end}}
 				</div>
 				<div class="grid grid--layout-2">
-					{{ range $peopleURL :=  rangePeople "FR" }}
+					{{ range $peopleURL :=  rangePeople "FR" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
-					{{end}}
-					{{ range $flagURL :=  rangeFlags "FR" }}
-						<div class="grid__item" style="background-image: url({{$flagURL}})"></div>
 					{{end}}
 				</div>
 				<div class="grid grid--layout-3">
-					{{ range $peopleURL :=  rangePeople "PT" }}
+					{{ range $peopleURL :=  rangePeople "PT" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
-					{{end}}
-					{{ range $flagURL :=  rangeFlags "PT" }}
-						<div class="grid__item" style="background-image: url({{$flagURL}})"></div>
 					{{end}}
 				</div>
 				<div class="grid grid--layout-4">
-					{{ range $peopleURL :=  rangePeople "SW" }}
+					{{ range $peopleURL :=  rangePeople "SW" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
-					{{end}}
-					{{ range $flagURL :=  rangeFlags "SW" }}
-						<div class="grid__item" style="background-image: url({{$flagURL}})"></div>
 					{{end}}
 				</div>
 				<button class="gridback"><svg class="icon icon--arrow"><use xlink:href="#icon-arrow"></use></svg></button>
