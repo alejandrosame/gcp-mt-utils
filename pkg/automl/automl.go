@@ -365,6 +365,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
 
     //infoLog.Println(fmt.Sprintf("%s", strings.Replace(strings.TrimRight(translatedText, "\n"), "1ØØØØØ1", "\n", -1)))
 
+    infoLog.Println("Replying")
     return translatedText, nil
 }
 
