@@ -111,12 +111,19 @@
         -->
         <script type="text/javascript">
             let options = {
-                debugMode: true,
+                debugMode: false,
                 cache: false
             }
             const swup = new Swup(options);
 
             function init () {
+                // Enable tooltips
+                $('[data-toggle="tooltip"]').tooltip('dispose');
+                $('[data-toggle="tooltip"]').tooltip({
+                    trigger : 'hover'
+                });
+                $('[data-toggle="tooltip"]').tooltip('enable');
+
                 // Reload only on landing page
                 var element = document.getElementById('landing-menu');
                 if (typeof(element) != 'undefined' && element != null)
@@ -343,7 +350,7 @@
                 var sourceText = reconstructText(sourceTitle);
                 var targetTitle = document.getElementById('target-text');
                 var targetText = reconstructText(targetTitle);
-                var url = "/translate/export?target=" + encodeURIComponent(targetText);
+                var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
 
                 window.open(url, "_blank");
             }

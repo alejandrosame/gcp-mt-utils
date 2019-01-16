@@ -1,0 +1,78 @@
+{{template "base" .}}
+
+{{define "title"}}Edit Pair{{end}}
+
+{{define "body"}}
+<form action='/pair/edit/{{.Form.Get "id"}}' method='POST' style='width:100%;'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <input type='hidden' name='redirectPage' value='{{.Form.Get "redirectPage"}}'>
+    {{with .Form}}
+        <div class="form-group row">
+            <div class="col">
+                <label for="sourceVersion" class='text-white'>Source text version:</label>
+                {{with .Errors.Get "sourceVersion"}}
+                    <label for="sourceVersion" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type="text" name='sourceVersion'
+                       value='{{.Get "sourceVersion"}}' readonly/>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="targetVersion" class='text-white'>Target text version:</label>
+                {{with .Errors.Get "targetVersion"}}
+                    <label for="targetVersion" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type="text" name='targetVersion'
+                       value='{{.Get "targetVersion"}}' readonly/>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="detail" class='text-white'>Translation detail:</label>
+                {{with .Errors.Get "detail"}}
+                    <label for="detail" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <input class="form-control form-control-lg bg-secondary" type="text" name='detail'
+                       value='{{.Get "detail"}}' readonly/>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="sourceText" class='text-white'>Source text:</label>
+                {{with .Errors.Get "sourceText"}}
+                    <label for="sourceText" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <textarea class="form-control form-control-lg bg-secondary text-white" name='sourceText'
+                >{{.Get "sourceText"}}</textarea>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="targetText" class='text-white'>Target text:</label>
+                {{with .Errors.Get "targetText"}}
+                    <label for="targetText" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <textarea class="form-control form-control-lg bg-secondary text-white" name='targetText'
+                >{{.Get "targetText"}}</textarea>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <label for="comments" class='text-white'>Comments:</label>
+                {{with .Errors.Get "targetText"}}
+                    <label for="comments" class='bg-danger text-white'>{{.}}</label>
+                {{end}}
+                <textarea class="form-control form-control-lg bg-secondary text-white" name='comments'
+                >{{.Get "comments"}}</textarea>
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col">
+                <input class="btn btn-secondary btn-block" type='submit' value='Edit pair'>
+            </div>
+            <div class="w-100"></div>
+        </div>
+    {{end}}
+</form>
+{{end}}

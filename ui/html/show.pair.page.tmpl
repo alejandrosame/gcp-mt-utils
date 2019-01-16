@@ -1,128 +1,49 @@
 {{template "base" .}}
 
-{{define "title"}}Manage pairs{{end}}
+{{define "title"}}Manage pairs - {{.Book.Name}} - Chapter {{.Book.Chapter}}{{end}}
 
 {{define "body"}}
     <div>
-        <div class="row mt-2">
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/validate'>
-                    Validate training pairs
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/create'>
-                    Create new training pair
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/export'>
-                    Export validated pairs to dataset
-                </a>
-            </div>
-            <div class="col mt-1">
-                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pairs/upload'>
-                    Upload training pairs from file
-                </a>
-            </div>
+        <div class="row mt-2 justify-content-center">
+            <h2>Pairs for {{.Book.Name}} - Chapter {{.Book.Chapter}}</h2>
         </div>
 
-        <div class="row mt-2 justify-content-center">
-            <h2>Latest Pairs</h2>
-        </div>
         {{if .Pairs}}
+            <div class="row mt-2">
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                       href='/pair/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
+                        Validate training pairs
+                    </a>
+                </div>
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                       href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/export'>
+                        Export validated pairs to dataset
+                    </a>
+                </div>
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                       href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
+                        Validate all pairs of this chapter
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col mt-1 text-center">
+                    {{with .ValidationStats}}
+                        <div class="alert alert-info font-weight-bold">
+                            Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                        </div>
+                    {{end}}
+                </div>
+            </div>
+
             {{range .Pairs}}
             <div class="row mt-2">
                 <div class="col">
-                    <div class='card bg-secondary border-dark'>
-                        <div class='card-header border-dark'>
-                            <div class="row">
-                                <div class="col text-center font-weight-bold">
-                                    <a style='color:white;' href='/pair/{{.ID}}'>#{{.ID}}</a>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col text-center">
-                                    <span class="font-weight-bold">{{.SourceLanguage}}</span>
-                                </div>
-                                <div class="col text-center">
-                                    <span class="font-weight-bold">{{.TargetLanguage}}</span>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col text-center font-italic small">
-                                    {{.Detail}}
-                                </div>
-                            </div>
-                        </div>
-                        <div class='card-body border-dark'>
-                            <div class="row">
-                                <div class="col text-justify-center">
-                                    {{truncate .SourceText 27}}
-                                </div>
-                                <div class="col text-justify-center">
-                                    {{truncate .TargetText 27}}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class='card-body border-dark'>
-                            <div class="row align-items-center">
-                                <div class="col">
-                                    <div class="row">
-                                        <div class="col text-center font-weight-bold">
-                                            Comments
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col text-center">
-                                            {{if .Comments.Valid}}
-                                                {{truncate .Comments.Value 27}}
-                                            {{else}}
-                                                No comments yet
-                                            {{end}}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col">
-                                    <div class="row">
-                                        <div class="col text-center font-weight-bold">
-                                            GCP Dataset
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col text-center">
-                                            {{if .GcpDataset.Valid}}
-                                                {{.GcpDataset.Value}}
-                                            {{else}}
-                                                Not uploaded yet
-                                            {{end}}
-                                        </div>
-                                    </div>
-                                </div>
-                                {{if .Validated}}
-                                    <div class="col text-center bg-success">
-                                        Validated
-                                    </div>
-                                {{else}}
-                                    <div class="col text-center bg-danger">
-                                        Not validated
-                                    </div>
-                                {{end}}
-                            </div>
-                        </div>
-
-                        <div class='card-footer border-dark'>
-                            <div class="row">
-                                <div class="col text-center">
-                                    <time>Created on {{humanDate .Created}}</time>
-                                </div>
-                                <div class="col text-center">
-                                    <time>Updated on {{humanDate .Updated}}</time>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    {{template "pair" .}}
                 </div>
             </div>
             {{end}}

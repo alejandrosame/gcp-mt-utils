@@ -8,7 +8,7 @@
             <div class="col mt-1 text-center">
                 {{with .ValidationStats}}
                     <div class="alert alert-info font-weight-bold">
-                        Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
+                        On Book {{$.Book.Name}}, Chapter {{$.Book.Chapter}}: Validated {{.Validated}} of {{.Total}} pairs ({{printf "%.2f" .Percent}}%)
                     </div>
                 {{end}}
             </div>
@@ -47,6 +47,26 @@
                         </div>
                     </div>
                 </div>
+                <div class='card-body border-dark'>
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col text-center font-weight-bold">
+                                    Comments
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    {{if .Form.Get "comments"}}
+                                        {{.Form.Get "sourceText"}}
+                                    {{else}}
+                                        No comments yet
+                                    {{end}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class='card-footer border-dark'>
                     <div class="row">
@@ -62,17 +82,27 @@
         </div>
         <div class="row mt-2">
             <div class="col mt-1">
+                <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/edit/{{.Form.Get "id"}}?redirect=validate'>
+                    Edit this pair
+                </a>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col mt-1">
                 <form action='/pair/validate/{{.Form.Get "id"}}' method='POST'>
                     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <input type='hidden' name='sourceLanguage' value='{{.Form.Get "sourceLanguage"}}' readonly/>
                     <input type='hidden' name='targetLanguage' value='{{.Form.Get "targetLanguage"}}' readonly/>
+                    <input type='hidden' name='detail' value='{{.Form.Get "detail"}}' readonly/>
                     <div class="col mt-1">
                         <input class="btn btn-outline-danger btn-sm btn-block" role="button" type='submit' 
-                               name="no-validate" value='Do not validate pair'>
+                               name="no-validate" value='Do not validate pair'
+                               onclick="return confirm('Are you sure that you DO NOT want to validate the pair?');">
                     </div>
                     <div class="col mt-1">
                         <input class="btn btn-outline-success btn-sm btn-block" role="button" type='submit'
-                               name="validate" value='Validate pair'>
+                               name="validate" value='Validate pair'
+                               onclick="return confirm('Are you sure that you DO want to validate the pair?');">
                     </div>
                 </form>
             </div>

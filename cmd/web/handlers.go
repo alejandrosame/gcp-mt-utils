@@ -6,6 +6,7 @@ import (
     "net/http"
     "net/url"
     "strconv"
+    "strings"
     "time"
 
     "os"
@@ -22,17 +23,69 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
+func (app *application) showBooks(w http.ResponseWriter, r *http.Request) {
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    p, err := app.pairs.Latest(sourceLanguage, targetLanguage)
+    b, err := app.pairs.GetBibleBooks(sourceLanguage, targetLanguage)
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p})
+    stats, err := app.pairs.ValidationStatistics(sourceLanguage, targetLanguage)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.book.page.tmpl", &templateData{Books: b, ValidationStats: stats})
+}
+
+
+func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    b.Chapter = chapterId
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    p, err := app.pairs.GetPairs(app.infoLog, sourceLanguage, targetLanguage, bookId, chapterId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    var stats *models.ValidationStats = nil
+    if (len(p) > 0){
+        stats, err = app.pairs.ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, p[0].Detail)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+    }
+
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, ValidationStats: stats, Book: b})
 }
 
 
@@ -107,6 +160,121 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     app.session.Put(r, "flash", "Pair successfully created!")
 
     http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
+}
+
+func (app *application) editPairForm(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    p, err := app.pairs.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    redirectPage := r.URL.Query().Get("redirect")
+    if redirectPage == "validate" {
+        redirectPage = fmt.Sprintf("/pair/validate/%d", id)
+    } else {
+        redirectPage = fmt.Sprintf("/pair/%d", id)
+    }
+
+    form := forms.New(url.Values{})
+    form.Add("id", fmt.Sprintf("%d", p.ID))
+    form.Add("sourceLanguage", p.SourceLanguage)
+    form.Add("targetLanguage", p.TargetLanguage)
+    form.Add("sourceText", p.SourceText)
+    form.Add("targetText", p.TargetText)
+    form.Add("sourceVersion", p.SourceVersion)
+    form.Add("targetVersion", p.TargetVersion)
+    form.Add("detail", p.Detail)
+    if p.Comments.Valid{
+        form.Add("comments", p.Comments.String)
+    }else{
+        form.Add("comments", "")
+    }
+    form.Add("updated", humanDate(p.Updated))
+    form.Add("created", humanDate(p.Created))
+    form.Add("redirectPage", redirectPage)
+
+    app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
+}
+
+
+func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    p, err := app.pairs.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("sourceText", "targetText", "sourceVersion", "targetVersion", "detail", "redirectPage")
+    // Max number of chars for text input
+    maxChar := 10000
+    form.MaxLength("sourceText", maxChar)
+    form.MaxLength("targetText", maxChar)
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    sourceText := strings.Trim(form.Get("sourceText"), " \n")
+    targetText := strings.Trim(form.Get("targetText"), " \n")
+    comments := strings.Trim(form.Get("comments"), " \n")
+    redirect := form.Get("redirectPage")
+
+    savedComments := ""
+    if p.Comments.Valid{
+        savedComments = p.Comments.String
+    }
+
+    if sourceText != p.SourceText || targetText != p.TargetText {
+        _, err = app.pairs.Edit(id, sourceText, targetText, comments)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        // Add feedback for the user as session information
+        app.session.Put(r, "flash", "Pair successfully edited!")
+    } else if savedComments != comments {
+        _, err = app.pairs.EditComments(id, comments)
+        if err != nil {
+            app.serverError(w, err)
+            return
+        }
+
+        app.session.Put(r, "flash", "Pair comments successfully edited!")
+    } else {
+        app.session.Put(r, "flash", "Pair content was not changed!")
+    }
+
+    http.Redirect(w, r, redirect, http.StatusSeeOther)
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
@@ -399,6 +567,12 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
+    sourceText, ok := r.URL.Query()["source"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
+
     targetText, ok := r.URL.Query()["target"]
     if !ok {
         app.notFound(w)
@@ -408,12 +582,25 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    tmpFile := "./tmp/translation.docx"
-    fileSize := files.WriteTranslationToDocx(tmpFile, targetText[0])
+    timeRequest := time.Now().Format("20060102150405")
 
-    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, time.Now().Format("20060102150405"))
+    tmpFileSource := fmt.Sprintf("./tmp/translation_%s_%s.docx", sourceLanguage, timeRequest)
+    tmpFileTarget := fmt.Sprintf("./tmp/translation_%s_%s.docx", targetLanguage, timeRequest)
 
-    app.downloadFile(w, r, "docx", tmpFile, name, fileSize)
+    zipName := fmt.Sprintf("translation_%s-%s_%s.zip",
+                           sourceLanguage, targetLanguage, timeRequest)
+    tmpZipFile := fmt.Sprintf("./tmp/%s", zipName)
+
+    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText[0])
+    _ = files.WriteTranslationToDocx(tmpFileTarget, targetText[0])
+
+    fileList := []string{tmpFileSource, tmpFileTarget}
+    err := files.ArchiveFiles(tmpZipFile, fileList)
+    if err != nil {
+        app.serverError(w, err)
+    }
+
+    app.downloadFile(w, r, "zip", tmpZipFile, zipName, files.GetFileSize(tmpZipFile))
 }
 
 
@@ -489,18 +676,34 @@ func (app *application) showDatasets(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()
-    if err != nil {
-        app.clientError(w, http.StatusBadRequest)
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
         return
     }
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    newId, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
+    newId, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage, bookId, chapterId)
     if err == models.ErrNoRecord {
-        app.session.Put(r, "flash", "No pairs to validate found")
+        app.session.Put(r, "flash", fmt.Sprintf("No pairs to validate found in Book %s and chapter %d",
+                                                b.Name, chapterId))
         http.Redirect(w, r, "/pair", http.StatusSeeOther)
         return
     } else if err != nil {
@@ -509,6 +712,42 @@ func (app *application) initValidatePair(w http.ResponseWriter, r *http.Request)
     }
 
     http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newId), http.StatusSeeOther)
+}
+
+
+func (app *application) validateAllPairs(w http.ResponseWriter, r *http.Request) {
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    err = app.pairs.ValidateAllPairsFromChapter(sourceLanguage, targetLanguage, bookId, chapterId)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", "All pairs validated for this chapter")
+    http.Redirect(w, r, fmt.Sprintf("/pair/book/%d/chapter/%d", bookId, chapterId), http.StatusSeeOther)
 }
 
 
@@ -534,7 +773,10 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
         return
     }
 
-    stats, err := app.pairs.ValidationStatistics(id)
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    stats, err := app.pairs.ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, p.Detail)
     if err != nil {
         app.serverError(w, err)
         return
@@ -549,12 +791,24 @@ func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request)
     form.Add("sourceVersion", p.SourceVersion)
     form.Add("targetVersion", p.TargetVersion)
     form.Add("detail", p.Detail)
+    if p.Comments.Valid{
+        form.Add("comments", p.Comments.String)
+    }else{
+        form.Add("comments", "")
+    }
     form.Add("updated", humanDate(p.Updated))
     form.Add("created", humanDate(p.Created))
+
+    b, err := app.pairs.GetBookFromDetail(p.Detail)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
 
     app.render(w, r, "validate.pair.page.tmpl", &templateData{
         Form: form,
         ValidationStats: stats,
+        Book: b,
     })
 }
 
@@ -596,8 +850,14 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
+    b, err := app.pairs.GetBookFromDetail(form.Get("detail"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
     // Get another pair to validate from the same scope
-    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage)
+    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage, b.ID, b.Chapter)
     if err == models.ErrNoRecord {
         app.session.Put(r, "flash", "No pairs found to be validated!")
         http.Redirect(w, r, "/pair", http.StatusSeeOther)
@@ -895,10 +1155,33 @@ func (app *application) cancelTrainingOperation(w http.ResponseWriter, r *http.R
 
 
 func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.Request) {
+    bookId, err := strconv.Atoi(r.URL.Query().Get(":bookid"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    b.Chapter = chapterId
+
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
+    p, err := app.pairs.GetValidatedNotExportedFromChapter(sourceLanguage, targetLanguage, b.ID, b.Chapter)
     if err != nil {
         app.serverError(w, err)
         return
@@ -906,24 +1189,30 @@ func (app *application) exportValidatedPairsForm(w http.ResponseWriter, r *http.
 
     if len(p) == 0 {
         app.session.Put(r, "flash", "No pairs available to be exported!")
-        http.Redirect(w, r, "/pair", http.StatusSeeOther)
+        redirectUrl := fmt.Sprintf("/pair/book/%d/chapter/%d", b.ID, b.Chapter)
+        http.Redirect(w, r, redirectUrl, http.StatusSeeOther)
         return
     }
 
     app.render(w, r, "export.pair.page.tmpl", &templateData{
         Pairs: p,
+        Book: b,
         Form: forms.New(nil),
     })
 }
 
 
 func (app *application) downloadFile(w http.ResponseWriter, r *http.Request, fileType, tmpFile, name, fileSize string) {
-    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
     if fileType == "tsv"{
-        w.Header().Add("Content-Type", "text/tab-separated-values")
-    } else {
-        w.Header().Add("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        w.Header().Set("Content-Type", "text/tab-separated-values")
+    } else if fileType == "docx"{
+        w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+    } else if fileType == "zip"{
+        w.Header().Set("Content-Type", "application/zip")
+    }  else if fileType == "tar"{
+        w.Header().Set("Content-Type", "application/x-tar")
     }
+    w.Header().Set("Content-Disposition", fmt.Sprintf("Attachment; filename=%s", name))
     w.Header().Set("Content-Length", fileSize)
     http.ServeFile(w, r, tmpFile)
 }
@@ -939,13 +1228,36 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
     form := forms.New(r.PostForm)
     form.Required("name", "idList")
 
+    bookId, err := strconv.Atoi(form.Get("book"))
+    if err != nil || bookId < 1 {
+        app.notFound(w)
+        return
+    }
+
+    b, err := app.pairs.GetBook(bookId)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    chapterId, err := strconv.Atoi(form.Get("chapter"))
+    if err != nil || chapterId < 1 || chapterId > b.Chapter {
+        app.notFound(w)
+        return
+    }
+
+    b.Chapter = chapterId
+
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
     if !form.Valid() {
         sourceLanguage := app.session.GetString(r, "sourceLanguage")
         targetLanguage := app.session.GetString(r, "targetLanguage")
 
-        p, err := app.pairs.GetValidatedNotExported(sourceLanguage, targetLanguage)
+        p, err := app.pairs.GetValidatedNotExportedFromChapter(sourceLanguage, targetLanguage, b.ID, b.Chapter)
         if err != nil {
             app.serverError(w, err)
             return
@@ -953,6 +1265,7 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
 
         app.render(w, r, "export.pair.page.tmpl", &templateData{
             Pairs: p,
+            Book: b,
             Form: form,
         })
         return

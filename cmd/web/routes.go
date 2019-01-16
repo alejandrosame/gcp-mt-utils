@@ -31,14 +31,18 @@ func (app *application) routes() http.Handler {
     // Validator routes
     mux.Get("/pair/create", validatorMiddleware.ThenFunc(app.createPairForm))
     mux.Post("/pair/create", validatorMiddleware.ThenFunc(app.createPair))
+    mux.Get("/pair/edit/:id", validatorMiddleware.ThenFunc(app.editPairForm))
+    mux.Post("/pair/edit/:id", validatorMiddleware.ThenFunc(app.editPair))
     mux.Get("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePairForm))
     mux.Post("/pair/validate/:id", validatorMiddleware.ThenFunc(app.validatePair))
-    mux.Get("/pair/validate", validatorMiddleware.ThenFunc(app.initValidatePair))
     mux.Get("/pair/:id", validatorMiddleware.ThenFunc(app.showPair))
-    mux.Get("/pair", validatorMiddleware.ThenFunc(app.showPairs))
+    mux.Get("/pair/book/:bookid/chapter/:chapterid/validate", validatorMiddleware.ThenFunc(app.initValidatePair))
+    mux.Get("/pair/book/:bookid/chapter/:chapterid", validatorMiddleware.ThenFunc(app.showPairs))
+    mux.Get("/pair", validatorMiddleware.ThenFunc(app.showBooks))
     mux.Get("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairsForm))
     mux.Post("/pairs/upload", validatorMiddleware.ThenFunc(app.uploadPairs))
-    mux.Get("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairsForm))
+    mux.Get("/pairs/book/:bookid/chapter/:chapterid/export", validatorMiddleware.ThenFunc(app.exportValidatedPairsForm))
+    mux.Get("/pairs/book/:bookid/chapter/:chapterid/validate", validatorMiddleware.ThenFunc(app.validateAllPairs))
     mux.Post("/pairs/export", validatorMiddleware.ThenFunc(app.exportValidatedPairs))
 
     // Translator routes
@@ -72,6 +76,5 @@ func (app *application) routes() http.Handler {
     // TODO: Change template file location to use absolute path based on the current file location
     fileServer := http.FileServer(http.Dir("./ui/static/"))
     mux.Get("/static/", http.StripPrefix("/static", fileServer))
-
     return standardMiddleware.Then(mux)
 }

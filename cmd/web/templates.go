@@ -4,9 +4,11 @@ import (
     "bufio"
     "fmt"
     "html/template"
+    "io/ioutil"
+    "math/rand"
+    "os"
     "path/filepath"
     "strings"
-    "os"
     "time"
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/automl"
@@ -24,6 +26,8 @@ type templateData struct {
     Form              *forms.Form
     Pair              *models.Pair
     Pairs             []*models.Pair
+    Book              *models.BibleBook
+    Books             []*models.BibleBook
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
     Datasets          []*automl.Dataset
@@ -80,6 +84,88 @@ func languageTarget(s string) string {
     return temp[1]
 }
 
+func rangeInt(start, end int) (stream chan int) {
+    stream = make(chan int)
+    go func() {
+        for i := start; i <= end; i++ {
+            stream <- i
+        }
+        close(stream)
+    }()
+    return
+}
+
+func ShuffleStrings(vals []string) []string {
+  r := rand.New(rand.NewSource(time.Now().Unix()))
+  ret := make([]string, len(vals))
+  perm := r.Perm(len(vals))
+  for i, randIndex := range perm {
+    ret[i] = vals[randIndex]
+  }
+  return ret
+}
+
+func ShuffleFiles(vals []os.FileInfo) []os.FileInfo {
+  r := rand.New(rand.NewSource(time.Now().Unix()))
+  ret := make([]os.FileInfo, len(vals))
+  perm := r.Perm(len(vals))
+  for i, randIndex := range perm {
+    ret[i] = vals[randIndex]
+  }
+  return ret
+}
+
+func rangeFlags(language string, max int) (stream chan string) {
+    m := make(map[string][]string)
+    m["ES"] = ShuffleStrings([]string{"es", "ar", "bo", "cl", "co", "cr", "cu", "do", "ec", "sv", "gt", "hn", "mx", "ni", "pa", "py",
+                       "pe", "uy", "ve", "gq"})
+    m["FR"] = ShuffleStrings([]string{"cd", "fr", "ca", "mg", "cm", "ci", "ne", "bf", "ml", "sn", "td", "gn", "rw", "be", "bi", "bj",
+                       "ht", "ch", "tg", "cf", "cg", "ga", "gq", "dj", "km", "lu", "vu", "sc", "mc"})
+    m["PT"] = ShuffleStrings([]string{"br", "ao", "mz", "pt", "gw", "tl", "gq", "cv", "st"})
+    m["SW"] = ShuffleStrings([]string{"tz", "cd", "ke", "so", "mz", "bi", "ug", "km", "zm", "mw", "mg"})
+
+    stream = make(chan string)
+    go func() {
+        limit := len(m[language])
+        if max < limit {
+            limit = max
+        }
+
+        for i := 0; i < limit; i++ {
+            stream <- fmt.Sprintf("/static/img/flags/%s.png", m[language][i])
+        }
+        close(stream)
+    }()
+    return
+}
+
+func rangePeople(language string, max int) (stream chan string) {
+    stream = make(chan string)
+    go func() {
+        files, err := ioutil.ReadDir(fmt.Sprintf("./ui/static/img/people/%s", strings.ToLower(language)))
+        if err != nil {
+            stream <- ""
+        } else {
+            limit := len(files)
+            if max < limit {
+                limit = max
+            }
+
+            files = ShuffleFiles(files[:limit])
+
+            for _, f := range files {
+                stream <- fmt.Sprintf("/static/img/people/%s/%s", strings.ToLower(language), f.Name())
+            }
+        }
+        close(stream)
+    }()
+    return
+}
+
+func minus(a, b int) (int) {
+    return a-b
+}
+
 
 // Initialize a template.FuncMap object and store it in a global variable. This is
 // essentially a string-keyed map which acts as a lookup between the names of our
@@ -92,6 +178,10 @@ var functions = template.FuncMap{
     "truncate": truncate,
     "languageSource": languageSource,
     "languageTarget": languageTarget,
+    "rangeInt": rangeInt,
+    "rangeFlags": rangeFlags,
+    "rangePeople": rangePeople,
+    "minus": minus,
 }
 
 

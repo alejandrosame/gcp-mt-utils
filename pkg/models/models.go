@@ -68,3 +68,12 @@ type Invitation struct {
     Expires        time.Time
     Used           bool
 }
+
+type BibleBook struct {
+    ID              int
+    Name            string
+    Chapter         int
+    Testament       string
+    Stats           *ValidationStats
+    ChapterStats    []*ValidationStats
+}
