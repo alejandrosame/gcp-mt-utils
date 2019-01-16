@@ -327,7 +327,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
     var paragraphs = ""
     for _, partialText := range lines {
         if partialText == "" {
-            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, ".-1-.")
+            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, ".---.")
         }else {
             paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, partialText)
         }
@@ -351,7 +351,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
             //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
             partialTranslatedText := translation.Get("translatedText").String()
 
-            if partialTranslatedText == ".-1-." {
+            if partialTranslatedText == ".---." {
                 translatedText += partialTranslatedText
             }else {
                 translatedText += partialTranslatedText + "\n"
@@ -361,9 +361,9 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
         return true // continue iterating
     })
 
-    translatedText = strings.Replace(strings.TrimRight(translatedText, "\n"), ".-1-.", "\n", -1)
+    translatedText = strings.Replace(strings.TrimRight(translatedText, "\n"), ".---.", "\n", -1)
 
-    //infoLog.Println(fmt.Sprintf("%s", strings.Replace(translatedText, "\n", "\\n", -1)))
+    //infoLog.Println(fmt.Sprintf("%s", strings.Replace(strings.TrimRight(translatedText, "\n"), ".---.", "\n", -1)))
 
     return translatedText, nil
 }
