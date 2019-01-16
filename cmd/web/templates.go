@@ -5,6 +5,7 @@ import (
     "fmt"
     "html/template"
     "io/ioutil"
+    "math/rand"
     "os"
     "path/filepath"
     "strings"
@@ -94,18 +95,43 @@ func rangeInt(start, end int) (stream chan int) {
     return
 }
 
-func rangeFlags(language string) (stream chan string) {
+func ShuffleStrings(vals []string) []string {
+  r := rand.New(rand.NewSource(time.Now().Unix()))
+  ret := make([]string, len(vals))
+  perm := r.Perm(len(vals))
+  for i, randIndex := range perm {
+    ret[i] = vals[randIndex]
+  }
+  return ret
+}
+
+func ShuffleFiles(vals []os.FileInfo) []os.FileInfo {
+  r := rand.New(rand.NewSource(time.Now().Unix()))
+  ret := make([]os.FileInfo, len(vals))
+  perm := r.Perm(len(vals))
+  for i, randIndex := range perm {
+    ret[i] = vals[randIndex]
+  }
+  return ret
+}
+
+func rangeFlags(language string, max int) (stream chan string) {
     m := make(map[string][]string)
-    m["ES"] = []string{"es", "ar", "bo", "cl", "co", "cr", "cu", "do", "ec", "sv", "gt", "hn", "mx", "ni", "pa", "py",
-                       "pe", "uy", "ve", "gq"}
-    m["FR"] = []string{"cd", "fr", "ca", "mg", "cm", "ci", "ne", "bf", "ml", "sn", "td", "gn", "rw", "be", "bi", "bj",
-                       "ht", "ch", "tg", "cf", "cg", "ga", "gq", "dj", "km", "lu", "vu", "sc", "mc"}
-    m["PT"] = []string{"br", "ao", "mz", "pt", "gw", "tl", "gq", "cv", "st"}
-    m["SW"] = []string{"tz", "cd", "ke", "so", "mz", "bi", "ug", "km", "zm", "mw", "mg"}
+    m["ES"] = ShuffleStrings([]string{"es", "ar", "bo", "cl", "co", "cr", "cu", "do", "ec", "sv", "gt", "hn", "mx", "ni", "pa", "py",
+                       "pe", "uy", "ve", "gq"})
+    m["FR"] = ShuffleStrings([]string{"cd", "fr", "ca", "mg", "cm", "ci", "ne", "bf", "ml", "sn", "td", "gn", "rw", "be", "bi", "bj",
+                       "ht", "ch", "tg", "cf", "cg", "ga", "gq", "dj", "km", "lu", "vu", "sc", "mc"})
+    m["PT"] = ShuffleStrings([]string{"br", "ao", "mz", "pt", "gw", "tl", "gq", "cv", "st"})
+    m["SW"] = ShuffleStrings([]string{"tz", "cd", "ke", "so", "mz", "bi", "ug", "km", "zm", "mw", "mg"})
 
     stream = make(chan string)
     go func() {
-        for i := 0; i < len(m[language]); i++ {
+        limit := len(m[language])
+        if max < limit {
+            limit = max
+        }
+
+        for i := 0; i < limit; i++ {
             stream <- fmt.Sprintf("/static/img/flags/%s.png", m[language][i])
         }
         close(stream)
@@ -113,13 +139,20 @@ func rangeFlags(language string) (stream chan string) {
     return
 }
 
-func rangePeople(language string) (stream chan string) {
+func rangePeople(language string, max int) (stream chan string) {
     stream = make(chan string)
     go func() {
         files, err := ioutil.ReadDir(fmt.Sprintf("./ui/static/img/people/%s", strings.ToLower(language)))
         if err != nil {
             stream <- ""
         } else {
+            limit := len(files)
+            if max < limit {
+                limit = max
+            }
+
+            files = ShuffleFiles(files[:limit])
+
             for _, f := range files {
                 stream <- fmt.Sprintf("/static/img/people/%s/%s", strings.ToLower(language), f.Name())
             }
