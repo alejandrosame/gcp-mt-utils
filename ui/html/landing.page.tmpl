@@ -41,20 +41,32 @@
 					{{ range $peopleURL :=  rangePeople "ES" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
 					{{end}}
+					{{ range $flagsURL :=  rangeFlags "ES" 20 }}
+						<div class="grid__item" style="background-image: url({{$flagsURL}})"></div>
+					{{end}}
 				</div>
 				<div class="grid grid--layout-2">
 					{{ range $peopleURL :=  rangePeople "FR" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
+					{{end}}
+					{{ range $flagsURL :=  rangeFlags "FR" 20 }}
+						<div class="grid__item" style="background-image: url({{$flagsURL}})"></div>
 					{{end}}
 				</div>
 				<div class="grid grid--layout-3">
 					{{ range $peopleURL :=  rangePeople "PT" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
 					{{end}}
+					{{ range $flagsURL :=  rangeFlags "PT" 20 }}
+						<div class="grid__item" style="background-image: url({{$flagsURL}})"></div>
+					{{end}}
 				</div>
 				<div class="grid grid--layout-4">
 					{{ range $peopleURL :=  rangePeople "SW" 10 }}
 						<div class="grid__item" style="background-image: url({{$peopleURL}})"></div>
+					{{end}}
+					{{ range $flagsURL :=  rangeFlags "SW" 20 }}
+						<div class="grid__item" style="background-image: url({{$flagsURL}})"></div>
 					{{end}}
 				</div>
 				<button class="gridback"><svg class="icon icon--arrow"><use xlink:href="#icon-arrow"></use></svg></button>
