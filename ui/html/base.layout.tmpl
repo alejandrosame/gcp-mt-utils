@@ -174,6 +174,22 @@
                     exportButton1.onclick = function() {exportTranslation();}
                     exportButton2.onclick = function() {exportTranslation();}
                 }
+
+                // Reload only on show chapter page
+                var element = document.getElementById('confirm-validate-all-chapter');
+                if (typeof(element) != 'undefined' && element != null)
+                {
+                    document.getElementById('confirm-validate-all-chapter').onclick = function(event){
+                        var check = confirm("Are you sure that you DO want to validate ALL the pairs in the chapter?");
+                        if (check == true) {
+                            return true;
+                        }
+                        else {
+                            event.stopPropagation();
+                            event.preventDefault();
+                        }
+                    }
+                }
             }
 
             init();

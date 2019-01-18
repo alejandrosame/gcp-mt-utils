@@ -32,7 +32,8 @@
                             <input type='text' class="form-control bg-secondary text-white" name='name' value='{{.Get "name"}}'>
                         </div>
                         <div class="form-group">
-                            <input onClick="submitExportPairForm()" type='submit' class="btn btn-secondary" value='Export selected'>
+                            <input type='submit' class="btn btn-secondary" value='Export selected'
+                                onclick="return confirm('Are you sure that you DO want to export the selected pairs?')?submitExportTranslation():false">
                         </div>
                     {{end}}
                 </form>
