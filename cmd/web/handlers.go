@@ -536,8 +536,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     form.Required("docTitle", "sourceText")
 
     if !form.Valid() {
-        app.infoLog.Printf("HERE INSIDE")
-        app.clientError(w, 400)
+        app.clientErrorDetailed(w, 400, form.Errors.ToString())
         return
     }
 
