@@ -3,8 +3,14 @@
 {{define "title"}}Translate text{{end}}
 
 {{define "body"}}
-<div class="col-container">
-    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+<div class="row w-100">
+    <div class="col">
+        <label for="docTitle" class='text-white'>Document title:</label>
+            <label for="docTitle" class='bg-danger text-white invisible'>This field cannot be empty</label>
+        <input class="form-control form-control-lg bg-secondary text-white" type="text" name='docTitle'/>
+    </div>
+    <div class="w-100"></div>
+    <div class="col d-flex align-items-stretch">
         <div class='card bg-secondary border-dark flex-fill'>
             <div class='card-header border-dark'>
                 <div class="row">
@@ -63,7 +69,7 @@
             </div>
         </div>
     </div>
-    <div class="col-sm-12 col-md-6 d-flex align-items-stretch">
+    <div class="col d-flex align-items-stretch">
         <div class='card bg-secondary border-dark flex-fill'>
             <div class='card-header border-dark'>
                 <div class="row">
