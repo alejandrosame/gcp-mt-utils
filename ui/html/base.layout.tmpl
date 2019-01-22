@@ -99,7 +99,7 @@
         <div class="container">
             <div class="row">
                 <div class="col">
-                    <button id="go-top-button" class="btn btn-outline-light btn-sm btn-block invisible">Go to top</a>
+                    <button id="go-top-button" class="btn btn-outline-light btn-sm btn-block invisible">Go to top</button>
                 </div>
             </div>
         </div>
@@ -132,6 +132,29 @@
                     // Preload all the images in the page..
                     imagesLoaded(document.querySelectorAll('.grid__item'), {background: true},
                                  () => document.body.classList.remove('loading'));
+
+
+                    waitForNextMenuItem();
+
+                    function waitForNextMenuItem() {
+                        setTimeout(nextMenuItem, 3000);
+                    }
+
+                    function nextMenuItem() {
+                        var items = document.getElementsByClassName("menu__item");
+                        var size = items.length;
+                        var current;
+                        for (var i=0, im=size; im>i; i++) {
+                            if (items[i].classList.contains("menu__item--current")) {
+                                current = i;
+                            }
+                        }
+
+                        var next = (current + 1)%(size);
+                        items[next].getElementsByClassName('menu__item-text')[0].click();
+
+                        waitForNextMenuItem();
+                    }
                 }else
                 {
                     window.onscroll = function() {scrollFunction()};
