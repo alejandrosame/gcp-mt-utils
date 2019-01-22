@@ -5,9 +5,9 @@
 {{define "body"}}
 <div class="row w-100">
     <div class="col">
-        <label for="docTitle" class='text-white'>Document title:</label>
-            <label for="docTitle" class='bg-danger text-white invisible'>This field cannot be empty</label>
-        <input class="form-control form-control-lg bg-secondary text-white" type="text" name='docTitle'/>
+        <label for="doc-title" class='text-white'>Document title:</label>
+            <label id="doc-title-error-label" for="doc-title" class='bg-danger text-white invisible'>This field cannot be empty</label>
+        <input id='doc-title' class="form-control form-control-lg bg-secondary text-white" type="text" name='doc-title'/>
     </div>
     <div class="w-100"></div>
     <div class="col d-flex align-items-stretch">

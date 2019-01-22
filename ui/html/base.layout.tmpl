@@ -320,15 +320,26 @@
             }
 
             function translate() {
-                translatingStatusStarted();
 
-                var title = document.getElementById('source-text');
-                var text = splitLines(reconstructText(title));
-                var paragraphLimit = 10;
-                var totalReply = "";
-                var currentText = "";
+                var docTitle = document.getElementById('doc-title').value.trim();
 
-                asyncTranslate(text, paragraphLimit, 0, totalReply)
+                if(docTitle == ""){
+                    document.getElementById('doc-title-error-label').classList.remove("invisible");
+                }else{
+
+                    document.getElementById('doc-title-error-label').classList.add("invisible");
+
+                    translatingStatusStarted();
+
+                    var title = document.getElementById('source-text');
+                    var text = splitLines(reconstructText(title));
+                    var paragraphLimit = 10;
+                    var totalReply = "";
+                    var currentText = "";
+
+                    asyncTranslate(text, paragraphLimit, 0, totalReply)
+                }
+
             }
 
             function endTranslate(totalReply) {
