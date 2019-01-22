@@ -23,11 +23,12 @@
                     </a>
                 </div>
                 <div class="col mt-1">
-                    <a id="confirm-validate-all-chapter"
-                       class="btn btn-outline-light btn-sm btn-block" role="button"
-                       href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
-                        Validate all pairs of this chapter
-                    </a>
+                    <form action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate' method='POST'>
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <button class="btn btn-outline-light btn-sm btn-block"
+                                onclick="return confirm('Are you sure that you DO want to validate ALL the pairs in the chapter?');"
+                        >Validate all pairs of this chapter</button>
+                    </form>
                 </div>
             </div>
 
