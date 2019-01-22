@@ -310,6 +310,8 @@ func StringToLines(s string) (lines []string, err error) {
 }
 
 func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
+    infoLog.Println("Starting translation")
+
     defaultValue := ""
 
     urlQuery := "https://translation.googleapis.com/language/translate/v2"
@@ -324,48 +326,35 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
         return defaultValue, err
     }
 
-    var paragraphs = ""
-    for _, partialText := range lines {
-        if partialText == "" {
-            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, "1ØØØØØ1")
-        }else {
-            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, partialText)
-        }
-    }
-
-    jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s" %s}`, source, target, paragraphs))
-
-    var totalTries = 30
-    body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
-    if err != nil {
-        return defaultValue, err
-    }
-
     var translatedText string = ""
+    for _, paragraph := range lines {
+        if paragraph == "" {
+            translatedText += "\n"
+        }else {
+            jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, paragraph))
 
-    translations := gjson.GetBytes(body, "data.translations")
-    translations.ForEach(func(key, translation gjson.Result) bool {
-        // If it's a train model operation
-        if translation.Get("translatedText").Exists(){
-
-            //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
-            partialTranslatedText := translation.Get("translatedText").String()
-
-            if partialTranslatedText == "1ØØØØØ1" {
-                translatedText += partialTranslatedText
-            }else {
-                translatedText += partialTranslatedText + "\n"
+            var totalTries = 18
+            body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
+            if err != nil {
+                return defaultValue, err
             }
 
+            translations := gjson.GetBytes(body, "data.translations")
+            translations.ForEach(func(key, translation gjson.Result) bool {
+                // If it's a train model operation
+                if translation.Get("translatedText").Exists(){
+
+                    //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
+                    partialTranslatedText := translation.Get("translatedText").String()
+
+                    translatedText += partialTranslatedText + "\n"
+                }
+                return true // continue iterating
+            })
         }
-        return true // continue iterating
-    })
+    }
 
-    translatedText = strings.Replace(strings.TrimRight(translatedText, "\n"), "1ØØØØØ1", "\n", -1)
-
-    //infoLog.Println(fmt.Sprintf("%s", strings.Replace(strings.TrimRight(translatedText, "\n"), "1ØØØØØ1", "\n", -1)))
-
-    infoLog.Println("Replying")
+    infoLog.Println("Replying with translation")
     return translatedText, nil
 }
 

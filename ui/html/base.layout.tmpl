@@ -331,13 +331,13 @@
 
                     translatingStatusStarted();
 
-                    var title = document.getElementById('source-text');
-                    var text = splitLines(reconstructText(title));
+                    var sourceText = document.getElementById('source-text');
+                    var text = splitLines(reconstructText(sourceText));
                     var paragraphLimit = 10;
                     var totalReply = "";
                     var currentText = "";
 
-                    asyncTranslate(text, paragraphLimit, 0, totalReply)
+                    asyncTranslate(docTitle, reconstructText(sourceText), paragraphLimit, 0, totalReply)
                 }
 
             }
@@ -349,31 +349,30 @@
                 translatingStatusFinished();
             }
 
-            function asyncTranslate(text, paragraphLimit, pos, totalReply) {
-                //let text = inputText;
-                var paragraphCount = 0;
-                var currentText = "";
-                while (pos < text.length && paragraphCount < paragraphLimit){
-                    currentText += text[pos] + "\n";
-                    pos++;
-                    paragraphCount++;
-                }
-                if (currentText != "") {
-                    var url = "/translate/" + encodeURIComponent(currentText);
-                    $.get(url, function(resp, status)
+            function asyncTranslate(docTitle, sourceText, paragraphLimit, pos, totalReply) {
+
+                if (sourceText != "") {
+
+                    $( "#doc-title-form" ).val(docTitle);
+                    $( "#source-text-form" ).val(sourceText);
+
+                    var url = "/translate"
+                    $.post(url, $("#translate-form").serialize(), function(resp, status)
                     {
                         var reply = JSON.parse(resp)
-                        totalReply += formatTextWithDiv(reply["Translation"]);
+                        var parsedReply = formatTextWithDiv(reply["Translation"]);
+                        endTranslate(parsedReply);
 
-                        if (pos == text.length){
-                            endTranslate(totalReply);
-                        }
-                        else{
-                            asyncTranslate(text, paragraphLimit, pos, totalReply);
-                        }
+                    })
+                    .fail(function(xhr, status, error) {
+                        console.log(xhr);
+                        console.log(status);
+                        console.log(error);
+                        alert("ERROR: Server replied with error message '"+error+"'");
+                        endTranslate("");
                     });
                 }
-                else{
+                else {
                     endTranslate("");
                 }
             }

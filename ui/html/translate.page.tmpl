@@ -4,6 +4,12 @@
 
 {{define "body"}}
 <div class="row w-100">
+    <form id="translate-form" action='/translate' method='POST' class="invisible">
+        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+        <input id="doc-title-form" type='hidden' name='docTitle'>
+        <textarea id="source-text-form" type='hidden' name='sourceText' ></textarea>
+    </form>
+
     <div class="col">
         <label for="doc-title" class='text-white'>Document title:</label>
             <label id="doc-title-error-label" for="doc-title" class='bg-danger text-white invisible'>This field cannot be empty</label>

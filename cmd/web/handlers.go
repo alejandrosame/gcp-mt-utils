@@ -532,16 +532,18 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         Translation     string
     }
 
-    text := r.URL.Query().Get(":source")
-    if text == "" {
-        reply := Reply{Translation: ""}
-        json.NewEncoder(w).Encode(reply)
+    form := forms.New(r.PostForm)
+    form.Required("docTitle", "sourceText")
+
+    if !form.Valid() {
+        app.infoLog.Printf("HERE INSIDE")
+        app.clientError(w, 400)
         return
     }
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := text
+    sourceText := form.Get("sourceText")
 
     file, err := os.Open("./auth/auth.txt")
     if err != nil {
