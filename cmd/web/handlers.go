@@ -127,9 +127,7 @@ func (app *application) createPair(w http.ResponseWriter, r *http.Request) {
     form.Required("sourceText", "targetText", "sourceVersion", "targetVersion",
                   "detail")
     // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-    form.MaxLength("targetText", maxChar)
+    maxChar := 255
     form.MaxLength("sourceVersion", maxChar)
     form.MaxLength("targetVersion", maxChar)
     form.MaxLength("detail", maxChar)
@@ -231,10 +229,6 @@ func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
 
     form := forms.New(r.PostForm)
     form.Required("sourceText", "targetText", "sourceVersion", "targetVersion", "detail", "redirectPage")
-    // Max number of chars for text input
-    maxChar := 10000
-    form.MaxLength("sourceText", maxChar)
-    form.MaxLength("targetText", maxChar)
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
