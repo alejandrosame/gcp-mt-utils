@@ -88,3 +88,125 @@ func (m *UserModel) Get(id int) (*models.User, error) {
 
     return s, nil
 }
+
+func (m *UserModel) GetRoleLimit(role string) (*models.RoleLimit, error) {
+    r := &models.RoleLimit{}
+
+    stmt := `SELECT user_role, character_limit
+             FROM role_character_limit WHERE user_role = ?`
+    err := m.DB.QueryRow(stmt, role).Scan(&r.UserRole, &r.CharacterLimit)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return r, nil
+}
+
+func (m *UserModel) UpdateRoleLimit(role string, limit int) (string, error) {
+    sqlStr := `UPDATE role_character_limit
+               SET character_limit = ?
+               WHERE user_role = ?`
+
+    _, err := m.DB.Exec(sqlStr, role, limit)
+    if err != nil {
+        return "", err
+    }
+
+    return role, nil
+}
+
+
+func (m *UserModel) GetUserLimit(id int) (*models.UserLimit, error) {
+    u := &models.UserLimit{}
+
+    stmt := `SELECT u.id, u.rolesuper, u.roleadmin, u.rolevalidator, u.roletranslator, u.name, u.email,
+                   COALESCE(ucl.character_limit, 0) AS character_limit,
+                   COALESCE(ucl.character_limit, 0) +
+                   (SELECT character_limit FROM role_character_limit WHERE user_role = 'all') AS total_character_limit,
+                   COALESCE(consumed.total_characters_translated, 0) AS total_characters_translated
+            FROM
+                users u
+            LEFT JOIN
+                user_character_limit ucl ON u.id = ucl.user_id
+            LEFT JOIN
+                (SELECT user_id, SUM(characters_translated) AS total_characters_translated
+                 FROM user_characters_consumed
+                 WHERE month(date) = month(UTC_TIMESTAMP()) AND year(date) = year(UTC_TIMESTAMP())
+                 GROUP BY user_id, month(date), year(date)
+                ) consumed
+                ON u.id = consumed.user_id
+            WHERE u.id = ?;`
+    err := m.DB.QueryRow(stmt, id).Scan(&u.ID,
+                                        &u.Super, &u.Admin, &u.Validator, &u.Translator,
+                                        &u.Name, &u.Email,
+                                        &u.CharacterLimit, &u.TotalLimit, &u.TotalTranslated)
+    if err == sql.ErrNoRows {
+        return nil, models.ErrNoRecord
+    } else if err != nil {
+        return nil, err
+    }
+
+    return u, nil
+}
+
+func (m *UserModel) GetAllUserLimits() ([]*models.UserLimit, error) {
+
+    stmt := `SELECT u.id, u.rolesuper, u.roleadmin, u.rolevalidator, u.roletranslator, u.name, u.email,
+                   COALESCE(ucl.character_limit, 0) AS character_limit,
+                   COALESCE(ucl.character_limit, 0) +
+                   (SELECT character_limit FROM role_character_limit WHERE user_role = 'all') AS total_character_limit,
+                   COALESCE(consumed.total_characters_translated, 0) AS total_characters_translated
+            FROM
+                users u
+            LEFT JOIN
+                user_character_limit ucl ON u.id = ucl.user_id
+            LEFT JOIN
+                (SELECT user_id, SUM(characters_translated) AS total_characters_translated
+                 FROM user_characters_consumed
+                 WHERE month(date) = month(UTC_TIMESTAMP()) AND year(date) = year(UTC_TIMESTAMP())
+                 GROUP BY user_id, month(date), year(date)
+                ) consumed
+                ON u.id = consumed.user_id;`
+
+    rows, err := m.DB.Query(stmt)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+
+    limits := []*models.UserLimit{}
+
+    for rows.Next() {
+        u := &models.UserLimit{}
+
+        err = rows.Scan(&u.ID,
+                        &u.Super, &u.Admin, &u.Validator, &u.Translator,
+                        &u.Name, &u.Email,
+                        &u.CharacterLimit, &u.TotalLimit, &u.TotalTranslated)
+        if err != nil {
+            return nil, err
+        }
+        limits = append(limits, u)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, err
+    }
+
+    return limits, nil
+}
+
+func (m *UserModel) UpdateUserLimit(id int, limit int) (int, error) {
+    sqlStr := `UPDATE user_character_limit
+               SET character_limit = ?
+               WHERE user_id = ?`
+
+    _, err := m.DB.Exec(sqlStr, id, limit)
+    if err != nil {
+        return 0, err
+    }
+
+    return id, nil
+}

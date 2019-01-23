@@ -206,7 +206,6 @@ func (app *application) editPairForm(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
 }
 
-
 func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
@@ -275,6 +274,37 @@ func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
     }
 
     http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+func (app *application) userCharacterLimitForm(w http.ResponseWriter, r *http.Request) {
+    allLimit, err := app.users.GetRoleLimit("all")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    allUserLimits, err := app.users.GetAllUserLimits()
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.user.limit.page.tmpl",
+               &templateData{
+                    Form: nil,
+                    RoleLimit: allLimit,
+                    AllUserLimits: allUserLimits,
+                })
+}
+
+func (app *application) updateGroupCharacterLimit(w http.ResponseWriter, r *http.Request) {
+    // "/user/limit/group/:group"
+    app.render(w, r, "show.user.limit.page.tmpl", &templateData{Form: nil})
+}
+
+func (app *application) updateUserCharacterLimit(w http.ResponseWriter, r *http.Request) {
+    // "/user/limit/:id"
+    app.render(w, r, "show.user.limit.page.tmpl", &templateData{Form: nil})
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {

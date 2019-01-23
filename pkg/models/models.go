@@ -58,6 +58,23 @@ type User struct {
     Translator     bool
 }
 
+type RoleLimit struct {
+    UserRole       string
+    CharacterLimit int
+}
+
+type UserLimit struct {
+    ID              int
+    Super           bool
+    Admin           bool
+    Validator       bool
+    Translator      bool
+    Name            string
+    Email           string
+    CharacterLimit  int
+    TotalLimit      int
+    TotalTranslated int
+}
 
 type Invitation struct {
     ID             int
