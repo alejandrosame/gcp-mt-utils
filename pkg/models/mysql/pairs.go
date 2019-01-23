@@ -39,7 +39,7 @@ func (m *PairModel) Insert(sourceLanguage, sourceVersion, targetLanguage, target
 
 
 func (m *PairModel) Edit(id int, sourceText, targetText, comments string) (int, error) {
-    sqlStr := `UPDATE pairs SET sl_text_source = ?, tl_text_source = ?, comments = ?, validated = false,
+    sqlStr := `UPDATE pairs SET source_text = ?, target_text = ?, comments = ?, validated = false,
                           updated = UTC_TIMESTAMP()
                WHERE id = ?`
 
