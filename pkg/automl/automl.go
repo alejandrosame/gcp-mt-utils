@@ -14,6 +14,9 @@ import (
     "strings"
     "time"
 
+    "github.com/alejandrosame/gcp-mt-utils/pkg/files"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/reports"
+
     "github.com/tidwall/gjson"
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
@@ -309,9 +312,11 @@ func StringToLines(s string) (lines []string, err error) {
     return
 }
 
-func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
+func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText, title string) (string, error) {
     infoLog.Println("Starting translation")
 
+    timeRequest := time.Now().Format("20060102150405")
+    characterCount := 0
     defaultValue := ""
 
     urlQuery := "https://translation.googleapis.com/language/translate/v2"
@@ -331,6 +336,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
         if paragraph == "" {
             translatedText += "\n"
         }else {
+            characterCount += len([]rune(paragraph))
             jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, paragraph))
 
             var totalTries = 18
@@ -355,6 +361,15 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
     }
 
     infoLog.Println("Replying with translation")
+
+    // Prepare file to send report
+    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest)
+    tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
+    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
+
+    reports.SendEmail(infoLog, errorLog, titleTimestamp, tmpFileSource, characterCount)
+
+    // Once report is sent, return feedback to user
     return translatedText, nil
 }
 

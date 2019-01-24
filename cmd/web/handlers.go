@@ -573,6 +573,8 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
     sourceText := form.Get("sourceText")
+    title := form.Get("docTitle")
+
 
     file, err := os.Open("./auth/auth.txt")
     if err != nil {
@@ -586,7 +588,8 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     modelName := scanner.Text()
 
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage,
+                                                   targetLanguage, sourceText, title)
     if err != nil {
         app.serverError(w, err)
         return
