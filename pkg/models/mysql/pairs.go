@@ -397,7 +397,7 @@ func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
 
 
 func (m *PairModel) Validate(id int) error {
-    
+
     sqlStr := `UPDATE pairs SET validated = true WHERE id = ?`
 
     stmt, err := m.DB.Prepare(sqlStr)
@@ -409,7 +409,25 @@ func (m *PairModel) Validate(id int) error {
     if err != nil {
         return err
     }
-    
+
+    return err
+}
+
+
+func (m *PairModel) Unvalidate(id int) error {
+
+    sqlStr := `UPDATE pairs SET validated = false WHERE id = ?`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    _, err = stmt.Exec(id)
+    if err != nil {
+        return err
+    }
+
     return err
 }
 

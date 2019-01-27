@@ -105,9 +105,13 @@ func (app *application) showPair(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    app.render(w, r, "show.page.tmpl", &templateData{
-        Pair:  p,
-    })
+    b, err := app.pairs.GetBookFromDetail(p.Detail)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("/pair/book/%d/chapter/%d#%d", b.ID, b.Chapter, id), http.StatusSeeOther)
 }
 
 
@@ -745,68 +749,6 @@ func (app *application) validateAllPairs(w http.ResponseWriter, r *http.Request)
 }
 
 
-func (app *application) validatePairForm(w http.ResponseWriter, r *http.Request) {
-    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
-    if err != nil || id < 1 {
-        app.notFound(w)
-        return
-    }
-
-    p, err := app.pairs.GetToValidateFromID(id)
-    if err == models.ErrNoRecord {
-        app.notFound(w)
-        return
-    } else if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    if p.Validated {
-        app.session.Put(r, "flash", fmt.Sprintf("Pair %d is already validated!", id))
-        http.Redirect(w, r, "/pair", http.StatusSeeOther)
-        return
-    }
-
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-
-    stats, err := app.pairs.ValidationStatisticsBookChapter(sourceLanguage, targetLanguage, p.Detail)
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    form := forms.New(url.Values{})
-    form.Add("id", fmt.Sprintf("%d", p.ID))
-    form.Add("sourceLanguage", p.SourceLanguage)
-    form.Add("targetLanguage", p.TargetLanguage)
-    form.Add("sourceText", p.SourceText)
-    form.Add("targetText", p.TargetText)
-    form.Add("sourceVersion", p.SourceVersion)
-    form.Add("targetVersion", p.TargetVersion)
-    form.Add("detail", p.Detail)
-    if p.Comments.Valid{
-        form.Add("comments", p.Comments.String)
-    }else{
-        form.Add("comments", "")
-    }
-    form.Add("updated", humanDate(p.Updated))
-    form.Add("created", humanDate(p.Created))
-
-    b, err := app.pairs.GetBookFromDetail(p.Detail)
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-
-    app.render(w, r, "validate.pair.page.tmpl", &templateData{
-        Form: form,
-        ValidationStats: stats,
-        Book: b,
-    })
-}
-
-
 func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
@@ -821,50 +763,60 @@ func (app *application) validatePair(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.OneRequired("no-validate", "validate")
+    form.Required("validate")
 
     // If the form isn't valid, redisplay the template passing in the
     // form.Form object as the data.
     if !form.Valid() {
-        app.render(w, r, "validate.pair.page.tmpl", &templateData{Form: form})
+        app.session.Put(r, "flash", "Invalid form!")
+        http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
         return
     }
 
-    if form.Get("no-validate") != "" {
-        // We will need to update comments if necessary
-        err = app.pairs.Update(id)
-    } else if form.Get("validate") != ""{
-        err = app.pairs.Validate(id)
-    }
-    if err != nil {
-        app.serverError(w, err)
-        return
-    }
-    // Do nothing if no-save-no-validate
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
 
-    b, err := app.pairs.GetBookFromDetail(form.Get("detail"))
+    err = app.pairs.Validate(id)
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    // Get another pair to validate from the same scope
-    newPair, err := app.pairs.GetNewIDToValidate(sourceLanguage, targetLanguage, b.ID, b.Chapter)
-    if err == models.ErrNoRecord {
-        app.session.Put(r, "flash", "No pairs found to be validated!")
-        http.Redirect(w, r, "/pair", http.StatusSeeOther)
+    app.session.Put(r, "flash", fmt.Sprintf("Pair %d successfully validated!", id))
+    http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
+}
+
+
+func (app *application) unvalidatePair(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
         return
-    } else if err != nil {
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("unvalidate")
+
+    // If the form isn't valid, redisplay the template passing in the
+    // form.Form object as the data.
+    if !form.Valid() {
+        app.session.Put(r, "flash", "Invalid form!")
+        http.Redirect(w, r, fmt.Sprintf("/pair/%d", id), http.StatusSeeOther)
+        return
+    }
+
+    err = app.pairs.Unvalidate(id)
+    if err != nil {
         app.serverError(w, err)
         return
     }
 
-    if form.Get("validate") != ""{
-        app.session.Put(r, "flash", fmt.Sprintf("Pair %d successfully validated!", id))
-    }
-    http.Redirect(w, r, fmt.Sprintf("/pair/validate/%d", newPair), http.StatusSeeOther)
+    app.session.Put(r, "flash", fmt.Sprintf("Pair %d successfully unvalidated!", id))
+    http.Redirect(w, r, fmt.Sprintf("/pair/edit/%d", id), http.StatusSeeOther)
 }
 
 
