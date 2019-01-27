@@ -16,6 +16,8 @@ import (
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/files"
     "github.com/alejandrosame/gcp-mt-utils/pkg/reports"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/models"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/models/mysql"
 
     "github.com/tidwall/gjson"
     "golang.org/x/oauth2"
@@ -312,10 +314,11 @@ func StringToLines(s string) (lines []string, err error) {
     return
 }
 
-func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText, title string) (string, error) {
+func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel, user *models.User,
+                          modelName, source, target, sourceText, title string) (string, error) {
     infoLog.Println("Starting translation")
 
-    timeRequest := time.Now().Format("20060102150405")
+    timeRequest := time.Now()
     characterCount := 0
     defaultValue := ""
 
@@ -363,11 +366,11 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
     infoLog.Println("Replying with translation")
 
     // Prepare file to send report
-    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest)
+    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
     tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
     _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
 
-    reports.SendEmail(infoLog, errorLog, titleTimestamp, tmpFileSource, characterCount)
+    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
 
     // Once report is sent, return feedback to user
     return translatedText, nil

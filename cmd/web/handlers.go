@@ -588,8 +588,8 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     modelName := scanner.Text()
 
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage,
-                                                   targetLanguage, sourceText, title)
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.authenticatedUser(r),
+                                                   modelName, sourceLanguage, targetLanguage, sourceText, title)
     if err != nil {
         app.serverError(w, err)
         return
