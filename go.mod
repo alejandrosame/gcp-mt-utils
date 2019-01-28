@@ -11,6 +11,7 @@ require (
 	github.com/go-test/deep v1.0.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/golangcollege/sessions v1.0.1
+	github.com/ipinfo/go-ipinfo v0.0.0-20181019221329-c28d31ed88f0
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
 	github.com/justinas/nosurf v0.0.0-20181122113328-3af30e51c05b
 	github.com/mholt/archiver v3.1.1+incompatible
