@@ -9,30 +9,6 @@
         </div>
 
         {{if .Pairs}}
-            <div class="row mt-2">
-                <div class="col mt-1">
-                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
-                       href='/pair/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate'>
-                        Validate training pairs randomly
-                    </a>
-                </div>
-                <div class="col mt-1">
-                    <form action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate' method='POST'>
-                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-                        <button class="btn btn-outline-light btn-sm btn-block"
-                                onclick="return confirm('Are you sure that you DO want to validate ALL the pairs in the chapter?');"
-                        >Validate all pairs of this chapter</button>
-                    </form>
-                </div>
-                <div class="w-100"></div>
-                <div class="col mt-1">
-                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
-                       href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/export'>
-                        Export validated pairs to dataset
-                    </a>
-                </div>
-            </div>
-
             <div class="row">
                 <div class="col mt-1 text-center">
                     {{with .ValidationStats}}
@@ -43,10 +19,173 @@
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col mt-1">
+                    <a class="btn btn-outline-light btn-sm btn-block" role="button"
+                       href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/export'>
+                        Export validated pairs to dataset
+                    </a>
+                </div>
+                <div class="w-100"></div>
+                <div class="col mt-1">
+                    <form name="unvalidateSelectedForm"
+                           action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/unvalidate' method='POST'>
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <input type='hidden' name='idList' value=''>
+                        <button type='submit' class="btn btn-danger btn-sm btn-block"
+                            onclick="return confirm('Are you sure that you DO want to UNVALIDATE all selected pairs?')?submitUnvalidateSelected():false"
+                        >Unvalidate selected pairs</button>
+                    </form>
+                </div>
+                <div class="col mt-1">
+                    <form name="validateSelectedForm"
+                           action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate' method='POST'>
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <input type='hidden' name='idList' value=''>
+                        <button class="btn btn-success btn-sm btn-block"
+                               onclick="return confirm('Are you sure that you DO want to VALIDATE all selected pairs?')?submitValidateSelected():false"
+                        >Validate selected pairs</button>
+                    </form>
+                </div>
+                <div class="w-100"></div>
+                <div class="col text-white">
+                    <label><input onClick="selectAllValidation(this)" type="checkbox"> Select/Unselect all pairs</label>
+                </div>
+            </div>
+
             {{range .Pairs}}
-            <div class="row mt-2">
+            <div id={{.ID}} class="row mt-1">
                 <div class="col">
-                    {{template "pair" .}}
+                    <div class='card bg-secondary border-dark'>
+                        <div class='card-header border-dark'>
+                            <div class="row">
+                                <div class="col col-lg-1 col-md-1 col-sm-1">
+                                    <input class="select-pair" value="{{.ID}}" type="checkbox">
+                                </div>
+                                <div class="col text-center font-weight-bold">
+                                    <a class="text-white" href='/pair/{{.ID}}'>#{{.ID}}</a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <span class="font-weight-bold">{{.SourceLanguage}}</span>
+                                    <span class="small">({{.SourceVersion}})</span>
+                                </div>
+                                <div class="col text-center">
+                                    <span class="font-weight-bold">{{.TargetLanguage}}</span>
+                                    <span class="small">({{.TargetVersion}})</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center font-italic small">
+                                    {{.Detail}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class='card-body border-dark'>
+                            <div class="row">
+                                <div class="col text-justify">
+                                    {{.SourceText}}
+                                </div>
+                                <div class="col text-justify">
+                                    {{.TargetText}}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class='card-body border-dark'>
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col text-center font-weight-bold">
+                                            Comments
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            {{if .Comments.Valid}}
+                                                {{.Comments.Value}}
+                                            {{else}}
+                                                No comments yet
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col text-center font-weight-bold">
+                                            GCP Dataset
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            {{if .GcpDataset.Valid}}
+                                                {{.GcpDataset.Value}}
+                                            {{else}}
+                                                Not uploaded yet
+                                            {{end}}
+                                        </div>
+                                    </div>
+                                </div>
+                                {{if .Validated}}
+                                    <div class="col text-center bg-success">
+                                        Validated
+                                    </div>
+                                {{else}}
+                                    <div class="col text-center bg-danger">
+                                        Not validated
+                                    </div>
+                                {{end}}
+                            </div>
+                        </div>
+
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <time>Created on {{humanDate .Created}}</time>
+                                </div>
+                                <div class="col text-center">
+                                    <time>Updated on {{humanDate .Updated}}</time>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class='card-footer border-dark'>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <a class="btn btn-outline-light btn-sm btn-block" role="button" href='/pair/edit/{{.ID}}'>
+                                        Edit this pair
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col text-center">
+                                    <form action='/pair/unvalidate/{{.ID}}' method='POST'>
+                                        <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                        <div class="col mt">
+                                            <input class="btn btn-danger btn-sm btn-block" role="button" type='submit'
+                                                   name="unvalidate" value='Unvalidate pair'
+                                                   onclick="return confirm('Are you sure that you DO want to UNVALIDATE the pair?');"
+                                                   {{if not .Validated}} disabled {{end}}
+                                            >
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="col text-center">
+                                    <form action='/pair/validate/{{.ID}}' method='POST'>
+                                        <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                        <div class="col mt">
+                                            <input class="btn btn-success btn-sm btn-block" role="button" type='submit'
+                                                   name="validate" value='Validate pair'
+                                                   onclick="return confirm('Are you sure that you DO want to VALIDATE the pair?');"
+                                                   {{if .Validated}} disabled {{end}}
+                                            >
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             {{end}}
