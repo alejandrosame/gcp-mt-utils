@@ -235,6 +235,34 @@
                 window.location = "/pair";
             }
 
+            function selectAllValidation(source) {
+                checkboxes = document.getElementsByClassName('select-pair');
+                for(var i=0, n=checkboxes.length;i<n;i++) {
+                    checkboxes[i].checked = source.checked;
+                }
+            }
+
+            function getPairIdsToValidate() {
+                checkboxes = document.getElementsByClassName('select-pair');
+                ids = ""
+                for(var i=0, n=checkboxes.length;i<n;i++) {
+                    if(checkboxes[i].checked){
+                        ids = ids + checkboxes[i].value + ","
+                    }
+                }
+                return ids.replace(/,$/g, '');
+            }
+
+            function submitUnvalidateSelected() {
+                document.unvalidateSelectedForm.idList.value = getPairIdsToValidate()
+                document.unvalidateSelectedForm.submit();
+            }
+
+            function submitValidateSelected() {
+                document.validateSelectedForm.idList.value = getPairIdsToValidate()
+                document.validateSelectedForm.submit();
+            }
+
             function sleep(milliseconds) {
               var start = new Date().getTime();
               for (var i = 0; i < 1e7; i++) {

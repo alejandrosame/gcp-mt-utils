@@ -397,7 +397,7 @@ func (m *PairModel) GetToValidateFromID(id int) (*models.Pair, error) {
 
 
 func (m *PairModel) Validate(id int) error {
-    
+
     sqlStr := `UPDATE pairs SET validated = true WHERE id = ?`
 
     stmt, err := m.DB.Prepare(sqlStr)
@@ -409,7 +409,25 @@ func (m *PairModel) Validate(id int) error {
     if err != nil {
         return err
     }
-    
+
+    return err
+}
+
+
+func (m *PairModel) Unvalidate(id int) error {
+
+    sqlStr := `UPDATE pairs SET validated = false WHERE id = ?`
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    _, err = stmt.Exec(id)
+    if err != nil {
+        return err
+    }
+
     return err
 }
 
@@ -652,6 +670,72 @@ func (m *PairModel) ValidateAllPairsFromChapter(sourceLanguage, targetLanguage s
     return nil
 }
 
+func (m *PairModel) ValidateSelectedPairsFromChapter(sourceLanguage, targetLanguage string, book, chapter int,
+                                                     idList string) (error) {
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%")
+
+    re := regexp.MustCompile(`\b\d+\b`)
+    substitution := `?`
+    idsPlaceholder := re.ReplaceAllString(idList, substitution)
+
+    sqlStr := fmt.Sprintf(`UPDATE pairs SET validated = true
+    WHERE source_language = ? AND target_language = ? AND text_detail LIKE ? AND
+          id IN (%s) AND validated = false`, idsPlaceholder)
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    t := strings.Split(idList, ",")
+    t = append([]string{sourceLanguage, targetLanguage, detailLike}, t...)
+    vals := make([]interface{}, len(t))
+    for i, v := range t {
+        vals[i] = v
+    }
+
+    _, err = stmt.Exec(vals...)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
+
+
+func (m *PairModel) UnvalidateSelectedPairsFromChapter(sourceLanguage, targetLanguage string, book, chapter int,
+                                                     idList string) (error) {
+
+    detailLike := fmt.Sprintf("book %d, chapter%d,%s", book, chapter, "%")
+
+    re := regexp.MustCompile(`\b\d+\b`)
+    substitution := `?`
+    idsPlaceholder := re.ReplaceAllString(idList, substitution)
+
+    sqlStr := fmt.Sprintf(`UPDATE pairs SET validated = false
+    WHERE source_language = ? AND target_language = ? AND text_detail LIKE ? AND
+          id IN (%s) AND validated = true`, idsPlaceholder)
+
+    stmt, err := m.DB.Prepare(sqlStr)
+    if err != nil {
+        return err
+    }
+
+    t := strings.Split(idList, ",")
+    t = append([]string{sourceLanguage, targetLanguage, detailLike}, t...)
+    vals := make([]interface{}, len(t))
+    for i, v := range t {
+        vals[i] = v
+    }
+
+    _, err = stmt.Exec(vals...)
+    if err != nil {
+        return err
+    }
+
+    return nil
+}
 
 func (m *PairModel) DatasetIsUsed(datasetName string) (bool, error) {
     sqlStr := ` SELECT count(*) as count
