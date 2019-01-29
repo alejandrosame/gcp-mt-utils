@@ -26,6 +26,11 @@ type GeoIP struct {
 
 
 func ExtractIP(infoLog, errorLog *log.Logger, r *http.Request) (string, error){
+    infoLog.Println(fmt.Sprintf("IP-FORWARDED: %s", r.Header.Get("X-Forwarded-For")))
+    ipForwarded := strings.Split(r.Header.Get("X-Forwarded-For"), ", ")[0]
+    if ipForwarded != ""{
+        return ipForwarded, nil
+    }
     return strings.Split(r.RemoteAddr, ":")[0], nil
 }
 

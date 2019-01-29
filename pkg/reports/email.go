@@ -32,9 +32,6 @@ func SendEmail(infoLog, errorLog *log.Logger, r *http.Request, reportModel *mysq
     plainTextContent, htmlContent, err := GenerateReportFromRequest(infoLog, errorLog, r, user,
                                                                     characterCount, title, requestDateFormatted)
 
-    infoLog.Println(plainTextContent)
-    infoLog.Println(htmlContent)
-
     if err != nil {
         errorLog.Println(err)
     }
