@@ -22,8 +22,21 @@
                     {{with .RoleLimit}}
                     <tr>
                         <td>{{.UserRole}}</td>
-                        <td>{{.CharacterLimit}}</td>
-                        <td>Update</td>
+                        <td>
+                            {{with $.Form }}
+                                {{with .Errors.Get "limit"}}
+                                    <label for="limit" class='bg-danger text-white'>{{.}}</label>
+                                {{end}}
+                            {{end}}
+                            <input form="{{.UserRole}}Form" class="form-control bg-secondary"
+                                   type="number" min=0 name="limit" value="{{.CharacterLimit}}">
+                        </td>
+                        <td>
+                            <form id="{{.UserRole}}Form" action='/user/limit/group/{{.UserRole}}' method='POST'>
+                                <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                <input class="btn btn-secondary btn-block" type='submit' value='Update'>
+                            </form>
+                        </td>
                     </tr>
                     {{end}}
                 </tbody>
@@ -59,9 +72,22 @@
                             <td>{{.Name}}</td>
                             <td>{{.Email}}</td>
                             <td>{{.TotalTranslated}}</td>
-                            <td>{{.CharacterLimit}}</td>
+                            <td>
+                                {{with $.Form }}
+                                    {{with .Errors.Get "limit"}}
+                                        <label for="limit" class='bg-danger text-white'>{{.}}</label>
+                                    {{end}}
+                                {{end}}
+                                <input form="{{.ID}}Form" class="form-control bg-secondary"
+                                       type="number" min=0 name="limit" value="{{.CharacterLimit}}">
+                            </td>
                             <td>{{.TotalLimit}}</td>
-                            <td>Update</td>
+                            <td>
+                                <form id="{{.ID}}Form" action='/user/limit/{{.ID}}' method='POST'>
+                                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                    <input class="btn btn-secondary btn-block" type='submit' value='Update'>
+                                </form>
+                            </td>
                         </tr>
                         {{end}}
                     {{end}}
@@ -92,9 +118,22 @@
                             <td>{{.Name}}</td>
                             <td>{{.Email}}</td>
                             <td>{{.TotalTranslated}}</td>
-                            <td>{{.CharacterLimit}}</td>
+                            <td>
+                                {{with $.Form }}
+                                    {{with .Errors.Get "limit"}}
+                                        <label for="limit" class='bg-danger text-white'>{{.}}</label>
+                                    {{end}}
+                                {{end}}
+                                <input form="{{.ID}}Form" class="form-control bg-secondary"
+                                       type="number" min=0 name="limit" value="{{.CharacterLimit}}">
+                            </td>
                             <td>{{.TotalLimit}}</td>
-                            <td>Update</td>
+                            <td>
+                                <form id="{{.ID}}Form" action='/user/limit/{{.ID}}' method='POST'>
+                                    <input type='hidden' name='csrf_token' value='{{$.CSRFToken}}'>
+                                    <input class="btn btn-secondary btn-block" type='submit' value='Update'>
+                                </form>
+                            </td>
                         </tr>
                         {{end}}
                     {{end}}

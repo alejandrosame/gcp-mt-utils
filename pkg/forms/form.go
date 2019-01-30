@@ -11,6 +11,7 @@ import (
     "os"
     "path/filepath"
     "regexp"
+    "strconv"
     "strings"
     "unicode/utf8"
 )
@@ -69,6 +70,22 @@ func (f *Form) MaxLength(field string, d int) {
     if utf8.RuneCountInString(value) > d {
         f.Errors.Add(field, fmt.Sprintf("This field is too long (maximum is %d characters)", d))
     }
+}
+
+
+func (f *Form) MinIntValue(field string, d int) (int) {
+    value, err := strconv.Atoi(f.Get(field))
+    if err != nil {
+        f.Errors.Add(field, "This field is not an integer value")
+        return 0
+    }
+
+    if value < d {
+       f.Errors.Add(field, fmt.Sprintf("This field value cannot be less than %d", d))
+        return 0
+    }
+
+    return value
 }
 
 

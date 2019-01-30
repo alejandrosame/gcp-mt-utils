@@ -109,7 +109,7 @@ func (m *UserModel) UpdateRoleLimit(role string, limit int) (string, error) {
                SET character_limit = ?
                WHERE user_role = ?`
 
-    _, err := m.DB.Exec(sqlStr, role, limit)
+    _, err := m.DB.Exec(sqlStr, limit, role)
     if err != nil {
         return "", err
     }
@@ -203,9 +203,25 @@ func (m *UserModel) UpdateUserLimit(id int, limit int) (int, error) {
                SET character_limit = ?
                WHERE user_id = ?`
 
-    _, err := m.DB.Exec(sqlStr, id, limit)
+    result, err := m.DB.Exec(sqlStr, limit, id)
     if err != nil {
         return 0, err
+    }
+
+    count, err := result.RowsAffected()
+    if err != nil {
+        return 0, err
+    }
+
+    // User still does not have a translation limit defined, we need to insert it instead of updating it
+    if count == 0 {
+        sqlStr := `INSERT into user_character_limit (character_limit, user_id)
+                   VALUES (?, ?)`
+
+        _, err := m.DB.Exec(sqlStr, limit, id)
+        if err != nil {
+            return 0, err
+        }
     }
 
     return id, nil

@@ -298,13 +298,87 @@ func (app *application) userCharacterLimitForm(w http.ResponseWriter, r *http.Re
 }
 
 func (app *application) updateGroupCharacterLimit(w http.ResponseWriter, r *http.Request) {
-    // "/user/limit/group/:group"
-    app.render(w, r, "show.user.limit.page.tmpl", &templateData{Form: nil})
+    group := r.URL.Query().Get(":group")
+    if group == "" || (group != "all" && group != "validator" && group != "translator" && group != "admin") {
+        app.notFound(w)
+        return
+    }
+
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("limit")
+    limitIntValue := form.MinIntValue("limit", 0)
+
+    if !form.Valid() {
+        app.session.Put(r, "flash",
+                        "Limit value was not changed. Check that it is a valid number over 0 and not empty!")
+        http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
+        return
+    }
+
+    _, err = app.users.UpdateRoleLimit(group, limitIntValue)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if group == "all" {
+        app.session.Put(r, "flash", "Base translation limit updated for all users!")
+    } else{
+        app.session.Put(r, "flash", fmt.Sprintf("Translation limit updated for %ss!", group))
+    }
+    http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
 }
 
 func (app *application) updateUserCharacterLimit(w http.ResponseWriter, r *http.Request) {
-    // "/user/limit/:id"
-    app.render(w, r, "show.user.limit.page.tmpl", &templateData{Form: nil})
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    u, err := app.users.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("limit")
+    limitIntValue := form.MinIntValue("limit", 0)
+
+    if !form.Valid() {
+        app.session.Put(r, "flash",
+                        "Limit value was not changed. Check that it is a valid number over 0 and not empty!")
+        http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
+        return
+    }
+
+    app.infoLog.Println(form.Get("limit"))
+    app.infoLog.Println(limitIntValue)
+
+    _, err = app.users.UpdateUserLimit(id, limitIntValue)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", fmt.Sprintf("Updated translation limit for user %s (%s)!", u.Name, u.Email))
+    http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
