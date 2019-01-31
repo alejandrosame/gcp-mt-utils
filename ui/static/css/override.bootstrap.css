@@ -1,17 +1,47 @@
 h1, h2, h3, h4, h5, h6 {
-    color: white;
+  color: white;
 }
 
 .bg-dark{
-    background-color:#222222!important
+  background-color:#04041D!important;
+}
+
+.table-dark{
+  background-color:#030326!important;
+}
+
+a.bg-dark:focus, a.bg-dark:hover, button.bg-dark:focus, button.bg-dark:hover{
+  background-color:#090931!important;
+}
+
+.btn-dark{
+  background-color:#030326!important;
+  border-color:#090931!important;
+}
+
+.border-dark{
+  border-color:#050550!important;
+}
+
+.bg-secondary{
+  background-color:#090931!important;
+}
+
+.btn-secondary{
+  background-color:#090931!important;
+  border-color:#050550!important;
+}
+
+.form-control{
+  border-color:#050550!important;
 }
 
 .card{
-    color: white;
+  color: white;
 }
 
 .alert{
-    z-index: 1029;
+  z-index: 1029;
 }
 
 .row {
