@@ -263,7 +263,7 @@
                 translatingWheel2.classList.remove("invisible");
             }
 
-            function translatingStatusFinished(errorCode) {
+            function translatingStatusFinished(errorCode, charactersUsed) {
                 translateButton1 = document.getElementById('translate-button-1');
                 translateButton2 = document.getElementById('translate-button-2');
                 exportButton1 = document.getElementById('export-button-1');
@@ -288,6 +288,7 @@
                     }
                 }
 
+                document.getElementById('characters-used').textContent = charactersUsed;
             }
 
             function reconstructText(ele) {
@@ -356,11 +357,11 @@
 
             }
 
-            function endTranslate(totalReply, errorCode) {
+            function endTranslate(totalReply, errorCode, charactersUsed) {
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
 
-                translatingStatusFinished(errorCode);
+                translatingStatusFinished(errorCode, charactersUsed);
             }
 
             function asyncTranslate(docTitle, sourceText, paragraphLimit, pos, totalReply) {
@@ -375,16 +376,16 @@
                     {
                         var reply = JSON.parse(resp)
                         var parsedReply = formatTextWithDiv(reply["Translation"]);
-                        endTranslate(parsedReply, reply["Error"]);
+                        endTranslate(parsedReply, reply["Error"], reply["CharactersUsed"]);
 
                     })
                     .fail(function(xhr, status, error) {
                         alert("ERROR: Server replied with error message '"+xhr.responseText+"'");
-                        endTranslate("", "");
+                        endTranslate("", "", reply["CharactersUsed"]);
                     });
                 }
                 else {
-                    endTranslate("", "None");
+                    endTranslate("", "None", reply["CharactersUsed"]);
                 }
             }
 

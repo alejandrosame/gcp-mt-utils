@@ -627,31 +627,40 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
+    limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "translate.page.tmpl",
+               &templateData{Form: forms.New(nil),
+                             UserLimit: limit})
 }
 
-func (app *application) translationLimitIsReached(user *models.User, text string) (string, error) {
+func (app *application) translationLimitIsReached(user *models.User, text string) (string, int, error) {
     limit, err := app.users.GetUserLimit(user.ID)
     if err != nil {
-        return "", err
+        return "", limit.TotalTranslated, err
     }
 
     if limit.TotalLimit <= limit.TotalTranslated {
-        return "reached", nil
+        return "reached", limit.TotalTranslated, nil
     }
 
     characterCount := len([]rune(strings.Replace(text, "\n", "", -1)))
 
     if limit.TotalLimit < limit.TotalTranslated + characterCount {
-        return "surpassed", nil
+        return "surpassed", limit.TotalTranslated, nil
     }
 
-    return "ok", nil
+    return "ok", limit.TotalTranslated, nil
 }
 
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     type Reply struct {
         Error           string
+        CharactersUsed  string
         Translation     string
     }
 
@@ -668,14 +677,14 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     sourceText := form.Get("sourceText")
     title := form.Get("docTitle")
 
-    check, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
+    check, charactersUsed, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
     if err != nil {
         app.serverError(w, err)
         return
     }
 
     if check != "ok"{
-        reply := Reply{Error: check, Translation: ""}
+        reply := Reply{Error: check, CharactersUsed: fmt.Sprintf("%d", charactersUsed), Translation: ""}
         json.NewEncoder(w).Encode(reply)
         return
     }
@@ -700,7 +709,13 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    reply := Reply{Error: "None", Translation: targetText}
+    limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: targetText}
     json.NewEncoder(w).Encode(reply)
 }
 

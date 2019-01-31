@@ -4,6 +4,15 @@
 
 {{define "body"}}
 <div class="row w-100">
+    <div class="col text-center">
+        {{with .UserLimit}}
+            <div class="alert alert-info font-weight-bold">
+                You have used <span id="characters-used">{{.TotalTranslated}}</span> of {{.TotalLimit}} characters from your monthly translation limit.
+            </div>
+        {{end}}
+    </div>
+    <div class="w-100"></div>
+
     <form id="translate-form" action='/translate' method='POST' class="invisible">
         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
         <input id="doc-title-form" type='hidden' name='docTitle'>
