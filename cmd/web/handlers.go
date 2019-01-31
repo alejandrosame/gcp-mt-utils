@@ -630,9 +630,28 @@ func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
 }
 
+func (app *application) translationLimitIsReached(user *models.User, text string) (string, error) {
+    limit, err := app.users.GetUserLimit(user.ID)
+    if err != nil {
+        return "", err
+    }
+
+    if limit.TotalLimit <= limit.TotalTranslated {
+        return "reached", nil
+    }
+
+    characterCount := len([]rune(strings.Replace(text, "\n", "", -1)))
+
+    if limit.TotalLimit < limit.TotalTranslated + characterCount {
+        return "surpassed", nil
+    }
+
+    return "ok", nil
+}
 
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     type Reply struct {
+        Error           string
         Translation     string
     }
 
@@ -649,6 +668,17 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     sourceText := form.Get("sourceText")
     title := form.Get("docTitle")
 
+    check, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if check != "ok"{
+        reply := Reply{Error: check, Translation: ""}
+        json.NewEncoder(w).Encode(reply)
+        return
+    }
 
     file, err := os.Open("./auth/auth.txt")
     if err != nil {
@@ -662,14 +692,15 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     modelName := scanner.Text()
 
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.authenticatedUser(r),
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                                   app.authenticatedUser(r),
                                                    modelName, sourceLanguage, targetLanguage, sourceText, title)
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    reply := Reply{Translation: targetText}
+    reply := Reply{Error: "None", Translation: targetText}
     json.NewEncoder(w).Encode(reply)
 }
 

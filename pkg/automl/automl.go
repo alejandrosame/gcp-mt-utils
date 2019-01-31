@@ -314,7 +314,8 @@ func StringToLines(s string) (lines []string, err error) {
     return
 }
 
-func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel, user *models.User,
+func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
+                          userModel *mysql.UserModel, user *models.User,
                           modelName, source, target, sourceText, title string) (string, error) {
     infoLog.Println("Starting translation")
 
@@ -370,6 +371,10 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, report
     tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
     _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
 
+    _, err = userModel.UpdateUserCharactersConsumed(user.ID, characterCount)
+    if err!= nil {
+        return "", err
+    }
     reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
 
     // Once report is sent, return feedback to user

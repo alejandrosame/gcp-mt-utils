@@ -226,3 +226,16 @@ func (m *UserModel) UpdateUserLimit(id int, limit int) (int, error) {
 
     return id, nil
 }
+
+
+func (m *UserModel) UpdateUserCharactersConsumed(id int, characterCount int) (int, error) {
+    sqlStr := `INSERT into user_characters_consumed (user_id, characters_translated, date)
+               VALUES (?, ?, UTC_TIMESTAMP())`
+
+    _, err := m.DB.Exec(sqlStr, id, characterCount)
+    if err != nil {
+        return 0, err
+    }
+
+    return id, nil
+}

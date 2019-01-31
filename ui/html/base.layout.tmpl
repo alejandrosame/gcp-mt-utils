@@ -263,7 +263,7 @@
                 translatingWheel2.classList.remove("invisible");
             }
 
-            function translatingStatusFinished() {
+            function translatingStatusFinished(errorCode) {
                 translateButton1 = document.getElementById('translate-button-1');
                 translateButton2 = document.getElementById('translate-button-2');
                 exportButton1 = document.getElementById('export-button-1');
@@ -277,6 +277,17 @@
                 exportButton2.disabled = false;
                 translatingWheel1.classList.add("invisible");
                 translatingWheel2.classList.add("invisible");
+
+                if (errorCode != "None") {
+                    if (errorCode == "reached"){
+                        alert("COULD NOT TRANSLATE: Your monthly translation limit was reached.\n"+
+                              "Please contact an admin to if you wish to increase your monthly translation limit.");
+                    } else if (errorCode == "surpassed"){
+                        alert("COULD NOT TRANSLATE: The text your are trying to translate will surpass your monthly translation limit.\n"+
+                              " Try to translate a smaller text or contact an admin if you wish to increase your monthly translation limit.");
+                    }
+                }
+
             }
 
             function reconstructText(ele) {
@@ -345,11 +356,11 @@
 
             }
 
-            function endTranslate(totalReply) {
+            function endTranslate(totalReply, errorCode) {
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
 
-                translatingStatusFinished();
+                translatingStatusFinished(errorCode);
             }
 
             function asyncTranslate(docTitle, sourceText, paragraphLimit, pos, totalReply) {
@@ -364,16 +375,16 @@
                     {
                         var reply = JSON.parse(resp)
                         var parsedReply = formatTextWithDiv(reply["Translation"]);
-                        endTranslate(parsedReply);
+                        endTranslate(parsedReply, reply["Error"]);
 
                     })
                     .fail(function(xhr, status, error) {
                         alert("ERROR: Server replied with error message '"+xhr.responseText+"'");
-                        endTranslate("");
+                        endTranslate("", "");
                     });
                 }
                 else {
-                    endTranslate("");
+                    endTranslate("", "None");
                 }
             }
 
