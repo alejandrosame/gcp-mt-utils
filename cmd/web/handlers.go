@@ -717,7 +717,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(reply)
 }
 
-
+/*
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
     sourceText, ok := r.URL.Query()["source"]
     if !ok {
@@ -754,7 +754,33 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
 
     app.downloadFile(w, r, "zip", tmpZipFile, zipName, files.GetFileSize(tmpZipFile))
 }
+*/
+func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
+    sourceText, ok := r.URL.Query()["source"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
 
+    targetText, ok := r.URL.Query()["target"]
+    if !ok {
+        app.notFound(w)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    timeRequest := time.Now().Format("20060102150405")
+
+    tmpFile := fmt.Sprintf("./tmp/translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, timeRequest)
+
+    name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, timeRequest)
+
+    size := files.WriteTranslationInterleavedToDocx(tmpFile, sourceText[0], targetText[0])
+
+    app.downloadFile(w, r, "docx", tmpFile, name, size)
+}
 
 func (app *application) showModels(w http.ResponseWriter, r *http.Request) {
 
