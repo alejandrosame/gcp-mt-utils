@@ -6,6 +6,32 @@
 <div class="row w-100">
     <div class="col text-center">
         {{with .UserLimit}}
+            <div class="alert alert-warning text-left">
+                <strong>DISCLAIMER:</strong> In order to avoid abuse of the translation API, each translation request gets reported.
+                Click <a class="text-dark" href="#" onCLick="$('#report-detail').collapse('toggle')">here</a> to view the information being reported.
+                <div class="collapse" id="report-detail">
+                     <ul>
+                        <li><strong>User name</strong>.</li>
+                        <li><strong>User email</strong>.</li>
+                        <li><strong>Device</strong> used to access the app.</li>
+                        <li><strong>IP</strong> from which the app is accessed.</li>
+                        <li><strong>City</strong>.</li>
+                        <li><strong>Zipcode</strong>.</li>
+                        <li><strong>Region</strong>.</li>
+                        <li><strong>Country</strong>.</li>
+                        <li><strong>Coordinates</strong> (latitude and longitude).</li>
+                        <li><strong>Title</strong> of the text being translated.</li>
+                        <li><strong>Text</strong> being translated.</li>
+                        <li><strong>Date</strong> at which the translation is requested.</li>
+                        <li><strong>Character count</strong> of the text being translated.</li>
+                     </ul>
+                </div>
+            </div>
+        {{end}}
+    </div>
+    <div class="w-100"></div>
+    <div class="col text-center">
+        {{with .UserLimit}}
             <div class="alert alert-info font-weight-bold">
                 You have used <span id="characters-used">{{.TotalTranslated}}</span> of {{.TotalLimit}} characters from your monthly translation limit.
             </div>
