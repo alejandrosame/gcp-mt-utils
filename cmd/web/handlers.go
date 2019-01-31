@@ -208,7 +208,6 @@ func (app *application) editPairForm(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "edit.page.tmpl", &templateData{Form: form})
 }
 
-
 func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
     id, err := strconv.Atoi(r.URL.Query().Get(":id"))
     if err != nil || id < 1 {
@@ -273,6 +272,111 @@ func (app *application) editPair(w http.ResponseWriter, r *http.Request) {
     }
 
     http.Redirect(w, r, redirect, http.StatusSeeOther)
+}
+
+func (app *application) userCharacterLimitForm(w http.ResponseWriter, r *http.Request) {
+    allLimit, err := app.users.GetRoleLimit("all")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    allUserLimits, err := app.users.GetAllUserLimits()
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "show.user.limit.page.tmpl",
+               &templateData{
+                    Form: nil,
+                    RoleLimit: allLimit,
+                    AllUserLimits: allUserLimits,
+                })
+}
+
+func (app *application) updateGroupCharacterLimit(w http.ResponseWriter, r *http.Request) {
+    group := r.URL.Query().Get(":group")
+    if group == "" || (group != "all" && group != "validator" && group != "translator" && group != "admin") {
+        app.notFound(w)
+        return
+    }
+
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("limit")
+    limitIntValue := form.MinIntValue("limit", 0)
+
+    if !form.Valid() {
+        app.session.Put(r, "flash",
+                        "Limit value was not changed. Check that it is a valid number over 0 and not empty!")
+        http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
+        return
+    }
+
+    _, err = app.users.UpdateRoleLimit(group, limitIntValue)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if group == "all" {
+        app.session.Put(r, "flash", "Base translation limit updated for all users!")
+    } else{
+        app.session.Put(r, "flash", fmt.Sprintf("Translation limit updated for %ss!", group))
+    }
+    http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
+}
+
+func (app *application) updateUserCharacterLimit(w http.ResponseWriter, r *http.Request) {
+    id, err := strconv.Atoi(r.URL.Query().Get(":id"))
+    if err != nil || id < 1 {
+        app.notFound(w)
+        return
+    }
+
+    u, err := app.users.Get(id)
+    if err == models.ErrNoRecord {
+        app.notFound(w)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    err = r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("limit")
+    limitIntValue := form.MinIntValue("limit", 0)
+
+    if !form.Valid() {
+        app.session.Put(r, "flash",
+                        "Limit value was not changed. Check that it is a valid number over 0 and not empty!")
+        http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
+        return
+    }
+
+    app.infoLog.Println(form.Get("limit"))
+    app.infoLog.Println(limitIntValue)
+
+    _, err = app.users.UpdateUserLimit(id, limitIntValue)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", fmt.Sprintf("Updated translation limit for user %s (%s)!", u.Name, u.Email))
+    http.Redirect(w, r, "/user/limit", http.StatusSeeOther)
 }
 
 func (app *application) signupUserForm(w http.ResponseWriter, r *http.Request) {
@@ -521,25 +625,67 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
 
 
 func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
-    app.render(w, r, "translate.page.tmpl", &templateData{Form: forms.New(nil)})
+    limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.render(w, r, "translate.page.tmpl",
+               &templateData{Form: forms.New(nil),
+                             UserLimit: limit})
 }
 
+func (app *application) translationLimitIsReached(user *models.User, text string) (string, int, error) {
+    limit, err := app.users.GetUserLimit(user.ID)
+    if err != nil {
+        return "", limit.TotalTranslated, err
+    }
+
+    if limit.TotalLimit <= limit.TotalTranslated {
+        return "reached", limit.TotalTranslated, nil
+    }
+
+    characterCount := len([]rune(strings.Replace(text, "\n", "", -1)))
+
+    if limit.TotalLimit < limit.TotalTranslated + characterCount {
+        return "surpassed", limit.TotalTranslated, nil
+    }
+
+    return "ok", limit.TotalTranslated, nil
+}
 
 func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     type Reply struct {
+        Error           string
+        CharactersUsed  string
         Translation     string
     }
 
-    text := r.URL.Query().Get(":source")
-    if text == "" {
-        reply := Reply{Translation: ""}
-        json.NewEncoder(w).Encode(reply)
+    form := forms.New(r.PostForm)
+    form.Required("docTitle", "sourceText")
+
+    if !form.Valid() {
+        app.clientErrorDetailed(w, 400, form.Errors.ToString())
         return
     }
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := text
+    sourceText := form.Get("sourceText")
+    title := form.Get("docTitle")
+
+    check, charactersUsed, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if check != "ok"{
+        reply := Reply{Error: check, CharactersUsed: fmt.Sprintf("%d", charactersUsed), Translation: ""}
+        json.NewEncoder(w).Encode(reply)
+        return
+    }
 
     file, err := os.Open("./auth/auth.txt")
     if err != nil {
@@ -553,13 +699,21 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     modelName := scanner.Text()
 
     //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, modelName, sourceLanguage, targetLanguage, sourceText)
+    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                                   app.authenticatedUser(r),
+                                                   modelName, sourceLanguage, targetLanguage, sourceText, title)
     if err != nil {
         app.serverError(w, err)
         return
     }
 
-    reply := Reply{Translation: targetText}
+    limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: targetText}
     json.NewEncoder(w).Encode(reply)
 }
 

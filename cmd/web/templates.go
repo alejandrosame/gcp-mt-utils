@@ -34,6 +34,9 @@ type templateData struct {
     ValidationStats   *models.ValidationStats
     SignUpInvitation  *models.Invitation
     Languages         string
+    RoleLimit         *models.RoleLimit
+    UserLimit         *models.UserLimit
+    AllUserLimits     []*models.UserLimit
 }
 
 

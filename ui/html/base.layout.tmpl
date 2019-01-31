@@ -58,6 +58,9 @@
                                         <a class="dropdown-item nav-link bg-dark" href='/model'>Manage models</a>
                                         <a class="dropdown-item nav-link bg-dark" href='/dataset'>Manage datasets</a>
                                         <a class="dropdown-item nav-link bg-dark" href='/train/status'>Training status</a>
+                                        <a class="dropdown-item nav-link bg-dark" href='/user/limit'>
+                                            Manage user translation limit
+                                        </a>
                                         <a class="dropdown-item nav-link bg-dark" href='/user/signup/invitation/generate'>
                                             Create invitation link
                                         </a>
@@ -288,7 +291,7 @@
                 translatingWheel2.classList.remove("invisible");
             }
 
-            function translatingStatusFinished() {
+            function translatingStatusFinished(errorCode, charactersUsed) {
                 translateButton1 = document.getElementById('translate-button-1');
                 translateButton2 = document.getElementById('translate-button-2');
                 exportButton1 = document.getElementById('export-button-1');
@@ -302,6 +305,18 @@
                 exportButton2.disabled = false;
                 translatingWheel1.classList.add("invisible");
                 translatingWheel2.classList.add("invisible");
+
+                if (errorCode != "None") {
+                    if (errorCode == "reached"){
+                        alert("COULD NOT TRANSLATE: Your monthly translation limit was reached.\n"+
+                              "Please contact an admin to if you wish to increase your monthly translation limit.");
+                    } else if (errorCode == "surpassed"){
+                        alert("COULD NOT TRANSLATE: The text your are trying to translate will surpass your monthly translation limit.\n"+
+                              " Try to translate a smaller text or contact an admin if you wish to increase your monthly translation limit.");
+                    }
+                }
+
+                document.getElementById('characters-used').textContent = charactersUsed;
             }
 
             function reconstructText(ele) {
@@ -348,50 +363,57 @@
             }
 
             function translate() {
-                translatingStatusStarted();
 
-                var title = document.getElementById('source-text');
-                var text = splitLines(reconstructText(title));
-                var paragraphLimit = 10;
-                var totalReply = "";
-                var currentText = "";
+                var docTitle = document.getElementById('doc-title').value.trim();
 
-                asyncTranslate(text, paragraphLimit, 0, totalReply)
+                if(docTitle == ""){
+                    document.getElementById('doc-title-error-label').classList.remove("invisible");
+                }else{
+
+                    document.getElementById('doc-title-error-label').classList.add("invisible");
+
+                    translatingStatusStarted();
+
+                    var sourceText = document.getElementById('source-text');
+                    var text = splitLines(reconstructText(sourceText));
+                    var paragraphLimit = 10;
+                    var totalReply = "";
+                    var currentText = "";
+
+                    asyncTranslate(docTitle, reconstructText(sourceText), paragraphLimit, 0, totalReply)
+                }
+
             }
 
-            function endTranslate(totalReply) {
+            function endTranslate(totalReply, errorCode, charactersUsed) {
                 var target = document.getElementById('target-text');
                 target.innerHTML = totalReply;
 
-                translatingStatusFinished();
+                translatingStatusFinished(errorCode, charactersUsed);
             }
 
-            function asyncTranslate(text, paragraphLimit, pos, totalReply) {
-                //let text = inputText;
-                var paragraphCount = 0;
-                var currentText = "";
-                while (pos < text.length && paragraphCount < paragraphLimit){
-                    currentText += text[pos] + "\n";
-                    pos++;
-                    paragraphCount++;
-                }
-                if (currentText != "") {
-                    var url = "/translate/" + encodeURIComponent(currentText);
-                    $.get(url, function(resp, status)
+            function asyncTranslate(docTitle, sourceText, paragraphLimit, pos, totalReply) {
+
+                if (sourceText != "") {
+
+                    $( "#doc-title-form" ).val(docTitle);
+                    $( "#source-text-form" ).val(sourceText);
+
+                    var url = "/translate"
+                    $.post(url, $("#translate-form").serialize(), function(resp, status)
                     {
                         var reply = JSON.parse(resp)
-                        totalReply += formatTextWithDiv(reply["Translation"]);
+                        var parsedReply = formatTextWithDiv(reply["Translation"]);
+                        endTranslate(parsedReply, reply["Error"], reply["CharactersUsed"]);
 
-                        if (pos == text.length){
-                            endTranslate(totalReply);
-                        }
-                        else{
-                            asyncTranslate(text, paragraphLimit, pos, totalReply);
-                        }
+                    })
+                    .fail(function(xhr, status, error) {
+                        alert("ERROR: Server replied with error message '"+xhr.responseText+"'");
+                        endTranslate("", "", reply["CharactersUsed"]);
                     });
                 }
-                else{
-                    endTranslate("");
+                else {
+                    endTranslate("", "None", reply["CharactersUsed"]);
                 }
             }
 

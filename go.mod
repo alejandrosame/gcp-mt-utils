@@ -11,6 +11,7 @@ require (
 	github.com/go-test/deep v1.0.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/golangcollege/sessions v1.0.1
+	github.com/ipinfo/go-ipinfo v0.0.0-20181019221329-c28d31ed88f0
 	github.com/justinas/alice v0.0.0-20171023064455-03f45bd4b7da
 	github.com/justinas/nosurf v0.0.0-20181122113328-3af30e51c05b
 	github.com/mholt/archiver v3.1.1+incompatible
@@ -18,6 +19,8 @@ require (
 	github.com/nwaples/rardecode v1.0.0 // indirect
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/sendgrid/rest v2.4.1+incompatible // indirect
+	github.com/sendgrid/sendgrid-go v3.4.1+incompatible
 	github.com/stretchr/testify v1.2.2 // indirect
 	github.com/tidwall/gjson v1.1.3
 	github.com/tidwall/match v1.0.1 // indirect

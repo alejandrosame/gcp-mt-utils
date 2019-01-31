@@ -14,6 +14,11 @@ import (
     "strings"
     "time"
 
+    "github.com/alejandrosame/gcp-mt-utils/pkg/files"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/reports"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/models"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/models/mysql"
+
     "github.com/tidwall/gjson"
     "golang.org/x/oauth2"
     "golang.org/x/oauth2/google"
@@ -309,7 +314,13 @@ func StringToLines(s string) (lines []string, err error) {
     return
 }
 
-func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, target, sourceText string) (string, error) {
+func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
+                          userModel *mysql.UserModel, user *models.User,
+                          modelName, source, target, sourceText, title string) (string, error) {
+    infoLog.Println("Starting translation")
+
+    timeRequest := time.Now()
+    characterCount := 0
     defaultValue := ""
 
     urlQuery := "https://translation.googleapis.com/language/translate/v2"
@@ -324,48 +335,49 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, modelName, source, targ
         return defaultValue, err
     }
 
-    var paragraphs = ""
-    for _, partialText := range lines {
-        if partialText == "" {
-            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, "1ØØØØØ1")
-        }else {
-            paragraphs = fmt.Sprintf(`%s, "q": "%s"`, paragraphs, partialText)
-        }
-    }
-
-    jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s" %s}`, source, target, paragraphs))
-
-    var totalTries = 30
-    body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
-    if err != nil {
-        return defaultValue, err
-    }
-
     var translatedText string = ""
+    for _, paragraph := range lines {
+        if paragraph == "" {
+            translatedText += "\n"
+        }else {
+            characterCount += len([]rune(paragraph))
+            jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, paragraph))
 
-    translations := gjson.GetBytes(body, "data.translations")
-    translations.ForEach(func(key, translation gjson.Result) bool {
-        // If it's a train model operation
-        if translation.Get("translatedText").Exists(){
-
-            //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
-            partialTranslatedText := translation.Get("translatedText").String()
-
-            if partialTranslatedText == "1ØØØØØ1" {
-                translatedText += partialTranslatedText
-            }else {
-                translatedText += partialTranslatedText + "\n"
+            var totalTries = 18
+            body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
+            if err != nil {
+                return defaultValue, err
             }
 
+            translations := gjson.GetBytes(body, "data.translations")
+            translations.ForEach(func(key, translation gjson.Result) bool {
+                // If it's a train model operation
+                if translation.Get("translatedText").Exists(){
+
+                    //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
+                    partialTranslatedText := translation.Get("translatedText").String()
+
+                    translatedText += partialTranslatedText + "\n"
+                }
+                return true // continue iterating
+            })
         }
-        return true // continue iterating
-    })
+    }
 
-    translatedText = strings.Replace(strings.TrimRight(translatedText, "\n"), "1ØØØØØ1", "\n", -1)
+    infoLog.Println("Replying with translation")
 
-    //infoLog.Println(fmt.Sprintf("%s", strings.Replace(strings.TrimRight(translatedText, "\n"), "1ØØØØØ1", "\n", -1)))
+    // Prepare file to send report
+    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
+    tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
+    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
 
-    infoLog.Println("Replying")
+    _, err = userModel.UpdateUserCharactersConsumed(user.ID, characterCount)
+    if err!= nil {
+        return "", err
+    }
+    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
+
+    // Once report is sent, return feedback to user
     return translatedText, nil
 }
 

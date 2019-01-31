@@ -31,6 +31,7 @@ type application struct {
     uploadPath    *string
     users         *mysql.UserModel
     invitations   *mysql.InvitationModel
+    reports       *mysql.ReportModel
 }
 
 func main() {
@@ -77,6 +78,7 @@ func main() {
         uploadPath:    uploadPath,
         users:         &mysql.UserModel{DB: db},
         invitations:   &mysql.InvitationModel{DB: db},
+        reports:       &mysql.ReportModel{DB: db},
     }
 
     tlsConfig := &tls.Config{
