@@ -124,6 +124,49 @@ func WriteTranslationToDocx(tmp_file, targetText string) string{
 }
 
 
+func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) string{
+    doc := document.New()
+
+    para := doc.AddParagraph()
+    run := para.AddRun()
+
+    counter := 1
+
+    sourceSplit := strings.Split(sourceText, "\n")
+    targetSplit := strings.Split(targetText, "\n")
+
+    for idx, _ := range targetSplit {
+        paraSource := doc.AddParagraph()
+        paraSource.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+
+        paraTarget := doc.AddParagraph()
+        paraTarget.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+
+        if sourceSplit[idx] != "" {
+            run = paraSource.AddRun()
+            run.Properties().SetBold(true)
+            run.AddText(fmt.Sprintf("%d - ",counter))
+
+            run = paraTarget.AddRun()
+            run.Properties().SetBold(true)
+            run.AddText(fmt.Sprintf("%d - ",counter))
+            counter = counter + 1
+        }
+        run = paraSource.AddRun()
+        run.Properties()
+        run.AddText(sourceSplit[idx])
+
+        run = paraTarget.AddRun()
+        run.Properties()
+        run.AddText(targetSplit[idx])
+    }
+
+    doc.SaveToFile(tmp_file)
+
+    return GetFileSize(tmp_file)
+}
+
+
 func GetFileSize(fileName string) string {
     file, err := os.Open(fileName)
     if err != nil {
