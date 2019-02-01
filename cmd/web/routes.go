@@ -48,7 +48,7 @@ func (app *application) routes() http.Handler {
 
     // Translator routes
     mux.Get("/translate/export", translatorMiddleware.ThenFunc(app.exportTranslation))
-    mux.Get("/translate/:source", translatorMiddleware.ThenFunc(app.translate))
+    mux.Post("/translate", translatorMiddleware.ThenFunc(app.translate))
     mux.Get("/translate", translatorMiddleware.ThenFunc(app.translatePage))
 
     // Admin routes
@@ -63,6 +63,9 @@ func (app *application) routes() http.Handler {
     mux.Get("/train/cancel/:name", adminMiddleware.ThenFunc(app.cancelTrainingOperationForm))
     mux.Post("/train/cancel/:name", adminMiddleware.ThenFunc(app.cancelTrainingOperation))
     mux.Get("/train/status", adminMiddleware.ThenFunc(app.showTrainingStatus))
+    mux.Post("/user/limit/group/:group", adminMiddleware.ThenFunc(app.updateGroupCharacterLimit))
+    mux.Post("/user/limit/:id", adminMiddleware.ThenFunc(app.updateUserCharacterLimit))
+    mux.Get("/user/limit", adminMiddleware.ThenFunc(app.userCharacterLimitForm))
     mux.Get("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLinkForm))
     mux.Post("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLink))
 
