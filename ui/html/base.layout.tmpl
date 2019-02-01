@@ -69,12 +69,20 @@
                             {{end}}
 
                             <li class="nav-item nav-end bg-dark">
+                                <a class="nav-link bg-dark" href='/about'>About</a>
+                            </li>
+
+                            <li class="nav-item nav-end bg-dark">
                                 <form action='/user/logout' method='POST'>
                                     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                                     <button class="nav-link bg-dark" >Logout ({{.AuthenticatedUser.Name}})</button>
                                 </form>
                             </li>
                         {{else}}
+                            <li class="nav-item nav-end bg-dark">
+                                <a class="nav-link bg-dark" href='/about'>About</a>
+                            </li>
+
                             <li class="nav-item nav-end bg-dark">
                                 <a class="nav-link bg-dark" href='/user/login'>Login</a>
                             </li>

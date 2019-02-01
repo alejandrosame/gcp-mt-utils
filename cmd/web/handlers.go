@@ -22,6 +22,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
     app.render(w, r, "landing.page.tmpl", &templateData{})
 }
 
+func (app *application) aboutPage(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "about.page.tmpl", &templateData{})
+}
+
 
 func (app *application) showBooks(w http.ResponseWriter, r *http.Request) {
     sourceLanguage := app.session.GetString(r, "sourceLanguage")

@@ -75,6 +75,7 @@ func (app *application) routes() http.Handler {
     mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))
     mux.Get("/user/login", dynamicMiddleware.ThenFunc(app.loginUserForm))
     mux.Post("/user/login", dynamicMiddleware.ThenFunc(app.loginUser))
+    mux.Get("/about", dynamicMiddleware.ThenFunc(app.aboutPage))
     mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
 
     // TODO: Change template file location to use absolute path based on the current file location
