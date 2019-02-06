@@ -10,6 +10,7 @@ import (
 
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
 
+    "baliance.com/gooxml/color"
     "baliance.com/gooxml/document"
     "baliance.com/gooxml/measurement"
     "github.com/mholt/archiver"
@@ -145,6 +146,7 @@ func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) 
         if sourceSplit[idx] != "" {
             run = paraSource.AddRun()
             run.Properties().SetBold(true)
+            run.Properties().SetColor(color.Red)
             run.AddText(fmt.Sprintf("%d - ",counter))
 
             run = paraTarget.AddRun()
@@ -153,7 +155,7 @@ func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) 
             counter = counter + 1
         }
         run = paraSource.AddRun()
-        run.Properties()
+        run.Properties().SetColor(color.Red)
         run.AddText(sourceSplit[idx])
 
         run = paraTarget.AddRun()
