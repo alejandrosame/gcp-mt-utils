@@ -16,6 +16,7 @@ import (
     "github.com/alejandrosame/gcp-mt-utils/pkg/files"
     "github.com/alejandrosame/gcp-mt-utils/pkg/forms"
     "github.com/alejandrosame/gcp-mt-utils/pkg/models"
+    "github.com/alejandrosame/gcp-mt-utils/pkg/passwords"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -461,8 +462,8 @@ func (app *application) signupUser(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
-
 func (app *application) generateInvitationLinkForm(w http.ResponseWriter, r *http.Request) {
+
     app.render(w, r, "generate.signup.invitation.page.tmpl", &templateData{
         Form: forms.New(nil),
     })
@@ -498,6 +499,129 @@ func (app *application) generateInvitationLink(w http.ResponseWriter, r *http.Re
     app.session.Put(r, "flash", "Invitation creation was successful.")
 
     app.render(w, r, "show.signup.invitation.page.tmpl", &templateData{ SignUpInvitation: i})
+}
+
+func (app *application) requestPasswordChangeForm(w http.ResponseWriter, r *http.Request) {
+    app.render(w, r, "request.password.change.page.tmpl", &templateData{
+        Form: forms.New(nil),
+    })
+}
+
+func (app *application) requestPasswordChange(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("email")
+    form.MatchesPattern("email", forms.EmailRX)
+
+    if !form.Valid() {
+        app.render(w, r, "request.password.change.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    passwordChangeRequest, err := app.users.InsertPasswordChangeRequest(form.Get("email"))
+    if err == models.ErrEmailNotFound {
+        form.Errors.Add("email", "Address is not correct. Try again.")
+        app.render(w, r, "request.password.change.page.tmpl", &templateData{Form: form})
+        return
+    } else if err == models.ErrTokenStillValid {
+        app.session.Put(r, "flash", "It appears that a previous token is still active. Please, wait 10 minutes before requesting a new password change.")
+        http.Redirect(w, r, "/user/password/request", http.StatusSeeOther)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    userName, err := app.users.GetUserName(form.Get("email"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    passwords.SendEmail(app.infoLog, app.errorLog, app.reports, userName, passwordChangeRequest)
+
+    app.session.Put(r, "flash", "Check your email for a password update link.")
+    http.Redirect(w, r, "/user/password/request", http.StatusSeeOther)
+}
+
+func (app *application) passwordChangeForm(w http.ResponseWriter, r *http.Request) {
+    token := r.URL.Query().Get("token")
+    if token == "" {
+        app.notFound(w)
+        return
+    }
+
+    found, err := app.users.PasswordChangeTokenExists(token)
+    if err == models.ErrTokenNotFound {
+        app.session.Put(r, "flash", "Token expired or did not match user email.")
+        http.Redirect(w, r, "/user/password/request", http.StatusSeeOther)
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if found == false {
+        app.notFound(w)
+        return
+    }
+
+    f := forms.New(url.Values{})
+    f.Add("changeToken", token)
+
+    app.render(w, r, "password.change.page.tmpl", &templateData{
+        Form: f,
+    })
+}
+
+func (app *application) passwordChange(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    form.Required("email", "password", "changeToken")
+    form.MatchesPattern("email", forms.EmailRX)
+    form.MinLength("password", 10)
+
+    // If there are any errors, redisplay the signup form.
+    if !form.Valid() {
+        app.render(w, r, "password.change.page.tmpl", &templateData{Form: form})
+        return
+    }
+
+    _, err = app.users.CheckPasswordChangeToken(form.Get("email"), form.Get("changeToken"))
+    if err == models.ErrTokenNotFound {
+        form.Errors.Add("generic", "Token expired or does not match invite.")
+        app.render(w, r, "password.change.page.tmpl", &templateData{Form: form})
+        return
+    } else if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    // Update password
+    _, err = app.users.UpdatePassword(form.Get("email"), form.Get("password"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    _, err = app.users.MarkPasswordChangeTokenAsUsed(form.Get("changeToken"))
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    app.session.Put(r, "flash", "Your password was changed successfully. Please log in.")
+    http.Redirect(w, r, "/user/login", http.StatusSeeOther)
 }
 
 
