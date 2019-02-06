@@ -3,23 +3,31 @@
 {{define "title"}}Login{{end}}
 
 {{define "body"}}
-<form action='/user/login' method='POST' novalidate>
-    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
-    {{with .Form}}
-        {{with .Errors.Get "generic"}}
-            <div class='bg-danger text-white'>{{.}}</div>
-        {{end}}
-        <div class="form-group">
-            <label for="email" class="text-white">Email:</label>
-            <input type='email' class="form-control bg-secondary text-white" name='email' value='{{.Get "email"}}'>
-        </div>
-        <div class="form-group">
-            <label for="password" class="text-white">Password:</label>
-            <input type='password' class="form-control bg-secondary text-white" name='password'>
-        </div>
-        <div class="form-group">
-            <input type='submit' class="btn btn-secondary" value='Login'>
-        </div>
-    {{end}}
-</form>
+<div class="row">
+    <div class="col">
+        <form action='/user/login' method='POST' novalidate>
+            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+            {{with .Form}}
+                {{with .Errors.Get "generic"}}
+                    <div class='bg-danger text-white'>{{.}}</div>
+                {{end}}
+                <div class="form-group">
+                    <label for="email" class="text-white">Email:</label>
+                    <input type='email' class="form-control bg-secondary text-white" name='email' value='{{.Get "email"}}'>
+                </div>
+                <div class="form-group">
+                    <label for="password" class="text-white">Password:</label>
+                    <input type='password' class="form-control bg-secondary text-white" name='password'>
+                </div>
+                <div class="form-group">
+                    <input type='submit' class="btn btn-secondary" value='Login'>
+                </div>
+            {{end}}
+        </form>
+    </div>
+    <div class="w-100">
+    <div class="col text-secondary">
+        Forgot your password? Click <a class="text-white" href="/user/password/request">here<a> to reset it.
+    </div>
+</div>
 {{end}}

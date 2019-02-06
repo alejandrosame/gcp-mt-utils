@@ -70,13 +70,23 @@ func (app *application) routes() http.Handler {
     mux.Post("/user/signup/invitation/generate", adminMiddleware.ThenFunc(app.generateInvitationLink))
 
 
+    // Info routes
+    mux.Get("/about", dynamicMiddleware.ThenFunc(app.aboutPage))
+
     // User session routes
     mux.Get("/user/signup", dynamicMiddleware.ThenFunc(app.signupUserForm))
     mux.Post("/user/signup", dynamicMiddleware.ThenFunc(app.signupUser))
     mux.Get("/user/login", dynamicMiddleware.ThenFunc(app.loginUserForm))
     mux.Post("/user/login", dynamicMiddleware.ThenFunc(app.loginUser))
-    mux.Get("/about", dynamicMiddleware.ThenFunc(app.aboutPage))
     mux.Post("/user/logout", dynamicMiddleware.Append(app.requireAuthenticatedUser).ThenFunc(app.logoutUser))
+
+    // User change routes
+    mux.Get("/user/password/change", dynamicMiddleware.ThenFunc(app.passwordChangeForm))
+    mux.Post("/user/password/change", dynamicMiddleware.ThenFunc(app.passwordChange))
+    mux.Get("/user/password/request", dynamicMiddleware.ThenFunc(app.requestPasswordChangeForm))
+    mux.Post("/user/password/request", dynamicMiddleware.ThenFunc(app.requestPasswordChange))
+
+
 
     // TODO: Change template file location to use absolute path based on the current file location
     fileServer := http.FileServer(http.Dir("./ui/static/"))
