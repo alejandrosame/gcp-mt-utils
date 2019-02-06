@@ -190,8 +190,16 @@
                 var element = document.getElementById('source-text');
                 if (typeof(element) != 'undefined' && element != null)
                 {
-                    window.addEventListener('paste', systemPasteListener);
-                    document.getElementById('source-text').addEventListener('keydown', keyBoardListener);
+                    $('#source-text').bind({
+                        paste : function(e){
+                            e.stopPropagation();
+                            e.preventDefault();
+
+                            var cd = e.originalEvent.clipboardData;
+
+                            $('#source-text').html(formatTextWithDiv(cd.getData("text/plain")));
+                        }
+                    });
                 }
 
                 // Reload only on translate UI
@@ -434,46 +442,6 @@
                 var url = "/translate/export?source=" + encodeURIComponent(sourceText) + "&target=" + encodeURIComponent(targetText);
 
                 window.open(url, "_blank");
-            }
-
-            function keyBoardListener(evt) {
-                if (evt.ctrlKey) {
-                    switch(evt.keyCode) {
-                        case 86: // v
-                            paste(evt.target);
-                            break;
-                    }
-                }
-            }
-
-            function paste(target) {
-                systemPasteReady = false;
-                function waitForPaste() {
-                    if (!systemPasteReady) {
-                        setTimeout(waitForPaste, 50);
-                        return;
-                    }
-
-                    target.innerHTML = formatTextWithDiv(systemPasteContent);
-                    systemPasteReady = false;
-                    document.body.removeChild(textArea);
-                    textArea = null;
-                }
-
-                // FireFox requires at least one editable
-                // element on the screen for the paste event to fire
-                textArea = document.createElement('textarea');
-                textArea.setAttribute('style', 'width:1px;border:0;opacity:0;');
-
-                document.body.appendChild(textArea);
-                textArea.select();
-                waitForPaste();
-            }
-
-            function systemPasteListener(evt) {
-                systemPasteContent = evt.clipboardData.getData('text/plain');
-                systemPasteReady = true;
-                evt.preventDefault();
             }
         </script>
     </body>
