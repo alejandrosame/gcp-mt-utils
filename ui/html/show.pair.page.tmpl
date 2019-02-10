@@ -189,6 +189,15 @@
                 </div>
             </div>
             {{end}}
+            {{with .NextChapter}}
+                <div class="row mt-1">
+                    <div class="col">
+                        <a class="btn btn-outline-light btn-sm btn-block"
+                           href="/pair/book/{{.ID}}/chapter/{{.Chapter}}"
+                        >Go to next chapter</a>
+                    </div>
+                </div>
+            {{end}}
         {{else}}
             <div class="row text-white">
                 <p>There's nothing to see here... yet!</p>

@@ -27,6 +27,7 @@ type templateData struct {
     Pair              *models.Pair
     Pairs             []*models.Pair
     Book              *models.BibleBook
+    NextChapter       *models.BibleBook
     Books             []*models.BibleBook
     Models            []*automl.Model
     TrainReport       *automl.TrainOperationReport
