@@ -64,10 +64,29 @@ func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+
     chapterId, err := strconv.Atoi(r.URL.Query().Get(":chapterid"))
     if err != nil || chapterId < 1 || chapterId > b.Chapter {
         app.notFound(w)
         return
+    }
+
+    // Get next chapter info before rendering the page
+    c := &models.BibleBook{}
+    if chapterId < b.Chapter {
+        c.ID = b.ID
+        c.Chapter = chapterId + 1
+    } else {
+        _, err = app.pairs.GetBook(bookId+1)
+        if err == models.ErrNoRecord {
+            c = nil
+        } else if err == nil {
+            c.ID = bookId + 1
+            c.Chapter = 1
+        } else {
+            app.serverError(w, err)
+            return
+        }
     }
 
     b.Chapter = chapterId
@@ -90,7 +109,7 @@ func (app *application) showPairs(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, ValidationStats: stats, Book: b})
+    app.render(w, r, "show.pair.page.tmpl", &templateData{Pairs: p, ValidationStats: stats, Book: b, NextChapter: c})
 }
 
 
