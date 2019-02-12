@@ -12,9 +12,24 @@
 
 .navbar-toggler{  background:#fff !important;}
 
+
 .first-container{
-    padding-top: 80px;
     flex-grow: 100;
+    padding-top: 84px;
+}
+
+@media (max-width: 880px) {
+    .first-container{
+        flex-grow: 100;
+        padding-top: 150px;
+    }
+}
+
+@media (max-width: 702px) {
+    .first-container{
+        flex-grow: 100;
+        padding-top: 200px;
+    }
 }
 
 .translation-text {
