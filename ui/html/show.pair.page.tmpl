@@ -20,6 +20,14 @@
             </div>
 
             <div class="row">
+                {{with .NextChapter}}
+                <div class="col">
+                    <a class="btn btn-outline-light btn-sm btn-block"
+                       href="/pair/book/{{.ID}}/chapter/{{.Chapter}}"
+                    >Go to next chapter</a>
+                </div>
+                <div class="w-100"></div>
+                {{end}}
                 <div class="col mt-1">
                     <a class="btn btn-outline-light btn-sm btn-block" role="button"
                        href='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/export'>
@@ -33,7 +41,7 @@
                         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                         <input type='hidden' name='idList' value=''>
                         <button type='submit' class="btn btn-danger btn-sm btn-block"
-                            onclick="return confirm('Are you sure that you DO want to UNVALIDATE all selected pairs?')?submitUnvalidateSelected():false"
+                            onclick="return confirm('Are you sure that you DO want to UNVALIDATE all selected pairs?')?submitUnvalidateSelected(this.form):false"
                         >Unvalidate selected pairs</button>
                     </form>
                 </div>
@@ -43,7 +51,7 @@
                         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                         <input type='hidden' name='idList' value=''>
                         <button class="btn btn-success btn-sm btn-block"
-                               onclick="return confirm('Are you sure that you DO want to VALIDATE all selected pairs?')?submitValidateSelected():false"
+                               onclick="return confirm('Are you sure that you DO want to VALIDATE all selected pairs?')?submitValidateSelected(this.form):false"
                         >Validate selected pairs</button>
                     </form>
                 </div>
@@ -189,15 +197,40 @@
                 </div>
             </div>
             {{end}}
-            {{with .NextChapter}}
-                <div class="row mt-1">
-                    <div class="col">
-                        <a class="btn btn-outline-light btn-sm btn-block"
-                           href="/pair/book/{{.ID}}/chapter/{{.Chapter}}"
-                        >Go to next chapter</a>
-                    </div>
+            <div class="row mt-1">
+                <div class="col text-white">
+                    <label><input onClick="selectAllValidation(this)" type="checkbox"> Select/Unselect all pairs</label>
                 </div>
-            {{end}}
+                <div class="w-100"></div>
+                <div class="col mt-1">
+                    <form name="unvalidateSelectedForm"
+                           action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/unvalidate' method='POST'>
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <input type='hidden' name='idList' value=''>
+                        <button type='submit' class="btn btn-danger btn-sm btn-block"
+                            onclick="return confirm('Are you sure that you DO want to UNVALIDATE all selected pairs?')?submitUnvalidateSelected(this.form):false"
+                        >Unvalidate selected pairs</button>
+                    </form>
+                </div>
+                <div class="col mt-1">
+                    <form name="validateSelectedForm"
+                           action='/pairs/book/{{.Book.ID}}/chapter/{{.Book.Chapter}}/validate' method='POST'>
+                        <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+                        <input type='hidden' name='idList' value=''>
+                        <button class="btn btn-success btn-sm btn-block"
+                               onclick="return confirm('Are you sure that you DO want to VALIDATE all selected pairs?')?submitValidateSelected(this.form):false"
+                        >Validate selected pairs</button>
+                    </form>
+                </div>
+                <div class="w-100"></div>
+                {{with .NextChapter}}
+                <div class="col">
+                    <a class="btn btn-outline-light btn-sm btn-block"
+                       href="/pair/book/{{.ID}}/chapter/{{.Chapter}}"
+                    >Go to next chapter</a>
+                </div>
+                {{end}}
+            </div>
         {{else}}
             <div class="row text-white">
                 <p>There's nothing to see here... yet!</p>

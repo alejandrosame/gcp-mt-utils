@@ -272,14 +272,14 @@
                 return ids.replace(/,$/g, '');
             }
 
-            function submitUnvalidateSelected() {
-                document.unvalidateSelectedForm.idList.value = getPairIdsToValidate()
-                document.unvalidateSelectedForm.submit();
+            function submitUnvalidateSelected(form) {
+                form.idList.value = getPairIdsToValidate()
+                form.submit();
             }
 
-            function submitValidateSelected() {
-                document.validateSelectedForm.idList.value = getPairIdsToValidate()
-                document.validateSelectedForm.submit();
+            function submitValidateSelected(form) {
+                form.idList.value = getPairIdsToValidate()
+                form.submit();
             }
 
             function sleep(milliseconds) {
