@@ -6,10 +6,6 @@
 
 .nav-link:hover{ background: #f4f4f4; color: #f97300; }
 
-.navbar-collapse{ justify-content: flex-end;}
-
-.navbar-end{ justify-content: flex-end;}
-
 .navbar-toggler{  background:#fff !important;}
 
 
