@@ -56,8 +56,8 @@ class Grid {
         // Total items.
         this.itemsTotal = this.DOM.items.length;
         // Spread the grid items.
-        //this.spread();
-		//window.addEventListener('resize', () => this.spread());
+        this.spread();
+		window.addEventListener('resize', () => this.spread());
     }
     spread() {
         // Randomly spread the grid items.
@@ -238,10 +238,8 @@ class NavController {
         // The Menu items instances.
         this.menuItems = [];
         Array.from(this.DOM.menu.querySelectorAll('.menu__item')).forEach((item) => this.menuItems.push(new MenuItem(item)));
-        // The page element (the grids and contents parent)
-        this.DOM.page = document.querySelector('.page');
         // The grid´s wrap.
-        this.DOM.gridWrap = this.DOM.page.querySelector('.gridwrap');
+        this.DOM.gridWrap = document.querySelector('.gridwrap');
         // The grid instances.
         this.grids = [];
         Array.from(this.DOM.gridWrap.querySelectorAll('.grid')).forEach((grid) => this.grids.push(new Grid(grid)));
