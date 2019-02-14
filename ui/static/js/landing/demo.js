@@ -56,7 +56,7 @@ class Grid {
         // Total items.
         this.itemsTotal = this.DOM.items.length;
         // Spread the grid items.
-        this.spread();
+        //this.spread();
 		//window.addEventListener('resize', () => this.spread());
     }
     spread() {
@@ -182,34 +182,6 @@ class Grid {
             });
         });
     }
-    open() {
-        return new Promise((resolve, reject) => {
-            this.DOM.el.classList.add('grid--open');
-
-            TweenMax.to(this.DOM.items, 1, {
-                ease: Expo.easeInOut,
-                x: 0,
-                y: 0,
-				scale: 1.01,
-                onComplete: resolve
-            });
-        });
-    }
-    close() {
-        return new Promise((resolve, reject) => {
-            this.DOM.el.classList.remove('grid--open');
-
-            this.DOM.items.forEach((item) => {
-                TweenMax.to(item, 1, {
-                    ease: Expo.easeInOut,
-                    x: item.dataset.ctx,
-                    y: item.dataset.cty,
-                    scale: 0.5,
-                    onComplete: resolve
-                });
-            });
-        });
-    }
 }
 
 class MenuItem {
@@ -270,8 +242,6 @@ class NavController {
         this.DOM.page = document.querySelector('.page');
         // The grid´s wrap.
         this.DOM.gridWrap = this.DOM.page.querySelector('.gridwrap');
-        // The back ctrl. For closing the grid/content view and go back to the main page.
-        this.DOM.backCtrl = this.DOM.page.querySelector('button.gridback');
         // The grid instances.
         this.grids = [];
         Array.from(this.DOM.gridWrap.querySelectorAll('.grid')).forEach((grid) => this.grids.push(new Grid(grid)));
@@ -296,8 +266,6 @@ class NavController {
         for (const [pos, item] of this.menuItems.entries()) {
             // Clicking on the menu item text will trigger the navigation: the current grid items move away and the new ones come in.
             item.DOM.textwrap.addEventListener('click', () => this.navigate(pos));
-            // Clicking the view all will show the grid.
-            //item.DOM.link.addEventListener('click', () => this.showContent(pos));
         }
     }
     navigate(pos) {
@@ -316,27 +284,6 @@ class NavController {
         this.grids[this.current].showItems(direction).then(() => {
             this.isAnimating = false;
             allowTilt = true;
-        });
-    }
-    showContent(pos) {
-        if ( this.isAnimating || this.grids[this.current].DOM.el.classList.contains('grid--open') ) return;
-		this.isAnimating = true;
-		// Disable the mousemove functionality.
-        allowTilt = false;
-        // Disable the menu.
-        this.DOM.menu.classList.add('menu--closed');
-        // Show the grid.
-        this.grids[this.current].open().then(() => this.isAnimating = false);
-        // Hide the menu items.
-        for (const item of this.menuItems) {
-            item.hide();
-        }
-        // Allow scroll.
-        this.DOM.page.classList.remove('page--preview');
-        // Show back ctrl.
-        TweenMax.to(this.DOM.backCtrl, 1, {
-            ease: Expo.easeInOut,
-            opacity: 1
         });
     }
 }
