@@ -68,6 +68,10 @@ class Grid {
             item.dataset.maxTy = randnum;
 
             const rect = item.getBoundingClientRect();
+            item.dataset.ctx = rect.left;
+            item.dataset.cty = rect.top;
+
+            /*
             // Item´s center point.
             const center = {x: rect.left+rect.width/2, y: rect.top+rect.height/2};
             // Calculate the item´s quadrant in the viewport.
@@ -95,6 +99,7 @@ class Grid {
                 y: ty,
                 scale: 0.5
             });
+            */
         });
     }
     tilt(ev) {
