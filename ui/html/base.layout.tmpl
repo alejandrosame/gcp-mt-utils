@@ -243,17 +243,17 @@
                 return ids.replace(/,$/g, '');
             }
 
-            function submitExportPairForm() {
-                document.exportPairForm.idList.value = getPairIdsToExport()
-                document.exportPairForm.action="/pairs/export";
+            function submitExportPairForm(book, chapter) {
+                document.exportPairForm.idList.value = getPairIdsToExport();
+                document.exportPairForm.action="/pairs/book/"+book+"/chapter/"+chapter+"/export";
                 document.exportPairForm.submit();
-                window.location = "/pair";
+                window.location = "/pair/book/"+book+"/chapter/"+chapter;
             }
 
-            function submitExportTranslation() {
-                document.exportPairForm.idList.value = getPairIdsToExport()
-                document.exportPairForm.action="/pairs/export";
-                document.exportPairForm.submit();
+            function submitExportAllPairForm() {
+                document.exportAllPairForm.idList.value = getPairIdsToExport();
+                document.exportAllPairForm.action="/pairs/export";
+                document.exportAllPairForm.submit();
                 window.location = "/pair";
             }
 

@@ -1,12 +1,12 @@
 {{template "base" .}}
 
-{{define "title"}}Select validated pairs to export - Book {{.Book.Name}} - Chapter {{.Book.Chapter}} {{end}}
+{{define "title"}}Select validated pairs to export{{end}}
 
 {{define "body"}}
 <div>
     {{if .Pairs}}
         <div class="row mt-2 justify-content-center">
-            <h2>Export validated pairs for {{.Book.Name}} - Chapter {{.Book.Chapter}}</h2>
+            <h2>Export validated pairs</h2>
         </div>
 
         <div class="row mt-2 text-white">
@@ -18,11 +18,9 @@
                     <div class='bg-danger text-white'>No pairs selected</div>
                 {{end}}
 
-                <form name="exportPairForm" action='' method='POST' target='_blank' novalidate>
+                <form name="exportAllPairForm" action='' method='POST' target='_blank' novalidate>
                     <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <input type='hidden' name='idList' value=''>
-                    <input type='hidden' name='book' value='{{.Book.ID}}'>
-                    <input type='hidden' name='chapter' value='{{.Book.Chapter}}'>
                     {{with .Form}}
                         <div class="form-group">
                             <label for="name" class="text-white">Dataset name: </label>
@@ -33,7 +31,7 @@
                         </div>
                         <div class="form-group">
                             <input type='submit' class="btn btn-secondary" value='Export selected'
-                                onclick="return confirm('Are you sure that you DO want to export the selected pairs?')?submitExportPairForm({{$.Book.ID}}, {{$.Book.Chapter}}):false">
+                                onclick="return confirm('Are you sure that you DO want to export the selected pairs?')?submitExportAllPairForm():false">
                         </div>
                     {{end}}
                 </form>
