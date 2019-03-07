@@ -778,9 +778,30 @@ func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
         return
     }
 
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    m, err := automl.GetModelsByLanguage(app.infoLog, app.errorLog, projectId, targetLanguage)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
     app.render(w, r, "translate.page.tmpl",
                &templateData{Form: forms.New(nil),
-                             UserLimit: limit})
+                             UserLimit: limit,
+                             Models: m,
+                             })
 }
 
 func (app *application) translationLimitIsReached(user *models.User, text string) (string, int, error) {
@@ -810,7 +831,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     }
 
     form := forms.New(r.PostForm)
-    form.Required("docTitle", "sourceText")
+    form.Required("docTitle", "sourceText", "model")
 
     if !form.Valid() {
         app.clientErrorDetailed(w, 400, form.Errors.ToString())
@@ -821,6 +842,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     targetLanguage := app.session.GetString(r, "targetLanguage")
     sourceText := form.Get("sourceText")
     title := form.Get("docTitle")
+    modelName := form.Get("model")
 
     check, charactersUsed, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
     if err != nil {
@@ -841,14 +863,18 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     }
     defer file.Close()
 
-    scanner := bufio.NewScanner(file)
-    scanner.Scan()
-    modelName := scanner.Text()
+    var targetText string
 
-    //targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, modelName, sourceText)
-    targetText, err := automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
-                                                   app.authenticatedUser(r),
-                                                   modelName, sourceLanguage, targetLanguage, sourceText, title)
+    if modelName == "nmt" {
+        targetText, err = automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                                      app.authenticatedUser(r),
+                                                      modelName, sourceLanguage, targetLanguage, sourceText, title)
+    } else {
+        targetText, err = automl.TranslateRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                                  app.authenticatedUser(r),
+                                                  modelName, sourceLanguage, targetLanguage, sourceText, title)
+    }
+
     if err != nil {
         app.serverError(w, err)
         return
@@ -864,44 +890,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     json.NewEncoder(w).Encode(reply)
 }
 
-/*
-func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
-    sourceText, ok := r.URL.Query()["source"]
-    if !ok {
-        app.notFound(w)
-        return
-    }
 
-    targetText, ok := r.URL.Query()["target"]
-    if !ok {
-        app.notFound(w)
-        return
-    }
-
-    sourceLanguage := app.session.GetString(r, "sourceLanguage")
-    targetLanguage := app.session.GetString(r, "targetLanguage")
-
-    timeRequest := time.Now().Format("20060102150405")
-
-    tmpFileSource := fmt.Sprintf("./tmp/translation_%s_%s.docx", sourceLanguage, timeRequest)
-    tmpFileTarget := fmt.Sprintf("./tmp/translation_%s_%s.docx", targetLanguage, timeRequest)
-
-    zipName := fmt.Sprintf("translation_%s-%s_%s.zip",
-                           sourceLanguage, targetLanguage, timeRequest)
-    tmpZipFile := fmt.Sprintf("./tmp/%s", zipName)
-
-    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText[0])
-    _ = files.WriteTranslationToDocx(tmpFileTarget, targetText[0])
-
-    fileList := []string{tmpFileSource, tmpFileTarget}
-    err := files.ArchiveFiles(tmpZipFile, fileList)
-    if err != nil {
-        app.serverError(w, err)
-    }
-
-    app.downloadFile(w, r, "zip", tmpZipFile, zipName, files.GetFileSize(tmpZipFile))
-}
-*/
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
     sourceText, ok := r.URL.Query()["source"]
     if !ok {

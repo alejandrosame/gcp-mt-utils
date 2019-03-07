@@ -42,6 +42,7 @@
     <form id="translate-form" action='/translate' method='POST' class="invisible">
         <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
         <input id="doc-title-form" type='hidden' name='docTitle'>
+        <input id="model-form" type='hidden' name='model'>
         <textarea id="source-text-form" type='hidden' name='sourceText' ></textarea>
     </form>
 
@@ -49,6 +50,19 @@
         <label for="doc-title" class='text-white'>Document title:</label>
             <label id="doc-title-error-label" for="doc-title" class='bg-danger text-white invisible'>This field cannot be empty</label>
         <input id='doc-title' class="form-control form-control-lg bg-secondary text-white" type="text" name='doc-title'/>
+    </div>
+    <div class="w-100"></div>
+    <div class="col">
+        <label for="model" class='text-white'>Translation model:</label>
+            <label id="model-error-label" for="model" class='bg-danger text-white invisible'>This field cannot be empty</label>
+        <select id='model' class="form-control form-control-lg bg-secondary text-white" name='model'>
+            <option value="nmt" selected>Default Google</option>
+            {{if .Models}}
+                {{range .Models}}
+                <option value="{{.Name}}">{{.DisplayName}}</option>
+                {{end}}
+            {{end}}
+        </select>
     </div>
     <div class="w-100"></div>
     <div class="col d-flex align-items-stretch">
