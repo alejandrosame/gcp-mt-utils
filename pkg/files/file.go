@@ -189,7 +189,15 @@ func WriteDataset(tmp_file string, pairs []*models.Pair) string{
     defer file.Close()
 
     for _, pair := range pairs {
-        _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", pair.SourceText, pair.TargetText))
+        cleanSourceText := strings.Replace(strings.Replace(strings.Replace(strings.TrimSpace(pair.SourceText),
+                                                                           "\t", " ", -1),
+                                                           "\r\n", " ", -1),
+                                           "\n", " ", -1)
+        cleanTargetText := strings.Replace(strings.Replace(strings.Replace(strings.TrimSpace(pair.TargetText),
+                                                                            "\t", " ", -1),
+                                                           "\r\n", " ", -1),
+                                           "\n", " ", -1)
+        _, err := file.WriteString(fmt.Sprintf("%s\t%s\n", cleanSourceText, cleanTargetText))
         if err != nil {
             log.Fatal(err)
         }

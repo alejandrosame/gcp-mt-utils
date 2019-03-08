@@ -384,6 +384,7 @@
             function translate() {
 
                 var docTitle = document.getElementById('doc-title').value.trim();
+                var model = document.getElementById('model').value;
 
                 if(docTitle == ""){
                     document.getElementById('doc-title-error-label').classList.remove("invisible");
@@ -399,7 +400,7 @@
                     var totalReply = "";
                     var currentText = "";
 
-                    asyncTranslate(docTitle, reconstructText(sourceText), paragraphLimit, 0, totalReply)
+                    asyncTranslate(docTitle, model, reconstructText(sourceText), paragraphLimit, 0, totalReply)
                 }
 
             }
@@ -411,11 +412,12 @@
                 translatingStatusFinished(errorCode, charactersUsed);
             }
 
-            function asyncTranslate(docTitle, sourceText, paragraphLimit, pos, totalReply) {
+            function asyncTranslate(docTitle, model, sourceText, paragraphLimit, pos, totalReply) {
 
                 if (sourceText != "") {
 
                     $( "#doc-title-form" ).val(docTitle);
+                    $( "#model-form" ).val(model);
                     $( "#source-text-form" ).val(sourceText);
 
                     var url = "/translate"

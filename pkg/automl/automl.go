@@ -205,53 +205,88 @@ func ListModelsRequest(infoLog, errorLog *log.Logger, projectId string) ([]*Mode
     return t.ModelList, nil
 }
 
+func GetModelsByLanguage(infoLog, errorLog *log.Logger, projectId, languageCode string) ([]*Model, error) {
+    models := []*Model{}
 
-func TranslateRequest(infoLog, errorLog *log.Logger, modelName, sourceText string) (string, error) {
+    translationModels, err := ListModelsRequest(infoLog, errorLog, projectId)
+    if err != nil {
+        return models, err
+    }
+
+    for _, m := range translationModels {
+        if strings.ToLower(m.TranslationModelMetadata.TargetLanguageCode) == strings.ToLower(languageCode) {
+            models = append(models, m)
+        }
+    }
+
+    return models, nil
+}
+
+func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
+                      userModel *mysql.UserModel, user *models.User,
+                      modelName, source, target, sourceText, title string) (string, error) {
+    infoLog.Println("Starting translation")
+
+    timeRequest := time.Now()
+    characterCount := 0
     defaultValue := ""
 
-    url := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:predict", modelName)
+    urlQuery := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:predict", modelName)
 
-    client, err := GetClient()
+    totalText, err := url.QueryUnescape(sourceText)
     if err != nil {
         return defaultValue, err
     }
 
-    jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": '%s'}}}`, sourceText))
-    req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-
-    // Debug request
-    dump, err := httputil.DumpRequestOut(req, true)
+    lines, err := StringToLines(totalText)
     if err != nil {
         return defaultValue, err
     }
 
-    infoLog.Printf("%s", dump)
-    
-    response, err := client.Do(req)
-    if err != nil {
-        return defaultValue, err
-    }
-    defer response.Body.Close()
+    var translatedText string = ""
+    for _, paragraph := range lines {
+        if paragraph == "" {
+            translatedText += "\n"
+        }else {
+            characterCount += len([]rune(paragraph))
+            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": '%s'}}}`, sourceText))
 
-    // Debug response    
-    dump, err = httputil.DumpResponse(response, true)
-    if err != nil {
-        return defaultValue, err
-    }
-    infoLog.Printf("%s", dump)
+            var totalTries = 18
+            body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
+            if err != nil {
+                return defaultValue, err
+            }
 
-    body, err := ioutil.ReadAll(response.Body)
-    if err != nil {
-        return defaultValue, err
+            translations := gjson.GetBytes(body, "payload")
+            translations.ForEach(func(key, translation gjson.Result) bool {
+                // If it's a train model operation
+                if translation.Get("translation").Exists(){
+
+                    //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
+                    partialTranslatedText := translation.Get("translation.translatedContent.content").String()
+
+                    translatedText += partialTranslatedText + "\n"
+                }
+                return true // continue iterating
+            })
+        }
     }
 
-    t := new(TranslationAPIResponse)
-    err = json.Unmarshal(body, &t)
-    if(err != nil){
-        return defaultValue, err
-    }
+    infoLog.Println("Replying with translation")
 
-    return t.PayloadList[0].Translation.TranslatedContent.Content, nil
+    // Prepare file to send report
+    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
+    tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
+    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
+
+    _, err = userModel.UpdateUserCharactersConsumed(user.ID, characterCount)
+    if err!= nil {
+        return "", err
+    }
+    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
+
+    // Once report is sent, return feedback to user
+    return translatedText, nil
 }
 
 func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response) ([]byte, error) {
