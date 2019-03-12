@@ -237,6 +237,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
     if err != nil {
         return defaultValue, err
     }
+    totalText = strings.Replace(totalText, "\"","\\\"", -1)
 
     lines, err := StringToLines(totalText)
     if err != nil {
@@ -249,7 +250,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
             translatedText += "\n"
         }else {
             characterCount += len([]rune(paragraph))
-            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": '%s'}}}`, paragraph))
+            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, paragraph))
 
             var totalTries = 18
             body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
@@ -265,7 +266,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                     //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
                     partialTranslatedText := translation.Get("translation.translatedContent.content").String()
 
-                    translatedText += partialTranslatedText + "\n"
+                    translatedText += strings.Replace(partialTranslatedText,"\\\"","\"", -1) + "\n"
                 }
                 return true // continue iterating
             })
@@ -289,7 +290,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
     return translatedText, nil
 }
 
-func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response) ([]byte, error) {
+func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response, requestDump []byte) ([]byte, error) {
     defer response.Body.Close()
 
     statusCode := response.StatusCode
@@ -311,6 +312,7 @@ func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Respons
     }
 
     dump, _ := httputil.DumpResponse(response, true)
+    errorLog.Printf("%s", requestDump)
     errorLog.Printf("%s", dump)
     return nil, err
 }
@@ -326,13 +328,14 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
 
     for currentTry := 0; currentTry < totalTries; currentTry++ {
         req, err := http.NewRequest("POST", urlQuery, bytes.NewBuffer(jsonStr))
+        dump, _ := httputil.DumpRequestOut(req, true)
 
         response, err := client.Do(req)
         if err != nil {
             return nil, err
         }
 
-        body, err = CheckTranslationReply(infoLog, errorLog, response)
+        body, err = CheckTranslationReply(infoLog, errorLog, response, dump)
         if err == nil { break }
 
         infoLog.Println(fmt.Sprintf("Try translation again: %d", currentTry))
@@ -366,6 +369,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, report
     if err != nil {
         return defaultValue, err
     }
+    totalText = strings.Replace(totalText, "\"","\\\"", -1)
 
     lines, err := StringToLines(totalText)
     if err != nil {
@@ -394,7 +398,7 @@ func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, report
                     //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
                     partialTranslatedText := translation.Get("translatedText").String()
 
-                    translatedText += partialTranslatedText + "\n"
+                    translatedText += strings.Replace(partialTranslatedText,"\\\"","\"", -1) + "\n"
                 }
                 return true // continue iterating
             })
