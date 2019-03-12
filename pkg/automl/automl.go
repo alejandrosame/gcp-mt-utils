@@ -249,7 +249,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
             translatedText += "\n"
         }else {
             characterCount += len([]rune(paragraph))
-            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": '%s'}}}`, sourceText))
+            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": '%s'}}}`, paragraph))
 
             var totalTries = 18
             body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
@@ -310,6 +310,8 @@ func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Respons
         err = errors.New("automl: Undefined Google API Error")
     }
 
+    dump, _ := httputil.DumpResponse(response, true)
+    errorLog.Printf("%s", dump)
     return nil, err
 }
 
