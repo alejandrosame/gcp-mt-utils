@@ -168,6 +168,78 @@ func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) 
     return GetFileSize(tmp_file)
 }
 
+/*
+func CheckDocx(input_tmp_file string) string{
+    doc, err := document.Open(input_tmp_file)
+    if err != nil {
+        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
+    }
+
+    doc.SaveToFile(output_tmp_file)
+
+    doc, err := document.Open(output_tmp_file)
+    if err != nil {
+        return fmt.Sprintf("ERROR OPENING FILE AFTER SAVE: %v", err)
+    }
+
+    return ""
+}
+*/
+
+
+func ExtractTextToTranslateDocx(input_tmp_file string) (*[][]string, int, error) {
+
+    var text [][]string
+    characterCount := 0
+
+    doc, err := document.Open(input_tmp_file)
+    if err != nil {
+        return nil, 0, err
+    }
+
+    for _, p := range doc.Paragraphs() {
+        var paragraph []string
+        for _, r := range p.Runs() {
+            text := r.Text()
+            characterCount = characterCount + len([]rune(strings.Replace(text, "\n", "", -1)))
+            paragraph = append(paragraph, text)
+        }
+
+        text = append(text, paragraph)
+    }
+
+    return &text, characterCount, nil
+}
+
+
+func WriteTranslatedTextToDocx(translation *[][]string, input_tmp_file, output_tmp_file string) string {
+
+    doc, err := document.Open(input_tmp_file)
+    if err != nil {
+        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
+    }
+
+    counterP := 1
+    for _, p := range doc.Paragraphs() {
+        counterR := 1
+        for _, r := range p.Runs() {
+            text := r.Text()
+
+            if text != "" {
+                r.ClearContent()
+                r.AddText((*translation)[counterP-1][counterR-1])
+            }
+            counterR = counterR + 1
+        }
+
+        counterP = counterP + 1
+    }
+
+    doc.SaveToFile(output_tmp_file)
+
+    return GetFileSize(output_tmp_file)
+}
+
 
 func GetFileSize(fileName string) string {
     file, err := os.Open(fileName)

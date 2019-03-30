@@ -3,3 +3,5 @@ tls/*
 tmp/*
 ui/old/*
 *tooltip*
+.~lock
+pkg/files/testdata/test_doc_out.docx

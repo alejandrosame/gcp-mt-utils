@@ -37,3 +37,16 @@ func TestReadPairsFromXlsx(t *testing.T) {
 
     testhelper.Equals(t, expectedPairs, file.Pairs)
 }
+
+
+func TestReadAndWriteTranslatedDocx(t *testing.T) {
+
+    text, characterCount, err := files.ExtractTextToTranslateDocx("./testdata/test_doc.docx")
+
+    testhelper.Ok(t, err)
+    testhelper.Equals(t, 12490, characterCount)
+
+    filesize := files.WriteTranslatedTextToDocx(text, "./testdata/test_doc.docx", "./testdata/test_doc_out.docx")
+
+    testhelper.Equals(t, "16183", filesize)
+}
