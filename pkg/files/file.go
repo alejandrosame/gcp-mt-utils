@@ -23,6 +23,11 @@ type TranslationPairFile struct {
     Pairs           []models.FilePair
 }
 
+type TextStruct struct {
+    Paragraphs      [][]string
+    CharacterCount  int
+}
+
 
 func (tpf *TranslationPairFile) Valid() bool {
     return len(tpf.Errors) == 0
@@ -168,51 +173,31 @@ func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) 
     return GetFileSize(tmp_file)
 }
 
-/*
-func CheckDocx(input_tmp_file string) string{
-    doc, err := document.Open(input_tmp_file)
-    if err != nil {
-        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
-    }
 
-    doc.SaveToFile(output_tmp_file)
-
-    doc, err := document.Open(output_tmp_file)
-    if err != nil {
-        return fmt.Sprintf("ERROR OPENING FILE AFTER SAVE: %v", err)
-    }
-
-    return ""
-}
-*/
-
-
-func ExtractTextToTranslateDocx(input_tmp_file string) (*[][]string, int, error) {
-
-    var text [][]string
-    characterCount := 0
+func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
+    text := TextStruct{}
 
     doc, err := document.Open(input_tmp_file)
     if err != nil {
-        return nil, 0, err
+        return nil, err
     }
 
     for _, p := range doc.Paragraphs() {
         var paragraph []string
         for _, r := range p.Runs() {
-            text := r.Text()
-            characterCount = characterCount + len([]rune(strings.Replace(text, "\n", "", -1)))
-            paragraph = append(paragraph, text)
+            currentText := r.Text()
+            text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(currentText, "\n", "", -1)))
+            paragraph = append(paragraph, currentText)
         }
 
-        text = append(text, paragraph)
+        text.Paragraphs = append(text.Paragraphs, paragraph)
     }
 
-    return &text, characterCount, nil
+    return &text, nil
 }
 
 
-func WriteTranslatedTextToDocx(translation *[][]string, input_tmp_file, output_tmp_file string) string {
+func WriteTranslatedTextToDocx(translation *TextStruct, input_tmp_file, output_tmp_file string) string {
 
     doc, err := document.Open(input_tmp_file)
     if err != nil {
@@ -227,7 +212,7 @@ func WriteTranslatedTextToDocx(translation *[][]string, input_tmp_file, output_t
 
             if text != "" {
                 r.ClearContent()
-                r.AddText((*translation)[counterP-1][counterR-1])
+                r.AddText(translation.Paragraphs[counterP-1][counterR-1])
             }
             counterR = counterR + 1
         }
@@ -238,6 +223,46 @@ func WriteTranslatedTextToDocx(translation *[][]string, input_tmp_file, output_t
     doc.SaveToFile(output_tmp_file)
 
     return GetFileSize(output_tmp_file)
+}
+
+func StringToLines(s string) (lines []string, err error) {
+    scanner := bufio.NewScanner(strings.NewReader(s))
+    for scanner.Scan() {
+        lines = append(lines, scanner.Text())
+    }
+    err = scanner.Err()
+    return
+}
+
+
+func ConvertPlainTextToTextStruct(plainText string) *TextStruct {
+    text := TextStruct{}
+
+    lines, err := StringToLines(plainText)
+    if err != nil {
+        return &text
+    }
+
+    for _, l := range lines {
+        text.Paragraphs = append(text.Paragraphs, []string{l})
+        text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(l, "\n", "", -1)))
+    }
+
+    return &text
+}
+
+
+func ConvertTextStructToPlainText(text *TextStruct) *string {
+    totalText := ""
+    for _, p := range text.Paragraphs {
+        runText := ""
+        for _, r := range p {
+            runText = runText + r
+        }
+        totalText = totalText + runText + "\n"
+    }
+
+    return &totalText
 }
 
 
