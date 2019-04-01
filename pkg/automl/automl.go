@@ -1,7 +1,6 @@
 package automl
 
 import (
-    "bufio"
     "bytes"
     "encoding/json"
     "errors"
@@ -222,73 +221,6 @@ func GetModelsByLanguage(infoLog, errorLog *log.Logger, projectId, languageCode 
     return models, nil
 }
 
-func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
-                      userModel *mysql.UserModel, user *models.User,
-                      modelName, source, target, sourceText, title string) (string, error) {
-    infoLog.Println("Starting translation")
-
-    timeRequest := time.Now()
-    characterCount := 0
-    defaultValue := ""
-
-    urlQuery := fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:predict", modelName)
-
-    totalText, err := url.QueryUnescape(sourceText)
-    if err != nil {
-        return defaultValue, err
-    }
-    totalText = strings.Replace(totalText, "\"","\\\"", -1)
-
-    lines, err := StringToLines(totalText)
-    if err != nil {
-        return defaultValue, err
-    }
-
-    var translatedText string = ""
-    for _, paragraph := range lines {
-        if paragraph == "" {
-            translatedText += "\n"
-        }else {
-            characterCount += len([]rune(paragraph))
-            jsonStr := []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, paragraph))
-
-            var totalTries = 18
-            body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
-            if err != nil {
-                return defaultValue, err
-            }
-
-            translations := gjson.GetBytes(body, "payload")
-            translations.ForEach(func(key, translation gjson.Result) bool {
-                // If it's a train model operation
-                if translation.Get("translation").Exists(){
-
-                    //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
-                    partialTranslatedText := translation.Get("translation.translatedContent.content").String()
-
-                    translatedText += strings.Replace(partialTranslatedText,"\\\"","\"", -1) + "\n"
-                }
-                return true // continue iterating
-            })
-        }
-    }
-
-    infoLog.Println("Replying with translation")
-
-    // Prepare file to send report
-    titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
-    tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
-    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
-
-    _, err = userModel.UpdateUserCharactersConsumed(user.ID, characterCount)
-    if err!= nil {
-        return "", err
-    }
-    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
-
-    // Once report is sent, return feedback to user
-    return translatedText, nil
-}
 
 func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response, requestDump []byte) ([]byte, error) {
     defer response.Body.Close()
@@ -345,81 +277,98 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
     return body, err
 }
 
-func StringToLines(s string) (lines []string, err error) {
-    scanner := bufio.NewScanner(strings.NewReader(s))
-    for scanner.Scan() {
-        lines = append(lines, scanner.Text())
-    }
-    err = scanner.Err()
-    return
-}
 
-func TranslateBaseRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
-                          userModel *mysql.UserModel, user *models.User,
-                          modelName, source, target, sourceText, title string) (string, error) {
+func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
+                      userModel *mysql.UserModel, user *models.User,
+                      modelName, source, target string, sourceText *files.TextStruct, title string) (*files.TextStruct, error) {
+
     infoLog.Println("Starting translation")
 
     timeRequest := time.Now()
-    characterCount := 0
-    defaultValue := ""
+    defaultValue := &files.TextStruct{}
+    var urlQuery string
+    translatedText := files.TextStruct{}
 
-    urlQuery := "https://translation.googleapis.com/language/translate/v2"
-
-    totalText, err := url.QueryUnescape(sourceText)
-    if err != nil {
-        return defaultValue, err
+    if modelName == "" {
+        return defaultValue, errors.New("model: empty value is not valid")
     }
-    totalText = strings.Replace(totalText, "\"","\\\"", -1)
-
-    lines, err := StringToLines(totalText)
-    if err != nil {
-        return defaultValue, err
-    }
-
-    var translatedText string = ""
-    for _, paragraph := range lines {
-        if paragraph == "" {
-            translatedText += "\n"
-        }else {
-            characterCount += len([]rune(paragraph))
-            jsonStr := []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, paragraph))
-
-            var totalTries = 18
-            body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
-            if err != nil {
-                return defaultValue, err
-            }
-
-            translations := gjson.GetBytes(body, "data.translations")
-            translations.ForEach(func(key, translation gjson.Result) bool {
-                // If it's a train model operation
-                if translation.Get("translatedText").Exists(){
-
-                    //partialTranslatedText := strings.Trim(translation.Get("translatedText").String(), "\n")
-                    partialTranslatedText := translation.Get("translatedText").String()
-
-                    translatedText += strings.Replace(partialTranslatedText,"\\\"","\"", -1) + "\n"
-                }
-                return true // continue iterating
-            })
-        }
-    }
-
-    infoLog.Println("Replying with translation")
 
     // Prepare file to send report
     titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
     tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
-    _ = files.WriteTranslationToDocx(tmpFileSource, sourceText)
+    _ = files.WriteDocxWithoutFormat(tmpFileSource, sourceText)
 
-    _, err = userModel.UpdateUserCharactersConsumed(user.ID, characterCount)
-    if err!= nil {
-        return "", err
+    // nmt -> Neural Machine Translation. Base model offered by Google
+    if modelName == "nmt"{
+        urlQuery = "https://translation.googleapis.com/language/translate/v2"
+    }else{
+        urlQuery = fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:predict", modelName)
     }
-    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, characterCount, timeRequest, title, tmpFileSource)
+
+    for _, paragraph := range (*sourceText).Paragraphs {
+        tempParagraph := []string{}
+        for _, currentText := range paragraph {
+            if currentText == "" {
+                tempParagraph = append(tempParagraph, "")
+            } else {
+                queryText, err := url.QueryUnescape(currentText)
+                if err != nil {
+                    return defaultValue, err
+                }
+                queryText = strings.Replace(queryText, "\"","\\\"", -1)
+
+                var jsonStr []byte
+                var keyword string
+                if modelName == "nmt"{
+                    jsonStr = []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, currentText))
+                    keyword = "translatedText"
+                } else{
+                    jsonStr = []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, currentText))
+                    keyword = "translation"
+                }
+
+                var totalTries = 2
+                body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
+                if err != nil {
+                    return defaultValue, err
+                }
+
+                var translations gjson.Result
+                if modelName == "nmt" {
+                    translations = gjson.GetBytes(body, "data.translations")
+                } else {
+                    translations = gjson.GetBytes(body, "payload")
+                }
+                translations.ForEach(func(key, translation gjson.Result) bool {
+                    if translation.Get(keyword).Exists(){
+                        var partialTranslatedText string
+                        if modelName == "nmt" {
+                            partialTranslatedText = translation.Get("translatedText").String()
+                        } else {
+                            partialTranslatedText = translation.Get("translation.translatedContent.content").String()
+                        }
+                        currentTranslatedText := strings.Replace(partialTranslatedText,"\\\"","\"", -1)
+                        translatedText.CharacterCount = translatedText.CharacterCount + len([]rune(strings.Replace(currentTranslatedText, "\n", "", -1)))
+                        tempParagraph = append(tempParagraph, currentTranslatedText)
+                    }
+                    return true // continue iterating
+                })
+
+            }
+        }
+        translatedText.Paragraphs = append(translatedText.Paragraphs, tempParagraph)
+    }
+
+    infoLog.Println("Replying with translation")
+
+    _, err := userModel.UpdateUserCharactersConsumed(user.ID, sourceText.CharacterCount)
+    if err!= nil {
+        return defaultValue, err
+    }
+    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, sourceText.CharacterCount, timeRequest, title, tmpFileSource)
 
     // Once report is sent, return feedback to user
-    return translatedText, nil
+    return &translatedText, nil
 }
 
 

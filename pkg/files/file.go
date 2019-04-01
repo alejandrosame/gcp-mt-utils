@@ -23,6 +23,11 @@ type TranslationPairFile struct {
     Pairs           []models.FilePair
 }
 
+type TextStruct struct {
+    Paragraphs      [][]string
+    CharacterCount  int
+}
+
 
 func (tpf *TranslationPairFile) Valid() bool {
     return len(tpf.Errors) == 0
@@ -96,32 +101,61 @@ func ReadPairsFromXlsx(path string) *TranslationPairFile {
 }
 
 
-func WriteTranslationToDocx(tmp_file, targetText string) string{
+func WriteDocxWithoutFormat(tmp_file string, text *TextStruct) string{
     doc := document.New()
 
-    para := doc.AddParagraph()
-    run := para.AddRun()
-
     counter := 1
-
-    for _, text := range strings.Split(targetText, "\n") {
-        para = doc.AddParagraph()
+    for _, p := range text.Paragraphs {
+        para := doc.AddParagraph()
         para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-        if text != "" {
-            run = para.AddRun()
-            run.Properties().SetBold(true)
-            run.AddText(fmt.Sprintf("%d - ",counter))
-            counter = counter + 1
+        firstRun := true
+        for _, r := range p {
+            // Add paragraph counter
+            if firstRun && r != "" {
+                run := para.AddRun()
+                run.Properties().SetBold(true)
+                run.AddText(fmt.Sprintf("%d - ", counter))
+                counter = counter + 1
+                firstRun = false
+            }
+            run := para.AddRun()
+            run.Properties()
+            run.AddText(r)
         }
-        run = para.AddRun()
-        run.Properties()
-        run.AddText(text)
-
     }
 
     doc.SaveToFile(tmp_file)
 
     return GetFileSize(tmp_file)
+}
+
+
+func WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file string) string {
+
+    doc, err := document.Open(format_file)
+    if err != nil {
+        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
+    }
+
+    counterP := 1
+    for _, p := range doc.Paragraphs() {
+        counterR := 1
+        for _, r := range p.Runs() {
+            text := r.Text()
+
+            if text != "" {
+                r.ClearContent()
+                r.AddText(translation.Paragraphs[counterP-1][counterR-1])
+            }
+            counterR = counterR + 1
+        }
+
+        counterP = counterP + 1
+    }
+
+    doc.SaveToFile(output_tmp_file)
+
+    return GetFileSize(output_tmp_file)
 }
 
 
@@ -166,6 +200,70 @@ func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) 
     doc.SaveToFile(tmp_file)
 
     return GetFileSize(tmp_file)
+}
+
+
+func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
+    text := TextStruct{}
+
+    doc, err := document.Open(input_tmp_file)
+    if err != nil {
+        return nil, err
+    }
+
+    for _, p := range doc.Paragraphs() {
+        var paragraph []string
+        for _, r := range p.Runs() {
+            currentText := r.Text()
+            text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(currentText, "\n", "", -1)))
+            paragraph = append(paragraph, currentText)
+        }
+
+        text.Paragraphs = append(text.Paragraphs, paragraph)
+    }
+
+    return &text, nil
+}
+
+
+func StringToLines(s string) (lines []string, err error) {
+    scanner := bufio.NewScanner(strings.NewReader(s))
+    for scanner.Scan() {
+        lines = append(lines, scanner.Text())
+    }
+    err = scanner.Err()
+    return
+}
+
+
+func ConvertPlainTextToTextStruct(plainText string) *TextStruct {
+    text := TextStruct{}
+
+    lines, err := StringToLines(plainText)
+    if err != nil {
+        return &text
+    }
+
+    for _, l := range lines {
+        text.Paragraphs = append(text.Paragraphs, []string{l})
+        text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(l, "\n", "", -1)))
+    }
+
+    return &text
+}
+
+
+func ConvertTextStructToPlainText(text *TextStruct) *string {
+    totalText := ""
+    for _, p := range text.Paragraphs {
+        runText := ""
+        for _, r := range p {
+            runText = runText + r
+        }
+        totalText = totalText + runText + "\n"
+    }
+
+    return &totalText
 }
 
 

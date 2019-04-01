@@ -62,4 +62,5 @@ a.bg-dark:focus, a.bg-dark:hover, button.bg-dark:focus, button.bg-dark:hover{
   flex: 1;
   width: 100%;
   padding: 16px;
+  margin-left: 16px;
 }
