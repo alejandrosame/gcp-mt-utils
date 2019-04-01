@@ -863,7 +863,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
 
     targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
                                                app.authenticatedUser(r),
-                                               modelName, sourceLanguage, targetLanguage, *sourceText, title)
+                                               modelName, sourceLanguage, targetLanguage, sourceText, title)
 
     if err != nil {
         app.serverError(w, err)
@@ -876,7 +876,8 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: targetText}
+    targetTextString := files.ConvertTextStructToPlainText(targetText)
+    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: *targetTextString}
     json.NewEncoder(w).Encode(reply)
 }
 

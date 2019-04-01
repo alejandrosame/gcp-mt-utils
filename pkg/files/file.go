@@ -101,32 +101,61 @@ func ReadPairsFromXlsx(path string) *TranslationPairFile {
 }
 
 
-func WriteTranslationToDocx(tmp_file, targetText string) string{
+func WriteDocxWithoutFormat(tmp_file string, text *TextStruct) string{
     doc := document.New()
 
-    para := doc.AddParagraph()
-    run := para.AddRun()
-
     counter := 1
-
-    for _, text := range strings.Split(targetText, "\n") {
-        para = doc.AddParagraph()
+    for _, p := range text.Paragraphs {
+        para := doc.AddParagraph()
         para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-        if text != "" {
-            run = para.AddRun()
-            run.Properties().SetBold(true)
-            run.AddText(fmt.Sprintf("%d - ",counter))
-            counter = counter + 1
+        firstRun := true
+        for _, r := range p {
+            // Add paragraph counter
+            if firstRun && r != "" {
+                run := para.AddRun()
+                run.Properties().SetBold(true)
+                run.AddText(fmt.Sprintf("%d - ", counter))
+                counter = counter + 1
+                firstRun = false
+            }
+            run := para.AddRun()
+            run.Properties()
+            run.AddText(r)
         }
-        run = para.AddRun()
-        run.Properties()
-        run.AddText(text)
-
     }
 
     doc.SaveToFile(tmp_file)
 
     return GetFileSize(tmp_file)
+}
+
+
+func  WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file string) string {
+
+    doc, err := document.Open(format_file)
+    if err != nil {
+        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
+    }
+
+    counterP := 1
+    for _, p := range doc.Paragraphs() {
+        counterR := 1
+        for _, r := range p.Runs() {
+            text := r.Text()
+
+            if text != "" {
+                r.ClearContent()
+                r.AddText(translation.Paragraphs[counterP-1][counterR-1])
+            }
+            counterR = counterR + 1
+        }
+
+        counterP = counterP + 1
+    }
+
+    doc.SaveToFile(output_tmp_file)
+
+    return GetFileSize(output_tmp_file)
 }
 
 
@@ -196,34 +225,6 @@ func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
     return &text, nil
 }
 
-
-func WriteTranslatedTextToDocx(translation *TextStruct, input_tmp_file, output_tmp_file string) string {
-
-    doc, err := document.Open(input_tmp_file)
-    if err != nil {
-        return fmt.Sprintf("ERROR OPENING INPUT FILE: %v", err)
-    }
-
-    counterP := 1
-    for _, p := range doc.Paragraphs() {
-        counterR := 1
-        for _, r := range p.Runs() {
-            text := r.Text()
-
-            if text != "" {
-                r.ClearContent()
-                r.AddText(translation.Paragraphs[counterP-1][counterR-1])
-            }
-            counterR = counterR + 1
-        }
-
-        counterP = counterP + 1
-    }
-
-    doc.SaveToFile(output_tmp_file)
-
-    return GetFileSize(output_tmp_file)
-}
 
 func StringToLines(s string) (lines []string, err error) {
     scanner := bufio.NewScanner(strings.NewReader(s))

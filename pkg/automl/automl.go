@@ -280,20 +280,19 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
 
 func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsModel *mysql.ReportModel,
                       userModel *mysql.UserModel, user *models.User,
-                      modelName, source, target string, sourceText files.TextStruct, title string) (string, error) {
+                      modelName, source, target string, sourceText *files.TextStruct, title string) (*files.TextStruct, error) {
 
     infoLog.Println("Starting translation")
 
     timeRequest := time.Now()
-    defaultValue := ""
+    defaultValue := &files.TextStruct{}
     var urlQuery string
     translatedText := files.TextStruct{}
 
     // Prepare file to send report
     titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
     tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
-    sourceString := files.ConvertTextStructToPlainText(&sourceText)
-    _ = files.WriteTranslationToDocx(tmpFileSource, *sourceString)
+    _ = files.WriteDocxWithoutFormat(tmpFileSource, sourceText)
 
     // nmt -> Neural Machine Translation. Base model offered by Google
     if modelName == "nmt"{
@@ -302,7 +301,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
         urlQuery = fmt.Sprintf("https://automl.googleapis.com/v1beta1/%s:predict", modelName)
     }
 
-    for _, paragraph := range sourceText.Paragraphs {
+    for _, paragraph := range (*sourceText).Paragraphs {
         var tempParagraph []string
         for _, currentText := range paragraph {
             if currentText != "" {
@@ -358,13 +357,12 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
 
     _, err := userModel.UpdateUserCharactersConsumed(user.ID, sourceText.CharacterCount)
     if err!= nil {
-        return "", err
+        return defaultValue, err
     }
     reports.SendEmail(infoLog, errorLog, r, reportsModel, user, sourceText.CharacterCount, timeRequest, title, tmpFileSource)
 
     // Once report is sent, return feedback to user
-    translatedTextString := files.ConvertTextStructToPlainText(&translatedText)
-    return *translatedTextString, nil
+    return &translatedText, nil
 }
 
 
