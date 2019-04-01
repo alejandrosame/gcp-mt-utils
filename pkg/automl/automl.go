@@ -289,6 +289,10 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
     var urlQuery string
     translatedText := files.TextStruct{}
 
+    if modelName == "" {
+        return defaultValue, errors.New("model: empty value is not valid")
+    }
+
     // Prepare file to send report
     titleTimestamp := fmt.Sprintf("%s_%s.docx", title, timeRequest.Format("20060102150405"))
     tmpFileSource := fmt.Sprintf("./tmp/%s", titleTimestamp)
@@ -302,9 +306,11 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
     }
 
     for _, paragraph := range (*sourceText).Paragraphs {
-        var tempParagraph []string
+        tempParagraph := []string{}
         for _, currentText := range paragraph {
-            if currentText != "" {
+            if currentText == "" {
+                tempParagraph = append(tempParagraph, "")
+            } else {
                 queryText, err := url.QueryUnescape(currentText)
                 if err != nil {
                     return defaultValue, err
@@ -321,7 +327,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                     keyword = "translation"
                 }
 
-                var totalTries = 18
+                var totalTries = 2
                 body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
                 if err != nil {
                     return defaultValue, err
@@ -348,9 +354,9 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                     return true // continue iterating
                 })
 
-                translatedText.Paragraphs = append(translatedText.Paragraphs, tempParagraph)
             }
         }
+        translatedText.Paragraphs = append(translatedText.Paragraphs, tempParagraph)
     }
 
     infoLog.Println("Replying with translation")

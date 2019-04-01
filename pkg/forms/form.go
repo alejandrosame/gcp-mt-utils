@@ -9,6 +9,7 @@ import (
     "net/http"
     "net/url"
     "os"
+    "path"
     "path/filepath"
     "regexp"
     "strconv"
@@ -191,6 +192,67 @@ func (f *Form) ProcessFileUpload(w http.ResponseWriter, r *http.Request, maxUplo
     }
 
     return newPath, fileType
+}
+
+
+func FilenameWithoutExtension(fn string) string {
+      return strings.TrimSuffix(fn, path.Ext(fn))
+}
+
+
+func (f *Form) ProcessTranslateFileUpload(w http.ResponseWriter, r *http.Request, maxUploadSize int64, uploadPath string,
+                                 infoLog *log.Logger, errorLog *log.Logger) (string, string, string) {
+
+    r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+    if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+        f.Errors.Add("fileName", fmt.Sprintf("This file is too big (max %d MB)", maxUploadSize))
+        return "", "", ""
+    }
+
+    fileType := r.PostFormValue("type")
+    file, fileHeader, err := r.FormFile("fileName")
+    if err != nil {
+        f.Errors.Add("fileName", "Please, select a file to upload")
+        return "", "", ""
+    }
+    defer file.Close()
+
+    fileBytes, err := ioutil.ReadAll(file)
+    if err != nil {
+        f.Errors.Add("fileName", "This file is invalid")
+        return "", "", ""
+    }
+
+    filetype := http.DetectContentType(fileBytes)
+    if filetype != "application/zip" {
+        errorLog.Printf("INVALID_FILE_TYPE: %s", filetype)
+        f.Errors.Add("fileName", "File type not supported (supported type is DOCX)")
+        return "", "", ""
+    }
+
+    fileName := randToken(12)
+    fileEndings, err := mime.ExtensionsByType(fileType)
+    if err != nil {
+        infoLog.Printf("CANT_READ_FILE_TYPE. Assuming DOCX file type")
+        fileType = "DOCX"
+        fileEndings = append(fileEndings, ".docx")
+    }
+
+    newPath := filepath.Join(uploadPath, fileName+fileEndings[0])
+    infoLog.Printf("FileType: %s, File: %s\n", fileType, newPath)
+
+    newFile, err := os.Create(newPath)
+    if err != nil {
+        f.Errors.Add("fileName", "Cannot create this file type in temporary folder")
+        return "", "", ""
+    }
+    defer newFile.Close()
+    if _, err := newFile.Write(fileBytes); err != nil {
+        f.Errors.Add("fileName", "Cannot write this file type in temporary folder")
+        return "", "", ""
+    }
+
+    return newPath, FilenameWithoutExtension(fileHeader.Filename), fileType
 }
 
 

@@ -130,7 +130,7 @@ func WriteDocxWithoutFormat(tmp_file string, text *TextStruct) string{
 }
 
 
-func  WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file string) string {
+func WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file string) string {
 
     doc, err := document.Open(format_file)
     if err != nil {
