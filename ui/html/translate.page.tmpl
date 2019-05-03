@@ -47,12 +47,6 @@
     </form>
 
     <div class="col">
-        <label for="doc-title" class='text-white'>Document title:</label>
-            <label id="doc-title-error-label" for="doc-title" class='bg-danger text-white invisible'>This field cannot be empty</label>
-        <input id='doc-title' class="form-control form-control-lg bg-secondary text-white" type="text" name='doc-title'/>
-    </div>
-    <div class="w-100"></div>
-    <div class="col">
         <label for="model" class='text-white'>Translation model:</label>
             <label id="model-error-label" for="model" class='bg-danger text-white invisible'>This field cannot be empty</label>
         <select id='model' class="form-control form-control-lg bg-secondary text-white" name='model'>
@@ -65,106 +59,168 @@
         </select>
     </div>
     <div class="w-100"></div>
-    <div class="col d-flex align-items-stretch">
-        <div class='card bg-secondary border-dark flex-fill'>
-            <div class='card-header border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
-                        </div>
-                        <div id="translating-wheel-1" class="sk-circle invisible">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class='card-body border-dark'>
-                <div class="row">
-                    <div class="col text-justify translation-text" id="source-text" contenteditable="true">
-                        <div>Your text to translate</div>
-                    </div>
-                </div>
-            </div>
-            <div class='card-footer border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
-                            <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
-                        </div>
-                        <div id="translating-wheel-2" class="sk-circle invisible">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col d-flex align-items-stretch">
-        <div class='card bg-secondary border-dark flex-fill'>
-            <div class='card-header border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class='card-body border-dark'>
-                <div class="row">
-                    <div class="col text-justify translation-text" id="target-text"></div>
-                </div>
-            </div>
 
-            <div class='card-footer border-dark'>
-                <div class="row">
-                    <div class="col text-center">
-                        <div>
-                            <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
-                            <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
+    <div class="col">
+        <div class="accordion" id="translationAccordion">
+            <div class="card bg-secondary border-white">
+                <div class="card-header" id="headingOne">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link text-white collapsed" type="button" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                      <strong>Upload file to translate</strong>
+                    </button>
+                  </h5>
+                </div>
+
+                <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#translationAccordion">
+                    <div class="col">
+                        <form id="fileTranslateForm" action='/translate/file' target='_blank' method='POST' enctype='multipart/form-data'>
+                            <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'/>
+                            <input id="modelForm" type='hidden' name='model'>
+                            {{with .Form}}
+                                <div class="form-group row">
+                                    <div class="col">
+                                        {{with .Errors.Get "fileName"}}
+                                            <label for="filename" class='bg-danger text-white'>{{.}}</label>
+                                        {{end}}
+                                        <input class="form-control-file text-white" type="file" 
+                                               accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                                               name="fileName">{{.Get "uploadFile"}}</input>
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col">
+                                        <input class="btn btn-dark btn-block" type="submit" value="Upload file to translate"
+                                               onclick="submitTranslateFileForm()">
+                                    </div>
+                                </div>
+                            {{end}}
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="card bg-secondary border-white">
+                <div class="card-header" id="headingTwo">
+                  <h5 class="mb-0">
+                    <button class="btn btn-link text-white" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                      <strong>Translate text</strong>
+                    </button>
+                  </h5>
+                </div>
+
+                <div id="collapseTwo" class="collapse show" aria-labelledby="headingTwo" data-parent="#translationAccordion">
+                    <div class="row">
+                        <div class="col">
+                            <label for="doc-title" class='text-white'>Document title:</label>
+                                <label id="doc-title-error-label" for="doc-title" class='bg-danger text-white invisible'>This field cannot be empty</label>
+                            <input id='doc-title' class="form-control form-control-lg bg-dark text-white" type="text" name='doc-title'/>
                         </div>
-                        <div id="exporting-wheel" class="sk-circle" style="display: none;">
-                            <div class="sk-circle1 sk-child"></div>
-                            <div class="sk-circle2 sk-child"></div>
-                            <div class="sk-circle3 sk-child"></div>
-                            <div class="sk-circle4 sk-child"></div>
-                            <div class="sk-circle5 sk-child"></div>
-                            <div class="sk-circle6 sk-child"></div>
-                            <div class="sk-circle7 sk-child"></div>
-                            <div class="sk-circle8 sk-child"></div>
-                            <div class="sk-circle9 sk-child"></div>
-                            <div class="sk-circle10 sk-child"></div>
-                            <div class="sk-circle11 sk-child"></div>
-                            <div class="sk-circle12 sk-child"></div>
+                        <div class="w-100"></div>
+                        <div class="col d-flex align-items-stretch">
+                            <div class='card bg-dark border-dark flex-fill'>
+                                <div class='card-header border-dark'>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            <div>
+                                                <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                                                <a id="translate-button-1" href="#" class="btn btn-dark">Translate</a>
+                                            </div>
+                                            <div id="translating-wheel-1" class="sk-circle invisible">
+                                                <div class="sk-circle1 sk-child"></div>
+                                                <div class="sk-circle2 sk-child"></div>
+                                                <div class="sk-circle3 sk-child"></div>
+                                                <div class="sk-circle4 sk-child"></div>
+                                                <div class="sk-circle5 sk-child"></div>
+                                                <div class="sk-circle6 sk-child"></div>
+                                                <div class="sk-circle7 sk-child"></div>
+                                                <div class="sk-circle8 sk-child"></div>
+                                                <div class="sk-circle9 sk-child"></div>
+                                                <div class="sk-circle10 sk-child"></div>
+                                                <div class="sk-circle11 sk-child"></div>
+                                                <div class="sk-circle12 sk-child"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='card-body border-dark'>
+                                    <div class="row">
+                                        <div class="col text-justify translation-text" id="source-text" contenteditable="true">
+                                            <div>Your text to translate</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='card-footer border-dark'>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            <div>
+                                                <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageSource}}{{end}}</span>
+                                                <a id="translate-button-2" href="#" class="btn btn-dark">Translate</a>
+                                            </div>
+                                            <div id="translating-wheel-2" class="sk-circle invisible">
+                                                <div class="sk-circle1 sk-child"></div>
+                                                <div class="sk-circle2 sk-child"></div>
+                                                <div class="sk-circle3 sk-child"></div>
+                                                <div class="sk-circle4 sk-child"></div>
+                                                <div class="sk-circle5 sk-child"></div>
+                                                <div class="sk-circle6 sk-child"></div>
+                                                <div class="sk-circle7 sk-child"></div>
+                                                <div class="sk-circle8 sk-child"></div>
+                                                <div class="sk-circle9 sk-child"></div>
+                                                <div class="sk-circle10 sk-child"></div>
+                                                <div class="sk-circle11 sk-child"></div>
+                                                <div class="sk-circle12 sk-child"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col d-flex align-items-stretch">
+                            <div class='card bg-dark border-dark flex-fill'>
+                                <div class='card-header border-dark'>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            <div>
+                                                <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                                                <a id="export-button-1" href="#" class="btn btn-dark export__button">Export</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='card-body border-dark'>
+                                    <div class="row">
+                                        <div class="col text-justify translation-text" id="target-text"></div>
+                                    </div>
+                                </div>
+
+                                <div class='card-footer border-dark'>
+                                    <div class="row">
+                                        <div class="col text-center">
+                                            <div>
+                                                <span class="font-weight-bold">{{if .AuthenticatedUser}}{{.Languages | languageTarget}}{{end}}</span>
+                                                <a id="export-button-2" href="#" class="btn btn-dark export__button">Export</a>
+                                            </div>
+                                            <div id="exporting-wheel" class="sk-circle" style="display: none;">
+                                                <div class="sk-circle1 sk-child"></div>
+                                                <div class="sk-circle2 sk-child"></div>
+                                                <div class="sk-circle3 sk-child"></div>
+                                                <div class="sk-circle4 sk-child"></div>
+                                                <div class="sk-circle5 sk-child"></div>
+                                                <div class="sk-circle6 sk-child"></div>
+                                                <div class="sk-circle7 sk-child"></div>
+                                                <div class="sk-circle8 sk-child"></div>
+                                                <div class="sk-circle9 sk-child"></div>
+                                                <div class="sk-circle10 sk-child"></div>
+                                                <div class="sk-circle11 sk-child"></div>
+                                                <div class="sk-circle12 sk-child"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </div>

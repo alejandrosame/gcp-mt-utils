@@ -770,6 +770,21 @@ func (app *application) uploadPairs(w http.ResponseWriter, r *http.Request) {
     http.Redirect(w, r, "/pair", http.StatusSeeOther)
 }
 
+func (app *application) getProjectID(w http.ResponseWriter) string {
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return ""
+    }
+    defer file.Close()
+
+    scanner := bufio.NewScanner(file)
+    scanner.Scan()
+    scanner.Scan()
+    projectId := scanner.Text()
+
+    return projectId
+}
 
 func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
     limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
@@ -804,7 +819,7 @@ func (app *application) translatePage(w http.ResponseWriter, r *http.Request) {
                              })
 }
 
-func (app *application) translationLimitIsReached(user *models.User, text string) (string, int, error) {
+func (app *application) translationLimitIsReached(user *models.User, text *files.TextStruct) (string, int, error) {
     limit, err := app.users.GetUserLimit(user.ID)
     if err != nil {
         return "", limit.TotalTranslated, err
@@ -814,9 +829,7 @@ func (app *application) translationLimitIsReached(user *models.User, text string
         return "reached", limit.TotalTranslated, nil
     }
 
-    characterCount := len([]rune(strings.Replace(text, "\n", "", -1)))
-
-    if limit.TotalLimit < limit.TotalTranslated + characterCount {
+    if limit.TotalLimit < limit.TotalTranslated + text.CharacterCount {
         return "surpassed", limit.TotalTranslated, nil
     }
 
@@ -840,7 +853,7 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
 
     sourceLanguage := app.session.GetString(r, "sourceLanguage")
     targetLanguage := app.session.GetString(r, "targetLanguage")
-    sourceText := form.Get("sourceText")
+    sourceText := files.ConvertPlainTextToTextStruct(form.Get("sourceText"))
     title := form.Get("docTitle")
     modelName := form.Get("model")
 
@@ -863,17 +876,9 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
     }
     defer file.Close()
 
-    var targetText string
-
-    if modelName == "nmt" {
-        targetText, err = automl.TranslateBaseRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
-                                                      app.authenticatedUser(r),
-                                                      modelName, sourceLanguage, targetLanguage, sourceText, title)
-    } else {
-        targetText, err = automl.TranslateRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
-                                                  app.authenticatedUser(r),
-                                                  modelName, sourceLanguage, targetLanguage, sourceText, title)
-    }
+    targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                               app.authenticatedUser(r),
+                                               modelName, sourceLanguage, targetLanguage, sourceText, title)
 
     if err != nil {
         app.serverError(w, err)
@@ -886,10 +891,103 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: targetText}
+    targetTextString := files.ConvertTextStructToPlainText(targetText)
+    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: *targetTextString}
     json.NewEncoder(w).Encode(reply)
 }
 
+
+func (app *application) translateFile(w http.ResponseWriter, r *http.Request) {
+    err := r.ParseForm()
+    if err != nil {
+        app.clientError(w, http.StatusBadRequest)
+        return
+    }
+
+    form := forms.New(r.PostForm)
+    tmp_file, fileName, _ := form.ProcessTranslateFileUpload(w, r, *app.maxUploadSize, *app.uploadPath, app.infoLog, app.errorLog)
+
+    limit, err := app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    sourceLanguage := app.session.GetString(r, "sourceLanguage")
+    targetLanguage := app.session.GetString(r, "targetLanguage")
+
+    m, err := automl.GetModelsByLanguage(app.infoLog, app.errorLog, app.getProjectID(w), targetLanguage)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if !form.Valid() {
+        app.render(w, r, "translate.page.tmpl",
+                   &templateData{Form: form,
+                                 UserLimit: limit,
+                                 Models: m,
+                                 })
+        return
+    }
+
+    sourceText, err := files.ExtractTextToTranslateDocx(tmp_file)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    title := fileName
+    modelName := form.Get("model")
+
+    check, _, err := app.translationLimitIsReached(app.authenticatedUser(r), sourceText)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    if check != "ok"{
+        app.session.Put(r, "flash",
+                        fmt.Sprintf("Not enough characters left to translate file. (Total characters: %d)!",
+                                    sourceText.CharacterCount))
+        app.render(w, r, "translate.page.tmpl",
+                   &templateData{Form: form,
+                                 UserLimit: limit,
+                                 Models: m,
+                                })
+        return
+    }
+
+    file, err := os.Open("./auth/auth.txt")
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+    defer file.Close()
+
+    targetText, err := automl.TranslateRequest(app.infoLog, app.errorLog, r, app.reports, app.users,
+                                               app.authenticatedUser(r),
+                                               modelName, sourceLanguage, targetLanguage, sourceText, title)
+
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    limit, err = app.users.GetUserLimit(app.authenticatedUser(r).ID)
+    if err != nil {
+        app.serverError(w, err)
+        return
+    }
+
+    timeRequest := time.Now().Format("20060102150405")
+    name := fmt.Sprintf("%s_%s-%s_%s.docx", title, sourceLanguage, targetLanguage, timeRequest)
+    output_tmp_file := fmt.Sprintf("./tmp/%s", name)
+
+    size := files.WriteDocxWithFormat(targetText, tmp_file, output_tmp_file)
+
+    app.downloadFile(w, r, "docx", output_tmp_file, name, size)
+}
 
 func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request) {
     sourceText, ok := r.URL.Query()["source"]

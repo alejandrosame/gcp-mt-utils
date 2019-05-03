@@ -257,6 +257,12 @@
                 window.location = "/pair";
             }
 
+            function submitTranslateFileForm() {
+                $( "#modelForm" ).val($( "#model option:selected" ).val())
+                document.exportPairForm.submit();
+                window.location = "/translate";
+            }
+
             function selectAllValidation(source) {
                 checkboxes = document.getElementsByClassName('select-pair');
                 for(var i=0, n=checkboxes.length;i<n;i++) {
