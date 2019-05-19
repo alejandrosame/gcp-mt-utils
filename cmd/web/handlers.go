@@ -1743,7 +1743,7 @@ func (app *application) exportValidatedPairs(w http.ResponseWriter, r *http.Requ
     fileSize := files.WriteDataset(tmpFile, pairs)
 
     app.session.Put(r, "flash", "Dataset successfully exported!")
-    app.downloadFile(w, r, "tsv", tmpFile, form.Get("name"), fileSize)
+    app.downloadFile(w, r, "tsv", tmpFile, fmt.Sprintf("%s.tsv", form.Get("name")), fileSize)
 }
 
 
@@ -1804,5 +1804,5 @@ func (app *application) exportAllValidatedPairs(w http.ResponseWriter, r *http.R
     fileSize := files.WriteDataset(tmpFile, pairs)
 
     app.session.Put(r, "flash", "Dataset successfully exported!")
-    app.downloadFile(w, r, "tsv", tmpFile, form.Get("name"), fileSize)
+    app.downloadFile(w, r, "tsv", tmpFile, fmt.Sprintf("%s.tsv", form.Get("name")), fileSize)
 }
