@@ -991,7 +991,14 @@ func (app *application) translateFile(w http.ResponseWriter, r *http.Request) {
 
     name_archive := fmt.Sprintf("%s_%s-%s_%s.zip", title, sourceLanguage, targetLanguage, timeRequest)
     output_tmp_file_archive := fmt.Sprintf("./tmp/%s", name_archive)
-    files.ArchiveFiles(output_tmp_file_archive, []string{output_tmp_file, output_tmp_file_no_format})
+
+    name_interleaved := fmt.Sprintf("%s_%s-%s_%s-interleaved.docx", title, sourceLanguage, targetLanguage, timeRequest)
+    output_tmp_file_interleaved := fmt.Sprintf("./tmp/%s", name_interleaved)
+    files.WriteTranslationInterleavedToDocx(output_tmp_file_interleaved, 
+                                            *files.ConvertTextStructToPlainText(sourceText),
+                                            *files.ConvertTextStructToPlainText(targetText))
+
+    files.ArchiveFiles(output_tmp_file_archive, []string{output_tmp_file, output_tmp_file_no_format, output_tmp_file_interleaved})
     size := files.GetFileSize(output_tmp_file_archive)
     app.downloadFile(w, r, "zip", output_tmp_file_archive, name_archive, size)
 }
