@@ -190,16 +190,13 @@ func WriteTranslationInterleavedToDocx(tmp_file string, sourceText, targetText *
         paraTarget := doc.AddParagraph()
         paraTarget.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
 
-        para := doc.AddParagraph()
-        para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
-
         firstRun := true
         for idxRun, r := range p.Runs {
             // Add paragraph counter
             if firstRun && r.Text != "" {
                 run = paraSource.AddRun()
                 run.Properties().SetBold(true)
-                run.Properties().SetColor(color.Orange)
+                run.Properties().SetColor(color.Blue)
                 run.AddText(fmt.Sprintf("%d - ",counter))
 
                 run = paraTarget.AddRun()
@@ -209,23 +206,21 @@ func WriteTranslationInterleavedToDocx(tmp_file string, sourceText, targetText *
 
                 firstRun = false
             }
-            run := para.AddRun()
 
             run = paraSource.AddRun()
-            run.Properties().SetColor(color.Orange)
+            run.Properties().SetColor(color.Blue)
             run.AddText(r.Text)
 
+            targetRun := targetText.Paragraphs[idxParagraph].Runs[idxRun]
+
             run = paraTarget.AddRun()
-            run.Properties()
-
-            targetRun := sourceText.Paragraphs[idxParagraph].Runs[idxRun]
-
             if targetRun.TranslationError{
                 run.Properties().SetColor(color.Red)
+                run.AddText(r.Text)
             }else{
                 run.Properties()
+                run.AddText(targetRun.Text)
             }
-            run.AddText(targetRun.Text)
         }
     }
 

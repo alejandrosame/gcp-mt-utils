@@ -321,7 +321,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                 var jsonStr []byte
                 var keyword string
                 if modelName == "nmt"{
-                    jsonStr = []byte(fmt.Sprintf(`{"format": "text", "source": "%s\"", "target": "%s", "q": "%s"}`, source, target, currentRun.Text))
+                    jsonStr = []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, currentRun.Text))
                     keyword = "translatedText"
                 } else{
                     jsonStr = []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, currentRun.Text))
