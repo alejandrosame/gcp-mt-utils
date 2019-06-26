@@ -222,17 +222,17 @@ func GetModelsByLanguage(infoLog, errorLog *log.Logger, projectId, languageCode 
 }
 
 
-func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response, requestDump []byte) ([]byte, error) {
+func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Response, requestDump []byte) ([]byte, int, error) {
     defer response.Body.Close()
 
     statusCode := response.StatusCode
     body, err := ioutil.ReadAll(response.Body)
     if err != nil {
-        return nil, err
+        return nil, statusCode, err
     }
 
     if statusCode == 200 {
-        return body, nil
+        return body, statusCode, nil
     }
 
     errorMessage := gjson.GetBytes(body, "error")
@@ -246,35 +246,36 @@ func CheckTranslationReply(infoLog, errorLog *log.Logger, response *http.Respons
     dump, _ := httputil.DumpResponse(response, true)
     errorLog.Printf("%s", requestDump)
     errorLog.Printf("%s", dump)
-    return nil, err
+    return nil, statusCode, err
 }
 
-func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, jsonStr []byte, totalTries int) ([]byte, error) {
+func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, jsonStr []byte, totalTries int) ([]byte, int, error) {
     var err error;
     var body []byte;
+    var statusCode int;
 
     client, err := GetClient()
     if err != nil {
-        return nil, err
+        return nil, statusCode, err
     }
 
-    for currentTry := 0; currentTry < totalTries; currentTry++ {
+    for currentTry := 1; currentTry <= totalTries; currentTry++ {
         req, err := http.NewRequest("POST", urlQuery, bytes.NewBuffer(jsonStr))
         dump, _ := httputil.DumpRequestOut(req, true)
 
         response, err := client.Do(req)
         if err != nil {
-            return nil, err
+            return nil, statusCode, err
         }
 
-        body, err = CheckTranslationReply(infoLog, errorLog, response, dump)
+        body, statusCode, err = CheckTranslationReply(infoLog, errorLog, response, dump)
         if err == nil { break }
 
         infoLog.Println(fmt.Sprintf("Try translation again: %d", currentTry))
 
         time.Sleep(10 * time.Second)
     }
-    return body, err
+    return body, statusCode, err
 }
 
 
@@ -306,12 +307,12 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
     }
 
     for _, paragraph := range (*sourceText).Paragraphs {
-        tempParagraph := []string{}
-        for _, currentText := range paragraph {
-            if currentText == "" {
-                tempParagraph = append(tempParagraph, "")
+        tempParagraph := files.Paragraph{}
+        for _, currentRun := range paragraph.Runs {
+            if currentRun.Text == "" {
+                tempParagraph.Runs = append(tempParagraph.Runs, files.TextRun{"", false})
             } else {
-                queryText, err := url.QueryUnescape(currentText)
+                queryText, err := url.QueryUnescape(currentRun.Text)
                 if err != nil {
                     return defaultValue, err
                 }
@@ -320,40 +321,49 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                 var jsonStr []byte
                 var keyword string
                 if modelName == "nmt"{
-                    jsonStr = []byte(fmt.Sprintf(`{"format": "text", "source": "%s", "target": "%s", "q": "%s"}`, source, target, currentText))
+                    jsonStr = []byte(fmt.Sprintf(`{"format": "text", "source": "%s\"", "target": "%s", "q": "%s"}`, source, target, currentRun.Text))
                     keyword = "translatedText"
                 } else{
-                    jsonStr = []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, currentText))
+                    jsonStr = []byte(fmt.Sprintf(`{"payload": {"textSnippet": { "content": "%s"}}}`, currentRun.Text))
                     keyword = "translation"
                 }
 
                 var totalTries = 2
-                body, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
+                body, statusCode, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
                 if err != nil {
                     return defaultValue, err
                 }
 
-                var translations gjson.Result
-                if modelName == "nmt" {
-                    translations = gjson.GetBytes(body, "data.translations")
-                } else {
-                    translations = gjson.GetBytes(body, "payload")
-                }
-                translations.ForEach(func(key, translation gjson.Result) bool {
-                    if translation.Get(keyword).Exists(){
-                        var partialTranslatedText string
-                        if modelName == "nmt" {
-                            partialTranslatedText = translation.Get("translatedText").String()
-                        } else {
-                            partialTranslatedText = translation.Get("translation.translatedContent.content").String()
-                        }
-                        currentTranslatedText := strings.Replace(partialTranslatedText,"\\\"","\"", -1)
-                        translatedText.CharacterCount = translatedText.CharacterCount + len([]rune(strings.Replace(currentTranslatedText, "\n", "", -1)))
-                        tempParagraph = append(tempParagraph, currentTranslatedText)
+                if statusCode != 200{
+                    // There was an error translating
+                    errorLog.Println("Translation request failed after reattempting")
+                    tempParagraph.Runs = append(tempParagraph.Runs, files.TextRun{currentRun.Text, true})
+                }else{
+                    var translations gjson.Result
+                    if modelName == "nmt" {
+                        translations = gjson.GetBytes(body, "data.translations")
+                    } else {
+                        translations = gjson.GetBytes(body, "payload")
                     }
-                    return true // continue iterating
-                })
-
+                    translations.ForEach(func(key, translation gjson.Result) bool {
+                        if translation.Get(keyword).Exists(){
+                            var partialTranslatedText string
+                            if modelName == "nmt" {
+                                partialTranslatedText = translation.Get("translatedText").String()
+                            } else {
+                                partialTranslatedText = translation.Get("translation.translatedContent.content").String()
+                            }
+                            currentTranslatedText := strings.Replace(partialTranslatedText,"\\\"","\"", -1)
+                            translatedText.CharacterCount = translatedText.CharacterCount + len([]rune(strings.Replace(currentTranslatedText, "\n", "", -1)))
+                            tempParagraph.Runs = append(tempParagraph.Runs, files.TextRun{currentTranslatedText, false})
+                        }else{
+                            // There was an error translating
+                            errorLog.Println("Translation not found in 'correct' reply")
+                            tempParagraph.Runs = append(tempParagraph.Runs, files.TextRun{currentRun.Text, true})
+                        }
+                        return true // continue iterating
+                    })
+                }
             }
         }
         translatedText.Paragraphs = append(translatedText.Paragraphs, tempParagraph)
@@ -361,11 +371,11 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
 
     infoLog.Println("Replying with translation")
 
-    _, err := userModel.UpdateUserCharactersConsumed(user.ID, sourceText.CharacterCount)
+    _, err := userModel.UpdateUserCharactersConsumed(user.ID, translatedText.CharacterCount)
     if err!= nil {
         return defaultValue, err
     }
-    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, sourceText.CharacterCount, timeRequest, title, tmpFileSource)
+    reports.SendEmail(infoLog, errorLog, r, reportsModel, user, translatedText.CharacterCount, timeRequest, title, tmpFileSource)
 
     // Once report is sent, return feedback to user
     return &translatedText, nil

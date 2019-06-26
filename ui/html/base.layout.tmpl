@@ -338,6 +338,10 @@
                     } else if (errorCode == "surpassed"){
                         alert("COULD NOT TRANSLATE: The text your are trying to translate will surpass your monthly translation limit.\n"+
                               " Try to translate a smaller text or contact an admin if you wish to increase your monthly translation limit.");
+                    } else if (errorCode == "translation_errors"){
+                        alert("PROBLEMS TRANSLATING: Some parts of the text were not translated successfully.");
+                    } else {
+                        alert(errorCode);
                     }
                 }
 
@@ -440,7 +444,7 @@
                     });
                 }
                 else {
-                    endTranslate("", "None", reply["CharactersUsed"]);
+                    endTranslate("", reply["Error"], reply["CharactersUsed"]);
                 }
             }
 

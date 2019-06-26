@@ -23,8 +23,17 @@ type TranslationPairFile struct {
     Pairs           []models.FilePair
 }
 
+type Paragraph struct {
+    Runs      []TextRun
+}
+
+type TextRun struct {
+    Text                string
+    TranslationError    bool
+}
+
 type TextStruct struct {
-    Paragraphs      [][]string
+    Paragraphs      []Paragraph
     CharacterCount  int
 }
 
@@ -109,9 +118,9 @@ func WriteDocxWithoutFormat(tmp_file string, text *TextStruct) string{
         para := doc.AddParagraph()
         para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
         firstRun := true
-        for _, r := range p {
+        for _, r := range p.Runs {
             // Add paragraph counter
-            if firstRun && r != "" {
+            if firstRun && r.Text != "" {
                 run := para.AddRun()
                 run.Properties().SetBold(true)
                 run.AddText(fmt.Sprintf("%d - ", counter))
@@ -119,8 +128,12 @@ func WriteDocxWithoutFormat(tmp_file string, text *TextStruct) string{
                 firstRun = false
             }
             run := para.AddRun()
-            run.Properties()
-            run.AddText(r)
+            if r.TranslationError {
+                run.Properties().SetColor(color.Red)
+            }else {
+                run.Properties()
+            }
+            run.AddText(r.Text)
         }
     }
 
@@ -144,8 +157,12 @@ func WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file s
             text := r.Text()
 
             if text != "" {
+                translatedRun := translation.Paragraphs[counterP-1].Runs[counterR-1]
                 r.ClearContent()
-                r.AddText(translation.Paragraphs[counterP-1][counterR-1])
+                if translatedRun.TranslationError{
+                    r.Properties().SetColor(color.Red)
+                }
+                r.AddText(translatedRun.Text)
             }
             counterR = counterR + 1
         }
@@ -159,42 +176,57 @@ func WriteDocxWithFormat(translation *TextStruct, format_file, output_tmp_file s
 }
 
 
-func WriteTranslationInterleavedToDocx(tmp_file, sourceText, targetText string) string{
+func WriteTranslationInterleavedToDocx(tmp_file string, sourceText, targetText *TextStruct) string{
     doc := document.New()
 
     para := doc.AddParagraph()
     run := para.AddRun()
 
     counter := 1
-
-    sourceSplit := strings.Split(sourceText, "\n")
-    targetSplit := strings.Split(targetText, "\n")
-
-    for idx, _ := range targetSplit {
+    for idxParagraph, p := range sourceText.Paragraphs {
         paraSource := doc.AddParagraph()
         paraSource.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
 
         paraTarget := doc.AddParagraph()
         paraTarget.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
 
-        if sourceSplit[idx] != "" {
+        para := doc.AddParagraph()
+        para.Properties().SetFirstLineIndent(0.5 * measurement.Inch)
+
+        firstRun := true
+        for idxRun, r := range p.Runs {
+            // Add paragraph counter
+            if firstRun && r.Text != "" {
+                run = paraSource.AddRun()
+                run.Properties().SetBold(true)
+                run.Properties().SetColor(color.Orange)
+                run.AddText(fmt.Sprintf("%d - ",counter))
+
+                run = paraTarget.AddRun()
+                run.Properties().SetBold(true)
+                run.AddText(fmt.Sprintf("%d - ",counter))
+                counter = counter + 1
+
+                firstRun = false
+            }
+            run := para.AddRun()
+
             run = paraSource.AddRun()
-            run.Properties().SetBold(true)
-            run.Properties().SetColor(color.Red)
-            run.AddText(fmt.Sprintf("%d - ",counter))
+            run.Properties().SetColor(color.Orange)
+            run.AddText(r.Text)
 
             run = paraTarget.AddRun()
-            run.Properties().SetBold(true)
-            run.AddText(fmt.Sprintf("%d - ",counter))
-            counter = counter + 1
-        }
-        run = paraSource.AddRun()
-        run.Properties().SetColor(color.Red)
-        run.AddText(sourceSplit[idx])
+            run.Properties()
 
-        run = paraTarget.AddRun()
-        run.Properties()
-        run.AddText(targetSplit[idx])
+            targetRun := sourceText.Paragraphs[idxParagraph].Runs[idxRun]
+
+            if targetRun.TranslationError{
+                run.Properties().SetColor(color.Red)
+            }else{
+                run.Properties()
+            }
+            run.AddText(targetRun.Text)
+        }
     }
 
     doc.SaveToFile(tmp_file)
@@ -212,11 +244,15 @@ func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
     }
 
     for _, p := range doc.Paragraphs() {
-        var paragraph []string
+        var paragraph Paragraph
         for _, r := range p.Runs() {
+            textRun := TextRun{}
             currentText := r.Text()
             text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(currentText, "\n", "", -1)))
-            paragraph = append(paragraph, currentText)
+            
+            textRun.Text = currentText
+            textRun.TranslationError = false
+            paragraph.Runs = append(paragraph.Runs, textRun)
         }
 
         text.Paragraphs = append(text.Paragraphs, paragraph)
@@ -245,25 +281,35 @@ func ConvertPlainTextToTextStruct(plainText string) *TextStruct {
     }
 
     for _, l := range lines {
-        text.Paragraphs = append(text.Paragraphs, []string{l})
-        text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(l, "\n", "", -1)))
+        characterCount := len([]rune(strings.Replace(l, "\n", "", -1)))
+        runs := []TextRun{
+            TextRun{l, false},
+        }
+        p := Paragraph{Runs: runs}
+
+        text.Paragraphs = append(text.Paragraphs, p)
+        text.CharacterCount = text.CharacterCount + characterCount
     }
 
     return &text
 }
 
 
-func ConvertTextStructToPlainText(text *TextStruct) *string {
+func ConvertTextStructToPlainText(text *TextStruct) (*string, bool) {
     totalText := ""
+    ok := true
     for _, p := range text.Paragraphs {
         runText := ""
-        for _, r := range p {
-            runText = runText + r
+        for _, r := range p.Runs {
+            runText = runText + r.Text
+            if r.TranslationError{
+                ok = false
+            }
         }
         totalText = totalText + runText + "\n"
     }
 
-    return &totalText
+    return &totalText, ok
 }
 
 
