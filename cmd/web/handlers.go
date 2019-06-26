@@ -891,8 +891,12 @@ func (app *application) translate(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    targetTextString := files.ConvertTextStructToPlainText(targetText)
-    reply := Reply{Error: "None", CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: *targetTextString}
+    errorString := "None"
+    targetTextString, ok := files.ConvertTextStructToPlainText(targetText)
+    if !ok{
+        errorString = "translation_errors"
+    }
+    reply := Reply{Error: errorString, CharactersUsed: fmt.Sprintf("%d", limit.TotalTranslated), Translation: *targetTextString}
     json.NewEncoder(w).Encode(reply)
 }
 
@@ -981,13 +985,15 @@ func (app *application) translateFile(w http.ResponseWriter, r *http.Request) {
     }
 
     timeRequest := time.Now().Format("20060102150405")
-    name := fmt.Sprintf("%s_%s-%s_%s.docx", title, sourceLanguage, targetLanguage, timeRequest)
-    output_tmp_file := fmt.Sprintf("./tmp/%s", name)
-    files.WriteDocxWithFormat(targetText, tmp_file, output_tmp_file)
 
+    // Unformatted file has the lowest risk of failing
     name_no_format := fmt.Sprintf("%s_%s-%s_%s-no_format.docx", title, sourceLanguage, targetLanguage, timeRequest)
     output_tmp_file_no_format := fmt.Sprintf("./tmp/%s", name_no_format)
     files.WriteDocxWithoutFormat(output_tmp_file_no_format, targetText)
+
+    name := fmt.Sprintf("%s_%s-%s_%s.docx", title, sourceLanguage, targetLanguage, timeRequest)
+    output_tmp_file := fmt.Sprintf("./tmp/%s", name)
+    files.WriteDocxWithFormat(targetText, tmp_file, output_tmp_file)
 
     name_archive := fmt.Sprintf("%s_%s-%s_%s.zip", title, sourceLanguage, targetLanguage, timeRequest)
     output_tmp_file_archive := fmt.Sprintf("./tmp/%s", name_archive)
@@ -995,8 +1001,7 @@ func (app *application) translateFile(w http.ResponseWriter, r *http.Request) {
     name_interleaved := fmt.Sprintf("%s_%s-%s_%s-interleaved.docx", title, sourceLanguage, targetLanguage, timeRequest)
     output_tmp_file_interleaved := fmt.Sprintf("./tmp/%s", name_interleaved)
     files.WriteTranslationInterleavedToDocx(output_tmp_file_interleaved, 
-                                            *files.ConvertTextStructToPlainText(sourceText),
-                                            *files.ConvertTextStructToPlainText(targetText))
+                                            sourceText, targetText)
 
     files.ArchiveFiles(output_tmp_file_archive, []string{output_tmp_file, output_tmp_file_no_format, output_tmp_file_interleaved})
     size := files.GetFileSize(output_tmp_file_archive)
@@ -1025,7 +1030,9 @@ func (app *application) exportTranslation(w http.ResponseWriter, r *http.Request
 
     name := fmt.Sprintf("translation_%s-%s_%s.docx", sourceLanguage, targetLanguage, timeRequest)
 
-    size := files.WriteTranslationInterleavedToDocx(tmpFile, sourceText[0], targetText[0])
+    size := files.WriteTranslationInterleavedToDocx(tmpFile,
+                                                    files.ConvertPlainTextToTextStruct(sourceText[0]),
+                                                    files.ConvertPlainTextToTextStruct(targetText[0]))
 
     app.downloadFile(w, r, "docx", tmpFile, name, size)
 }
