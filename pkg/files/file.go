@@ -230,7 +230,7 @@ func WriteTranslationInterleavedToDocx(tmp_file string, sourceText, targetText *
 }
 
 
-func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
+func ExtractTextToTranslateDocx(input_tmp_file string, unique_run bool) (*TextStruct, error) {
     text := TextStruct{}
 
     doc, err := document.Open(input_tmp_file)
@@ -240,14 +240,24 @@ func ExtractTextToTranslateDocx(input_tmp_file string) (*TextStruct, error) {
 
     for _, p := range doc.Paragraphs() {
         var paragraph Paragraph
+        commonRun := TextRun{}
+        commonRun.TranslationError = false
         for _, r := range p.Runs() {
-            textRun := TextRun{}
             currentText := r.Text()
+
             text.CharacterCount = text.CharacterCount + len([]rune(strings.Replace(currentText, "\n", "", -1)))
             
-            textRun.Text = currentText
-            textRun.TranslationError = false
-            paragraph.Runs = append(paragraph.Runs, textRun)
+            if unique_run {
+                commonRun.Text = commonRun.Text + currentText
+            }else{
+                textRun := TextRun{}
+                textRun.Text = currentText
+                textRun.TranslationError = false
+                paragraph.Runs = append(paragraph.Runs, textRun)
+            }
+        }
+        if unique_run {
+            paragraph.Runs = append(paragraph.Runs, commonRun)
         }
 
         text.Paragraphs = append(text.Paragraphs, paragraph)
