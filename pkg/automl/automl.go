@@ -273,7 +273,7 @@ func MakeTranslationRequest(infoLog, errorLog *log.Logger, urlQuery string, json
 
         infoLog.Println(fmt.Sprintf("Try translation again: %d", currentTry))
 
-        time.Sleep(10 * time.Second)
+        time.Sleep(2 * time.Second)
     }
     return body, statusCode, err
 }
@@ -328,7 +328,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                     keyword = "translation"
                 }
 
-                var totalTries = 2
+                var totalTries = 5
                 body, statusCode, err := MakeTranslationRequest(infoLog, errorLog, urlQuery, jsonStr, totalTries)
                 if err != nil {
                     return defaultValue, err
