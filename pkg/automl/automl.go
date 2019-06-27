@@ -5,6 +5,7 @@ import (
     "encoding/json"
     "errors"
     "fmt"
+    "html"
     "io/ioutil"
     "log"
     "net/http"
@@ -354,6 +355,7 @@ func TranslateRequest(infoLog, errorLog *log.Logger, r *http.Request, reportsMod
                                 partialTranslatedText = translation.Get("translation.translatedContent.content").String()
                             }
                             currentTranslatedText := strings.Replace(partialTranslatedText,"\\\"","\"", -1)
+                            currentTranslatedText = html.UnescapeString(currentTranslatedText)
                             translatedText.CharacterCount = translatedText.CharacterCount + len([]rune(strings.Replace(currentTranslatedText, "\n", "", -1)))
                             tempParagraph.Runs = append(tempParagraph.Runs, files.TextRun{currentTranslatedText, false})
                         }else{
